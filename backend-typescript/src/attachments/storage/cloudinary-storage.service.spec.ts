@@ -3,6 +3,7 @@ import { PassThrough } from 'stream';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorageService } from './cloudinary-storage.service';
 import { validateEnvironment } from '../../common/environment';
+import { AttachmentsService } from '../attachments.service';
 
 const key = '11111111-1111-4111-8111-111111111111/ITEM_IMAGE/22222222-2222-4222-8222-222222222222.png';
 const publicId = 'apna-galla/' + key;
@@ -75,5 +76,20 @@ describe('Private Cloudinary attachment storage', () => {
     expect(validateEnvironment(config).STORAGE_PROVIDER).toBe('cloudinary');
     expect(() => validateEnvironment({ ...config, CLOUDINARY_API_SECRET: '' })).toThrow('CLOUDINARY_API_SECRET');
     expect(() => validateEnvironment({ ...config, CLOUDINARY_CLOUD_NAME: '../redirect' })).toThrow('Invalid Cloudinary cloud name');
+  });
+  it('does not read old local photos from a newly selected cloud store', async () => {
+    vi.stubEnv('STORAGE_PROVIDER', 'cloudinary');
+    const storage = { save: vi.fn(), get: vi.fn(), delete: vi.fn() };
+    const db = { attachment: { findFirst: vi.fn().mockResolvedValue({ storage_provider: 'local', storage_key: key }) } };
+    await expect(new AttachmentsService(db as any, storage).getAttachment('tenant', 'photo')).rejects.toThrow('needs storage migration');
+    expect(storage.get).not.toHaveBeenCalled();
+  });
+  it('does not delete database metadata or old photos through a mismatched provider', async () => {
+    vi.stubEnv('STORAGE_PROVIDER', 'cloudinary');
+    const storage = { save: vi.fn(), get: vi.fn(), delete: vi.fn() };
+    const db = { attachment: { findFirst: vi.fn().mockResolvedValue({ storage_provider: 'local', storage_key: key }), delete: vi.fn() } };
+    await expect(new AttachmentsService(db as any, storage).deleteAttachment('tenant', 'photo')).rejects.toThrow('needs storage migration');
+    expect(storage.delete).not.toHaveBeenCalled();
+    expect(db.attachment.delete).not.toHaveBeenCalled();
   });
 });
