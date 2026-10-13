@@ -1,0 +1,905 @@
+{
+  "date": "2026-10-07",
+  "cli_version": "0.1.22",
+  "browser": {
+    "passed": 60,
+    "failed": 0,
+    "exit_code": 0,
+    "headed": true,
+    "workers": 1
+  },
+  "post_ledger_browser_recheck": {
+    "passed": 11,
+    "failed": 0,
+    "exit_code": 0,
+    "headed": true,
+    "included_in_existing_60": true
+  },
+  "backend_e2e": {
+    "passed": 190,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "backend_unit_integration": {
+    "passed": 235,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "cli_supplement": {
+    "5": "Headed CLI password-field Enter submitted login successfully; browser tests also exercised Tab focus and deep-link refresh.",
+    "36": "Four supplier methods passed. Headed CLI interrupted a proof upload with HTTP 503, retried only the photo, and confirmed one payment of 10 with remaining due 40 from a credit purchase of 50. The saved proof was visible."
+  },
+  "manual": {
+    "PASS": 63,
+    "PARTIAL": 6,
+    "BLOCKED": 3
+  },
+  "checks": [
+    {
+      "number": 1,
+      "section": "Start, login and navigation",
+      "title": "Local access",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access."
+    },
+    {
+      "number": 2,
+      "section": "Start, login and navigation",
+      "title": "Centred Bill button",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access."
+    },
+    {
+      "number": 3,
+      "section": "Start, login and navigation",
+      "title": "Home discovery",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access."
+    },
+    {
+      "number": 4,
+      "section": "Start, login and navigation",
+      "title": "Summary dates and privacy",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access."
+    },
+    {
+      "number": 5,
+      "section": "Start, login and navigation",
+      "title": "Refresh and keyboard",
+      "status": "PASS",
+      "evidence": "Headed CLI password-field Enter submitted login successfully; browser tests also exercised Tab focus and deep-link refresh."
+    },
+    {
+      "number": 6,
+      "section": "Start, login and navigation",
+      "title": "Logout and denied access",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access."
+    },
+    {
+      "number": 7,
+      "section": "Price-only billing and counted stock",
+      "title": "Save an unknown item while billing",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 8,
+      "section": "Price-only billing and counted stock",
+      "title": "Find it again",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 9,
+      "section": "Price-only billing and counted stock",
+      "title": "Start actual counting",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 10,
+      "section": "Price-only billing and counted stock",
+      "title": "Return an older uncounted sale",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 11,
+      "section": "Price-only billing and counted stock",
+      "title": "Respect counted stock",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 12,
+      "section": "Price-only billing and counted stock",
+      "title": "Inventory and alerts",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters."
+    },
+    {
+      "number": 13,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Cash and change",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 14,
+      "section": "Bills, payment modes and UPI split",
+      "title": "UPI setup",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 15,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Half cash, half UPI",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 16,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Split on the saved invoice",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 17,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Udhar and promise date",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 18,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Split amount validation",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt."
+    },
+    {
+      "number": 19,
+      "section": "Bill corrections and network recovery",
+      "title": "Quantity, price and discount",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 20,
+      "section": "Bill corrections and network recovery",
+      "title": "Customer selection",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 21,
+      "section": "Bill corrections and network recovery",
+      "title": "Hold and resume",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 22,
+      "section": "Bill corrections and network recovery",
+      "title": "Retry after lost response",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 23,
+      "section": "Bill corrections and network recovery",
+      "title": "Attachment retry",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 24,
+      "section": "Bill corrections and network recovery",
+      "title": "Return and cancellation limits",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns."
+    },
+    {
+      "number": 25,
+      "section": "Items and universal Retail modes",
+      "title": "Basic item and opening stock",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 26,
+      "section": "Items and universal Retail modes",
+      "title": "Service",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 27,
+      "section": "Items and universal Retail modes",
+      "title": "Variant and pack unit",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 28,
+      "section": "Items and universal Retail modes",
+      "title": "Weight, length and area",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 29,
+      "section": "Items and universal Retail modes",
+      "title": "Batch, expiry and FEFO",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 30,
+      "section": "Items and universal Retail modes",
+      "title": "Serial, warranty, kit and extras",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed."
+    },
+    {
+      "number": 31,
+      "section": "Suppliers and searchable purchases",
+      "title": "Supplier details",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection."
+    },
+    {
+      "number": 32,
+      "section": "Suppliers and searchable purchases",
+      "title": "Monthly supplier visit",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection."
+    },
+    {
+      "number": 33,
+      "section": "Suppliers and searchable purchases",
+      "title": "Search Buy Stock items",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection."
+    },
+    {
+      "number": 34,
+      "section": "Suppliers and searchable purchases",
+      "title": "Itemized receiving",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection."
+    },
+    {
+      "number": 35,
+      "section": "Suppliers and searchable purchases",
+      "title": "Credit, paid and partial purchase",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection."
+    },
+    {
+      "number": 36,
+      "section": "Suppliers and searchable purchases",
+      "title": "Pay supplier",
+      "status": "PASS",
+      "evidence": "Four supplier methods passed. Headed CLI interrupted a proof upload with HTTP 503, retried only the photo, and confirmed one payment of 10 with remaining due 40 from a credit purchase of 50. The saved proof was visible."
+    },
+    {
+      "number": 37,
+      "section": "Calendar, repayments and tasks",
+      "title": "Calendar navigation",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 38,
+      "section": "Calendar, repayments and tasks",
+      "title": "Weekly supplier schedule",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 39,
+      "section": "Calendar, repayments and tasks",
+      "title": "Promised customer repayment",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 40,
+      "section": "Calendar, repayments and tasks",
+      "title": "Collected and supplier dues",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 41,
+      "section": "Calendar, repayments and tasks",
+      "title": "Task and meeting",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 42,
+      "section": "Calendar, repayments and tasks",
+      "title": "Holiday accuracy and coverage",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage."
+    },
+    {
+      "number": 43,
+      "section": "Custom payment voice greeting",
+      "title": "Enable and customize",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection."
+    },
+    {
+      "number": 44,
+      "section": "Custom payment voice greeting",
+      "title": "Preview and device volume",
+      "status": "PARTIAL",
+      "evidence": "Real English/Hindi speech requests were made. A person must still confirm audible pronunciation, volume and installed Hindi voices on the target phone."
+    },
+    {
+      "number": 45,
+      "section": "Custom payment voice greeting",
+      "title": "Confirmed billing greeting",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection."
+    },
+    {
+      "number": 46,
+      "section": "Custom payment voice greeting",
+      "title": "Customer collection",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection."
+    },
+    {
+      "number": 47,
+      "section": "Custom payment voice greeting",
+      "title": "Disabled, blocked or offline voice",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection."
+    },
+    {
+      "number": 48,
+      "section": "Custom payment voice greeting",
+      "title": "Tenant voice privacy",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection."
+    },
+    {
+      "number": 49,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Opening cash and method totals",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 50,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Actual cash movement",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 51,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Cash count reconciliation",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 52,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Galla history and date",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 53,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Business expense versus owner money",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 54,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Customer due QR",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed."
+    },
+    {
+      "number": 55,
+      "section": "Reports, documents and settings",
+      "title": "Reports directory",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows."
+    },
+    {
+      "number": 56,
+      "section": "Reports, documents and settings",
+      "title": "CSV export",
+      "status": "PARTIAL",
+      "evidence": "CSV download bytes, quoting and formula neutralization passed. Opening that CSV in a desktop spreadsheet was not performed."
+    },
+    {
+      "number": 57,
+      "section": "Reports, documents and settings",
+      "title": "Document security",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows."
+    },
+    {
+      "number": 58,
+      "section": "Reports, documents and settings",
+      "title": "Business, profile and print settings",
+      "status": "PARTIAL",
+      "evidence": "Business/profile/display/invoice settings and print controls passed. A physical printer/service must still be tested."
+    },
+    {
+      "number": 59,
+      "section": "Reports, documents and settings",
+      "title": "Staff and logged-in devices",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows."
+    },
+    {
+      "number": 60,
+      "section": "Reports, documents and settings",
+      "title": "Portability and deletion request",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows."
+    },
+    {
+      "number": 61,
+      "section": "Platform and tenant isolation",
+      "title": "Separate Platform login",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression."
+    },
+    {
+      "number": 62,
+      "section": "Platform and tenant isolation",
+      "title": "Brand-new shop",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression."
+    },
+    {
+      "number": 63,
+      "section": "Platform and tenant isolation",
+      "title": "Plan, overrides and lifecycle",
+      "status": "PARTIAL",
+      "evidence": "Plan, override, suspension/reactivation and free days passed in the browser; expiry/trial/complimentary rules passed in API tests. Every state was not separately inspected in a Retail browser."
+    },
+    {
+      "number": 64,
+      "section": "Platform and tenant isolation",
+      "title": "Audit, sessions and support",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression."
+    },
+    {
+      "number": 65,
+      "section": "Platform and tenant isolation",
+      "title": "Metrics and providers",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression."
+    },
+    {
+      "number": 66,
+      "section": "Platform and tenant isolation",
+      "title": "Two-shop attack check",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression."
+    },
+    {
+      "number": 67,
+      "section": "Release-only checks and limitations",
+      "title": "Public publishing details",
+      "status": "PARTIAL",
+      "evidence": "Public pages and draft publishing settings passed. Legal operator/support/package/retention details still require reviewed real values."
+    },
+    {
+      "number": 68,
+      "section": "Release-only checks and limitations",
+      "title": "Google and recovery email",
+      "status": "BLOCKED",
+      "evidence": "Live Google OAuth and SMTP are not configured. Signed-token/recovery security tests passed; real provider login and delivered email remain blocked."
+    },
+    {
+      "number": 69,
+      "section": "Release-only checks and limitations",
+      "title": "Real backup and restore",
+      "status": "BLOCKED",
+      "evidence": "Local whole-database backup/restore tests passed. Production private offsite storage, scheduler/alerts, attachment recovery and measured production RPO/RTO remain blocked."
+    },
+    {
+      "number": 70,
+      "section": "Release-only checks and limitations",
+      "title": "Signed Android app",
+      "status": "BLOCKED",
+      "evidence": "No signed Android release or physical Play-test phone was tested. Native Google/camera/share/printer/TalkBack acceptance remains blocked."
+    },
+    {
+      "number": 71,
+      "section": "Release-only checks and limitations",
+      "title": "Slow or disconnected network",
+      "status": "PASS",
+      "evidence": "Public publishing and failure/retry layouts tested; external release gates are explicitly separated."
+    },
+    {
+      "number": 72,
+      "section": "Release-only checks and limitations",
+      "title": "Accessibility and release decision",
+      "status": "PARTIAL",
+      "evidence": "360/390/412px, larger text, desktop layouts, focus and labels were exercised. A complete contrast/screen-reader/keyboard audit remains open."
+    }
+  ],
+  "browser_tests": [
+    {
+      "name": "public policies/support/deletion remain reachable without app installation",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 5896
+    },
+    {
+      "name": "the default Retail theme uses bright surfaces and restrained sage accents",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 2505
+    },
+    {
+      "name": "owner can submit an account deletion request from the public web page",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 3353
+    },
+    {
+      "name": "Super Admin can edit app publishing placeholders and inspect privacy requests",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 3696
+    },
+    {
+      "name": "comfortable and larger text, dark mode and real settings remain usable at 360px",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 8830
+    },
+    {
+      "name": "login success",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 2249
+    },
+    {
+      "name": "invalid login",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 1874
+    },
+    {
+      "name": "protected route redirect",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 1091
+    },
+    {
+      "name": "logout",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3571
+    },
+    {
+      "name": "renders Users screen",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 2671
+    },
+    {
+      "name": "user search",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3780
+    },
+    {
+      "name": "Create User UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 4090
+    },
+    {
+      "name": "Create Role UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3074
+    },
+    {
+      "name": "Session revoke through UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3070
+    },
+    {
+      "name": "owner configures a bundle, extras, variants and pack units and bills a kit through the UI",
+      "file": "item-configuration.spec.ts",
+      "status": "passed",
+      "duration_ms": 22042
+    },
+    {
+      "name": "Manual 07–12 / 24: real purchase starts counting; an older uncounted return never creates phantom stock",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 17526
+    },
+    {
+      "name": "Manual 18 / 26: a service bills without stock and split checkout rejects missing or excessive payment",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 11338
+    },
+    {
+      "name": "Manual 27: variant BOX receiving/selling uses ten base units and protects saved conversion factors",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 19827
+    },
+    {
+      "name": "Manual 28: receive, bill and return weight through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 16457
+    },
+    {
+      "name": "Manual 28: receive, bill and return length through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 16040
+    },
+    {
+      "name": "Manual 28: receive, bill and return area through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 18151
+    },
+    {
+      "name": "Manual 29: receiving two expiry lots uses FEFO and rejects expired-only stock",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 26075
+    },
+    {
+      "name": "Manual 30: unique serial receiving, one sale, visible warranty and original return/resale",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 20971
+    },
+    {
+      "name": "Manual 38–42: recurring visits, changed promise, collection and refreshed tasks reflect in Calendar",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 17154
+    },
+    {
+      "name": "Manual 49–53: the exact drawer example is 2220, Short 20 persists, and UPI/Udhar stay outside cash",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 30714
+    },
+    {
+      "name": "Manual 04 / 05 / 55 / 72: real period/privacy changes, deep-link refresh and keyboard focus",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 11116
+    },
+    {
+      "name": "Manual 13 / 19 / 20 / 23 / 57 / 60: corrected bill, inline customer, photo-only retry, private preview and export",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 17587
+    },
+    {
+      "name": "Manual 43–48: real device speech requests, persistence, collection-only greeting and tenant separation",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 22216
+    },
+    {
+      "name": "Manual 59: create staff, assign Cashier, change temporary password, deny owner settings and revoke access",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 15391
+    },
+    {
+      "name": "Manual 35 / 36 / 37 / 40 / 42: all purchase payment states, four supplier methods and published holiday coverage",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 25675
+    },
+    {
+      "name": "Manual 47: unsupported device voice cannot prevent or undo a real bill",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 11108
+    },
+    {
+      "name": "Manual 12: real low/out filters exclude uncounted goods and services",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 15696
+    },
+    {
+      "name": "Organization Lifecycle respects the current tenant and initializes owned business structures",
+      "file": "module_02.spec.ts",
+      "status": "passed",
+      "duration_ms": 10242
+    },
+    {
+      "name": "Platform creates a usable shop and performs audited controls through the browser",
+      "file": "platform-control-plane.spec.ts",
+      "status": "passed",
+      "duration_ms": 27950
+    },
+    {
+      "name": "UPI setup, static QR download, invoice preference, manual amount QR and customer due QR",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 15677
+    },
+    {
+      "name": "report CSV preserves commas and quotes and neutralizes tenant spreadsheet formulas",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 5289
+    },
+    {
+      "name": "lost billing response retries the same operation without a second invoice",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 8621
+    },
+    {
+      "name": "Daily Galla opening, reconciliation, history, export and error recovery",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 6663
+    },
+    {
+      "name": "counter light and dark responsive 360",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7636
+    },
+    {
+      "name": "counter light and dark responsive 390",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7600
+    },
+    {
+      "name": "counter light and dark responsive 412",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7408
+    },
+    {
+      "name": "counter light and dark responsive 1280",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7964
+    },
+    {
+      "name": "advanced parties, multi-item purchase, photo retry, supplier payment, Quick Sale, Udhar and needs use real API",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 27325
+    },
+    {
+      "name": "field coverage responsive 360",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 7394
+    },
+    {
+      "name": "field coverage responsive 390",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 7302
+    },
+    {
+      "name": "field coverage responsive 412",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 7212
+    },
+    {
+      "name": "field coverage responsive 1280",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 7396
+    },
+    {
+      "name": "price-only inline item, centred Bill, exact split UPI QR and one confirmed-payment greeting",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 12808
+    },
+    {
+      "name": "supplier monthly visits, tasks, holiday dates and promised Udhar repayment appear in Calendar",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 11493
+    },
+    {
+      "name": "Buy Stock searches the full catalog and Home exposes real modules without eight primary buttons",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 5857
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 360",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2752
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 390",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2655
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 412",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2680
+    },
+    {
+      "name": "real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 51986
+    },
+    {
+      "name": "mobile 360: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 21110
+    },
+    {
+      "name": "mobile 390: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 21020
+    },
+    {
+      "name": "mobile 412: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 21205
+    },
+    {
+      "name": "desktop 1280: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 21139
+    },
+    {
+      "name": "Retail shows recoverable API and render errors, loading, empty and setup states",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 5838
+    },
+    {
+      "name": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 12148
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+ALTER TABLE pos_held_bills ADD COLUMN bill_discount DECIMAL(15,6) NOT NULL DEFAULT 0;

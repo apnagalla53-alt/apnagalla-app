@@ -1,0 +1,21 @@
+# Operator template. Use managed PostgreSQL and a trusted TLS ingress; do not expose API directly.
+services:
+  api:
+    build: ../backend-typescript
+    env_file: ../backend-typescript/.env.production
+    restart: unless-stopped
+    expose: ['8010']
+    volumes:
+      - private_uploads:/app/uploads
+      - backup_work:/app/.local-backups
+    security_opt: ['no-new-privileges:true']
+  web:
+    build: ../frontend
+    restart: unless-stopped
+    ports: ['127.0.0.1:8080:8080']
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  private_uploads:
+  backup_work:

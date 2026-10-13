@@ -1,0 +1,35 @@
+{
+  "item": "Test Product 1791299201269",
+  "invoices": [
+    "POS-1791299203633",
+    "POS-1791299205155",
+    "POS-1791299207406",
+    "POS-1791299211360"
+  ],
+  "cash_receipts": 140,
+  "bank_receipts": 160,
+  "split": [
+    40,
+    60
+  ],
+  "customer_due_after_payment": 0,
+  "return": 100,
+  "refund": 100,
+  "purchase": {
+    "quantity": 5,
+    "rate": 60,
+    "total": 300
+  },
+  "stock": 12,
+  "movement_total": 12,
+  "expense": {
+    "amount": 50,
+    "method": "CASH"
+  },
+  "need": {
+    "quantity": 2,
+    "status": "NEED"
+  },
+  "checked_vouchers": 10,
+  "balanced": true
+}

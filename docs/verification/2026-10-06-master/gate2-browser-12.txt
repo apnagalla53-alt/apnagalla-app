@@ -1,0 +1,19 @@
+
+Running 12 tests using 1 worker
+
+(node:34152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [chromium] › tests\retail-field-coverage.spec.ts:4:1 › advanced parties, multi-item purchase, photo retry, supplier payment, Quick Sale, Udhar and needs use real API (8.1s)
+  ok  2 [chromium] › tests\retail-field-coverage.spec.ts:35:39 › field coverage responsive 360 (3.5s)
+  ok  3 [chromium] › tests\retail-field-coverage.spec.ts:35:39 › field coverage responsive 390 (3.5s)
+  ok  4 [chromium] › tests\retail-field-coverage.spec.ts:35:39 › field coverage responsive 412 (3.6s)
+  ok  5 [chromium] › tests\retail-field-coverage.spec.ts:35:39 › field coverage responsive 1280 (3.7s)
+  ok  6 [chromium] › tests\retail-smoke.spec.ts:20:1 › real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports (20.1s)
+  ok  7 [chromium] › tests\retail-smoke.spec.ts:113:3 › mobile 360: routes, navigation, bill and payment remain visible (10.3s)
+  ok  8 [chromium] › tests\retail-smoke.spec.ts:113:3 › mobile 390: routes, navigation, bill and payment remain visible (10.8s)
+  ok  9 [chromium] › tests\retail-smoke.spec.ts:113:3 › mobile 412: routes, navigation, bill and payment remain visible (10.9s)
+  ok 10 [chromium] › tests\retail-smoke.spec.ts:113:3 › desktop 1280: routes, navigation, bill and payment remain visible (10.9s)
+  ok 11 [chromium] › tests\retail-smoke.spec.ts:139:1 › Retail shows recoverable API and render errors, loading, empty and setup states (3.4s)
+  ok 12 [chromium] › tests\retail-smoke.spec.ts:154:1 › quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it (6.1s)
+
+  12 passed (1.7m)

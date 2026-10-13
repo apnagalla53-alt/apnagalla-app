@@ -1,0 +1,16 @@
+.retail-app .r-item-photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  overflow: hidden;
+  border: 1px solid var(--r-border);
+  border-radius: 8px;
+  background: var(--r-surface);
+}
+.retail-app .r-item-photo img { width: 100%; height: 100%; object-fit: contain; }
+.retail-app .r-item-summary { display: flex; align-items: flex-start; gap: 16px; }
+.retail-app .r-item-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.retail-app .r-item-summary .r-item-photo { width: 72px; height: 72px; flex-basis: 72px; }

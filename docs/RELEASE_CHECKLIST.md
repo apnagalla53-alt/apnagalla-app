@@ -1,0 +1,58 @@
+# Release checklist
+
+All checks apply to the **exact candidate artifact and production-like staging configuration**. Unchecked/NOT CONFIGURED means do not launch. Attach actual logs/screenshots and operator identity; never substitute previous PASS declarations.
+
+- [ ] Real mobile OTP and Google signup/sign-in/linking accepted on staging; resend/expiry/failed delivery and duplicate-account protection checked. Test-only SMS sinks are excluded from deployment.
+- [ ] Public consent, privacy/support placeholders and verified-email recovery reviewed; the operator can revoke/reset access without viewing existing passwords.
+- [ ] Onboarding resume, three canonical plans, unpaid PENDING requests, explicitly configured one-time trial and import/fresh paths verified for brand-new owners.
+- [ ] Referral attribution, real paid conversion, manual reward approval and duplicate/self-referral guards checked; no fake payment or automatic payout.
+- [ ] Archive/restore retains history and original status. Permanent deletion policy reviewed with retention/legal hold/backup gates; incomplete file-erasure jobs remain visible and retriable. S3 version erasure remains disabled until provider tooling is verified.
+- [ ] Full headed Retail regression passes on the final artifact; [current account/platform verification](verification/PLATFORM_CONTROL_PLANE_VERIFICATION.md) reviewed with all blocked provider rows disclosed.
+
+- [ ] Reviewed Git diff; preserved user work; recorded commit/version; no scratch scripts, uploads, debug logs or secrets in artifact.
+- [ ] Dependency and secret scans reviewed; disclosed archived local credential rotated if reused; runtime versions pinned.
+- [ ] Historically leaked shared DBA credential rotated through a coordinated cross-project procedure; EVOLIX runtime isolation alone does not invalidate it. Exposed Google client secrets revoked in the provider console.
+- [ ] API runtime owns no tables and has no SUPERUSER/BYPASSRLS/CREATEDB/CREATEROLE or migration-role membership; 35 migrations and forced RLS verified under the actual runtime role.
+- [ ] Mandatory Platform authenticator enrollment, code/recovery replay rejection, encrypted secrets, lost-device recovery and preserved MFA key verified; no production MFA bypass.
+- [ ] HttpOnly/Secure/SameSite browser cookies, signed CSRF headers, origin restrictions, logout/revocation and removal of old localStorage JWTs verified through actual HTTPS ingress.
+- [ ] Production environment validator rejects missing secrets/unsafe origins; separate JWT secrets, TLS database and private storage configured.
+- [ ] Clean disposable database: full migration deploy/status/validate/generate pass. Realistic pre-latest/customer-like upgrade, lock duration and scoped uniqueness conflicts reviewed.
+- [ ] Verified pre-deployment backup, offsite encryption/retention and alert delivery. Provider NOT CONFIGURED blocks release.
+- [ ] Production-like database **and attachment** restore drill completed; measured RPO/RTO meet approved targets; selective tenant restore is not advertised.
+- [ ] Backend `npx tsc --noEmit` and `npm run build` exit 0.
+- [ ] Frontend `npx tsc --noEmit` and `npm run build` exit 0; chunk-size warning assessed.
+- [ ] Full automated regression has actual passed/failed/file counts and exit codes. Legacy/unsupported failures remain visible; no claim of bundle/modifier coverage without tests.
+- [ ] Cross-tenant GET/POST/PATCH/DELETE attack matrix completed for every implemented resource; nonexistent endpoints identified explicitly.
+- [ ] Tenant token cannot reach Platform APIs; platform actions reload explicit authorization and create audits; support access expires/revokes correctly.
+- [ ] Subscription active/trial/expired/suspended/complimentary transitions and plan/global/override/user permission enforcement verified without data deletion.
+- [ ] Same item/last stock/serial/batch/payment/return races and duplicate/unknown-outcome writes reconciled; no negative stock or unbalanced/orphan journals.
+- [ ] Retail real-browser acceptance on a **new shop created through Super Admin**: items, purchase, customer, cash/UPI/Udhar/split bills, history/returns/payments, supplier/expense/Need List/reports/settings.
+- [ ] Daily Galla cash-only drawer equation, optional opening/actual count, short/excess/matched history/export, tenant/date isolation and Indian midnight boundary verified.
+- [ ] UPI profile validation, static and exact bill/due QR, invoice preference, download/share/print, tenant isolation and manual payment confirmation verified. Native sharing/physical printing checked on supported devices.
+- [ ] Super Admin browser: dashboard, create/open tenant, plan/feature/subscription, suspend/reactivate, users/devices/support, real revenue/expense, database/backup/audit; laptop/desktop/tablet checked.
+- [ ] Retail 360×800, 390×844, 412×915 and desktop layouts checked for overflow, sticky controls, labels, loading/empty/error/content and deep-link refresh.
+- [ ] Light/dark visual comparison completed against all 26 supplied reference screenshots; important missing workflows/fields have an accepted disposition. A Coming Soon screen is not parity PASS.
+- [ ] Basic keyboard/focus/labels/contrast and real mobile camera/contact/sharing behavior reviewed; accessibility issues recorded.
+- [ ] Slow network/disconnect/timeout tested; original operation recovered by idempotent retry; cart survives. Full offline POS is not advertised.
+- [ ] Items/parties/bills/purchases/expenses/needs/serials/batches/audit/tenants/users/subscriptions pagination, search/filter and realistic-volume/N+1 checks completed.
+- [ ] CSV exports verified and formula-safe; complete tenant data-portability process documented and exercised.
+- [ ] `/api/v1/health` and `/api/v1/health/ready` verified through TLS reverse proxy; DB outage/readiness recovery tested without public sensitive details.
+- [ ] Production security headers, CORS/CSP/HSTS and shared rate limits verified; normal POS throughput remains usable.
+- [ ] External uptime/error/database/storage/backup alerts deliver to assigned operators; infrastructure unavailable metrics are labeled truthfully.
+- [ ] First Super Admin operator procedure tested; owner password change/recovery and temporary-password policy meet launch requirements.
+- [ ] Google Cloud client origins/audience and Android signing fingerprints configured; actual web and Play-installed linking/login/logout pass. Signed-token automated tests alone are insufficient.
+- [ ] Real SMTP verification/reset delivery tested; domain authentication and failure alerts configured; no provider-none recovery launch.
+- [ ] Public privacy/terms/support/deletion pages have approved operator details; deletion requests have an assigned fulfillment process; placeholders are not advertised as final policies.
+- [ ] Android release compiled and signed using the required JDK/SDK, version/package confirmed, permission/Data Safety inventory reviewed, real-device print/share/camera/network/accessibility tested and Play pre-launch results reviewed.
+- [ ] Native SaaS subscription screens comply with the chosen Play distribution policy; no unapproved external payment steering. Shop incoming UPI remains manually confirmed.
+- [ ] Configured S3 encryption/retention/private access tested against the real provider; six simulated crypto tests do not establish cloud backup readiness.
+- [ ] Rollback artifact, schema compatibility, safety backup, incident contacts and documented recovery rehearsal ready.
+- [ ] Zero critical/high production blockers, explicit review approval, then separately authorized deployment. **Do not deploy automatically.**
+- [ ] Starter/Smart/Pro prices, numeric limits, shop switches, rollout/override precedence, expiry/downgrade safety and direct API denials verified; online checkout and voice are unavailable until real integrations are completed.
+- [ ] Operator database/object backups cover every paid tier; restore drill checks Starter/Smart/Pro records. Export entitlements never affect protection. Pro convenience export and all-tier account-exit portability are separately exercised.
+- [ ] Import cutover/source mappings reviewed against real vendor exports; counts, stock cost and opening receivable/payable totals reconciled; source retention and retry behavior checked.
+- [ ] Report scheduler runs on an always-on worker; summary timing/freshness/opt-out and Retail/Reports entitlement denial checked; in-app-only delivery accurately described.
+- [ ] Shop portability download and audited support follow-up queue checked; owner contact notice and retention policy approved; operator recovery backup independently verified.
+- [ ] WhatsApp saved/manual phone receipt and Udhar links tested on actual signed phones; recipient review/text-vs-PDF distinction retained; no delivery/payment claim on chat opening.
+- [ ] Assistant additive migration applied before API startup; approved catalog retained, query-log retention operational, permissions/entitlements and cross-tenant conversation tests pass.
+- [ ] Assistant held-out/negative routing, real facade totals, legacy payment-allocation refusal, Platform human approval, mobile/dark/network recovery and 10/25/50 load evidence reviewed. No voice/WhatsApp/LLM or write capability is implied by V1.

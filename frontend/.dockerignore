@@ -1,0 +1,14 @@
+node_modules
+dist
+android
+test-results
+playwright-report
+.env
+.env.*
+*.log
+*.tsbuildinfo
+coverage
+.cache
+.vite
+*.dump
+*.backup

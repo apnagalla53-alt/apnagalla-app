@@ -1,0 +1,1007 @@
+{
+  "date": "2026-10-07",
+  "browser": {
+    "passed": 71,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "headed": true,
+    "workers": 1
+  },
+  "latest_targeted_browser": {
+    "passed": 8,
+    "failed": 0,
+    "exit_code": 0,
+    "included_in_existing_71": true
+  },
+  "backend_e2e": {
+    "passed": 213,
+    "failed": 0,
+    "files": 17,
+    "exit_code": 0
+  },
+  "latest_targeted_backend": {
+    "passed": 23,
+    "failed": 0,
+    "exit_code": 0,
+    "included_in_existing_213": true,
+    "scope": "Final REPORTS entitlement change and Khata invoice receipt reference"
+  },
+  "backend_unit_integration": {
+    "passed": 255,
+    "failed": 0,
+    "files": 30,
+    "exit_code": 0
+  },
+  "distinct_automated_tests": 539,
+  "builds": {
+    "backend": "PASS",
+    "frontend": "PASS"
+  },
+  "database": {
+    "migrations": 26,
+    "clean_deploy": "PASS",
+    "status": "PASS",
+    "validate": "PASS",
+    "generate": "PASS",
+    "disposable_only": true
+  },
+  "manual": {
+    "PASS": 65,
+    "PARTIAL": 4,
+    "BLOCKED": 3
+  },
+  "csv_excel": {
+    "csv_opened_in_excel": true,
+    "header": "SKU",
+    "data_rows": 88,
+    "columns": 3,
+    "active_formulas": 0,
+    "formula_like_text_cells": 9,
+    "readonly": true,
+    "checked_at": "2026-10-07T20:30:02.4317359+05:30"
+  },
+  "production_dependency_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "checks": [
+    {
+      "number": 1,
+      "section": "Start, login and navigation",
+      "title": "Local access",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 2,
+      "section": "Start, login and navigation",
+      "title": "Centred Bill button",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 3,
+      "section": "Start, login and navigation",
+      "title": "Home discovery",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 4,
+      "section": "Start, login and navigation",
+      "title": "Summary dates and privacy",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 5,
+      "section": "Start, login and navigation",
+      "title": "Refresh and keyboard",
+      "status": "PASS",
+      "evidence": "Headed CLI password-field Enter submitted login successfully; browser tests also exercised Tab focus and deep-link refresh. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 6,
+      "section": "Start, login and navigation",
+      "title": "Logout and denied access",
+      "status": "PASS",
+      "evidence": "Headed login, light theme, navigation, module routes, periods, logout and denied access. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 7,
+      "section": "Price-only billing and counted stock",
+      "title": "Save an unknown item while billing",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 8,
+      "section": "Price-only billing and counted stock",
+      "title": "Find it again",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 9,
+      "section": "Price-only billing and counted stock",
+      "title": "Start actual counting",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 10,
+      "section": "Price-only billing and counted stock",
+      "title": "Return an older uncounted sale",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 11,
+      "section": "Price-only billing and counted stock",
+      "title": "Respect counted stock",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 12,
+      "section": "Price-only billing and counted stock",
+      "title": "Inventory and alerts",
+      "status": "PASS",
+      "evidence": "Fresh-shop real purchase, original uncounted return, counted sale, oversell rejection and stock filters. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 13,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Cash and change",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 14,
+      "section": "Bills, payment modes and UPI split",
+      "title": "UPI setup",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 15,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Half cash, half UPI",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 16,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Split on the saved invoice",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 17,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Udhar and promise date",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 18,
+      "section": "Bills, payment modes and UPI split",
+      "title": "Split amount validation",
+      "status": "PASS",
+      "evidence": "Real cash/UPI/Udhar/split posting, exact QR amount and reference-only paid receipt. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 19,
+      "section": "Bill corrections and network recovery",
+      "title": "Quantity, price and discount",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 20,
+      "section": "Bill corrections and network recovery",
+      "title": "Customer selection",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 21,
+      "section": "Bill corrections and network recovery",
+      "title": "Hold and resume",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 22,
+      "section": "Bill corrections and network recovery",
+      "title": "Retry after lost response",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 23,
+      "section": "Bill corrections and network recovery",
+      "title": "Attachment retry",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 24,
+      "section": "Bill corrections and network recovery",
+      "title": "Return and cancellation limits",
+      "status": "PASS",
+      "evidence": "Real edited quote, inline customer, held cart, lost-response replay, photo-only retry and bounded original returns. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 25,
+      "section": "Items and universal Retail modes",
+      "title": "Basic item and opening stock",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 26,
+      "section": "Items and universal Retail modes",
+      "title": "Service",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 27,
+      "section": "Items and universal Retail modes",
+      "title": "Variant and pack unit",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 28,
+      "section": "Items and universal Retail modes",
+      "title": "Weight, length and area",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 29,
+      "section": "Items and universal Retail modes",
+      "title": "Batch, expiry and FEFO",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 30,
+      "section": "Items and universal Retail modes",
+      "title": "Serial, warranty, kit and extras",
+      "status": "PASS",
+      "evidence": "Real catalog/purchase/POS/return flows for services, packs, variants, measurements, FEFO and serials. Kit/extras UI and original snapshot return API tests also passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 31,
+      "section": "Suppliers and searchable purchases",
+      "title": "Supplier details",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 32,
+      "section": "Suppliers and searchable purchases",
+      "title": "Monthly supplier visit",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 33,
+      "section": "Suppliers and searchable purchases",
+      "title": "Search Buy Stock items",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 34,
+      "section": "Suppliers and searchable purchases",
+      "title": "Itemized receiving",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 35,
+      "section": "Suppliers and searchable purchases",
+      "title": "Credit, paid and partial purchase",
+      "status": "PASS",
+      "evidence": "Expanded suppliers, full catalog search, itemized/amount purchases, three payment states and duplicate supplier bill rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 36,
+      "section": "Suppliers and searchable purchases",
+      "title": "Pay supplier",
+      "status": "PASS",
+      "evidence": "Four supplier methods passed. Headed CLI interrupted a proof upload with HTTP 503, retried only the photo, and confirmed one payment of 10 with remaining due 40 from a credit purchase of 50. The saved proof was visible. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 37,
+      "section": "Calendar, repayments and tasks",
+      "title": "Calendar navigation",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 38,
+      "section": "Calendar, repayments and tasks",
+      "title": "Weekly supplier schedule",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 39,
+      "section": "Calendar, repayments and tasks",
+      "title": "Promised customer repayment",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 40,
+      "section": "Calendar, repayments and tasks",
+      "title": "Collected and supplier dues",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 41,
+      "section": "Calendar, repayments and tasks",
+      "title": "Task and meeting",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 42,
+      "section": "Calendar, repayments and tasks",
+      "title": "Holiday accuracy and coverage",
+      "status": "PASS",
+      "evidence": "Saved weekly/monthly visits, month-end clamping, moved/collected receivables, payables, persisted tasks and verified holiday coverage. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 43,
+      "section": "Custom payment voice greeting",
+      "title": "Enable and customize",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 44,
+      "section": "Custom payment voice greeting",
+      "title": "Preview and device volume",
+      "status": "PARTIAL",
+      "evidence": "Real Hindi speech request/capabilities rerun in headed browser; audible pronunciation, volume and Hindi voice on target phone still need human acceptance."
+    },
+    {
+      "number": 45,
+      "section": "Custom payment voice greeting",
+      "title": "Confirmed billing greeting",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 46,
+      "section": "Custom payment voice greeting",
+      "title": "Customer collection",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 47,
+      "section": "Custom payment voice greeting",
+      "title": "Disabled, blocked or offline voice",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 48,
+      "section": "Custom payment voice greeting",
+      "title": "Tenant voice privacy",
+      "status": "PASS",
+      "evidence": "Persisted per-shop voice settings, real speech requests, received-money triggers, disabled/unavailable handling and foreign company rejection. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 49,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Opening cash and method totals",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 50,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Actual cash movement",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 51,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Cash count reconciliation",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 52,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Galla history and date",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 53,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Business expense versus owner money",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 54,
+      "section": "Daily Galla, Khata and expenses",
+      "title": "Customer due QR",
+      "status": "PASS",
+      "evidence": "Exact drawer: 2000 + 500 + 100 - 150 - 50 - 100 - 80 = 2220; UPI 300 and Udhar 200 separate. Short 20 persisted; Galla/Khata/expense tests passed. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 55,
+      "section": "Reports, documents and settings",
+      "title": "Reports directory",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 56,
+      "section": "Reports, documents and settings",
+      "title": "CSV export",
+      "status": "PASS",
+      "evidence": "Real downloaded stock CSV opened read-only in desktop Excel: 88 rows, 9 formula-like text cells and zero active formulas. CSV escaping and formula neutralization also rerun in browser."
+    },
+    {
+      "number": 57,
+      "section": "Reports, documents and settings",
+      "title": "Document security",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 58,
+      "section": "Reports, documents and settings",
+      "title": "Business, profile and print settings",
+      "status": "PARTIAL",
+      "evidence": "Settings/print controls rerun. Installed HP printer driver currently reports Offline; no paper bill was printed or inspected."
+    },
+    {
+      "number": 59,
+      "section": "Reports, documents and settings",
+      "title": "Staff and logged-in devices",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 60,
+      "section": "Reports, documents and settings",
+      "title": "Portability and deletion request",
+      "status": "PASS",
+      "evidence": "Reports/CSV, real private image preview/download, file/tenant security API tests, actual staff/password/revocation and account export/deletion-request browser flows. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 61,
+      "section": "Platform and tenant isolation",
+      "title": "Separate Platform login",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 62,
+      "section": "Platform and tenant isolation",
+      "title": "Brand-new shop",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 63,
+      "section": "Platform and tenant isolation",
+      "title": "Plan, overrides and lifecycle",
+      "status": "PASS",
+      "evidence": "Fresh real Retail browser independently inspected TRIAL, COMPLIMENTARY, expired access denial and renewed access with item data retained; platform plan/override/suspension flows also rerun."
+    },
+    {
+      "number": 64,
+      "section": "Platform and tenant isolation",
+      "title": "Audit, sessions and support",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 65,
+      "section": "Platform and tenant isolation",
+      "title": "Metrics and providers",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 66,
+      "section": "Platform and tenant isolation",
+      "title": "Two-shop attack check",
+      "status": "PASS",
+      "evidence": "Real Super Admin tenant creation and audit controls plus explicit isolation, entitlement and subscription API regression. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 67,
+      "section": "Release-only checks and limitations",
+      "title": "Public publishing details",
+      "status": "PARTIAL",
+      "evidence": "Public pages, privacy requests and draft platform publishing settings rerun. Real reviewed operator/support/package/retention values remain unfilled."
+    },
+    {
+      "number": 68,
+      "section": "Release-only checks and limitations",
+      "title": "Google and recovery email",
+      "status": "BLOCKED",
+      "evidence": "Live Google OAuth and SMTP remain unconfigured; provider capability check rerun. Signed-token/recovery backend tests pass but do not establish delivered provider login/email."
+    },
+    {
+      "number": 69,
+      "section": "Release-only checks and limitations",
+      "title": "Real backup and restore",
+      "status": "BLOCKED",
+      "evidence": "Real disposable PostgreSQL archive/restore tests rerun and shop portability download verified. Production offsite credentials, schedule/alerts, attachment recovery and measured RPO/RTO remain unconfigured."
+    },
+    {
+      "number": 70,
+      "section": "Release-only checks and limitations",
+      "title": "Signed Android app",
+      "status": "BLOCKED",
+      "evidence": "No JAVA_HOME/ANDROID_HOME, java or adb available. Signed Android build, Play-installed phone and native WhatsApp/camera/share/print/TalkBack not verified."
+    },
+    {
+      "number": 71,
+      "section": "Release-only checks and limitations",
+      "title": "Slow or disconnected network",
+      "status": "PASS",
+      "evidence": "Public publishing and failure/retry layouts tested; external release gates are explicitly separated. Existing flow rerun in the complete headed regression."
+    },
+    {
+      "number": 72,
+      "section": "Release-only checks and limitations",
+      "title": "Accessibility and release decision",
+      "status": "PARTIAL",
+      "evidence": "Seven-screen WCAG scan has zero serious/critical violations; keyboard focus and mobile/desktop/light/dark/larger-text rerun. Full human keyboard/screen-reader/TalkBack acceptance remains open."
+    }
+  ],
+  "tests": [
+    {
+      "name": "public policies/support/deletion remain reachable without app installation",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 8521
+    },
+    {
+      "name": "the default Retail theme uses bright surfaces and restrained sage accents",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 5193
+    },
+    {
+      "name": "owner can submit an account deletion request from the public web page",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 4899
+    },
+    {
+      "name": "Super Admin can edit app publishing placeholders and inspect privacy requests",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 5014
+    },
+    {
+      "name": "comfortable and larger text, dark mode and real settings remain usable at 360px",
+      "file": "app-publishing.spec.ts",
+      "status": "passed",
+      "duration_ms": 11554
+    },
+    {
+      "name": "login success",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3054
+    },
+    {
+      "name": "invalid login",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 2947
+    },
+    {
+      "name": "protected route redirect",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 1742
+    },
+    {
+      "name": "logout",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 4775
+    },
+    {
+      "name": "renders Users screen",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 3817
+    },
+    {
+      "name": "user search",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 5998
+    },
+    {
+      "name": "Create User UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 6337
+    },
+    {
+      "name": "Create Role UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 4609
+    },
+    {
+      "name": "Session revoke through UI",
+      "file": "auth.spec.ts",
+      "status": "passed",
+      "duration_ms": 4057
+    },
+    {
+      "name": "imports and report controls fit 360px",
+      "file": "import-report-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 5730
+    },
+    {
+      "name": "imports and report controls fit 390px",
+      "file": "import-report-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 5371
+    },
+    {
+      "name": "imports and report controls fit 412px",
+      "file": "import-report-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 6995
+    },
+    {
+      "name": "fresh sign-in → import guide → item/party opening migration → Hindi answer → backup notification",
+      "file": "import-report-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 78658
+    },
+    {
+      "name": "start fresh persists through reload and import remains available in More",
+      "file": "import-report-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 7555
+    },
+    {
+      "name": "owner configures a bundle, extras, variants and pack units and bills a kit through the UI",
+      "file": "item-configuration.spec.ts",
+      "status": "passed",
+      "duration_ms": 25737
+    },
+    {
+      "name": "Manual 07–12 / 24: real purchase starts counting; an older uncounted return never creates phantom stock",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 19055
+    },
+    {
+      "name": "Manual 18 / 26: a service bills without stock and split checkout rejects missing or excessive payment",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 12048
+    },
+    {
+      "name": "Manual 27: variant BOX receiving/selling uses ten base units and protects saved conversion factors",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 20241
+    },
+    {
+      "name": "Manual 28: receive, bill and return weight through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 16830
+    },
+    {
+      "name": "Manual 28: receive, bill and return length through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 16502
+    },
+    {
+      "name": "Manual 28: receive, bill and return area through Retail",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 19716
+    },
+    {
+      "name": "Manual 29: receiving two expiry lots uses FEFO and rejects expired-only stock",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 31912
+    },
+    {
+      "name": "Manual 30: unique serial receiving, one sale, visible warranty and original return/resale",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 24767
+    },
+    {
+      "name": "Manual 38–42: recurring visits, changed promise, collection and refreshed tasks reflect in Calendar",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 18200
+    },
+    {
+      "name": "Manual 49–53: the exact drawer example is 2220, Short 20 persists, and UPI/Udhar stay outside cash",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 31687
+    },
+    {
+      "name": "Manual 04 / 05 / 55 / 72: real period/privacy changes, deep-link refresh and keyboard focus",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 11815
+    },
+    {
+      "name": "Manual 13 / 19 / 20 / 23 / 57 / 60: corrected bill, inline customer, photo-only retry, private preview and export",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 19999
+    },
+    {
+      "name": "Manual 43–48: real device speech requests, persistence, collection-only greeting and tenant separation",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 27655
+    },
+    {
+      "name": "Manual 59: create staff, assign Cashier, change temporary password, deny owner settings and revoke access",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 20080
+    },
+    {
+      "name": "Manual 35 / 36 / 37 / 40 / 42: all purchase payment states, four supplier methods and published holiday coverage",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 31637
+    },
+    {
+      "name": "Manual 47: unsupported device voice cannot prevent or undo a real bill",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 13814
+    },
+    {
+      "name": "Manual 12: real low/out filters exclude uncounted goods and services",
+      "file": "manual-acceptance.spec.ts",
+      "status": "passed",
+      "duration_ms": 18782
+    },
+    {
+      "name": "Organization Lifecycle respects the current tenant and initializes owned business structures",
+      "file": "module_02.spec.ts",
+      "status": "passed",
+      "duration_ms": 12591
+    },
+    {
+      "name": "Retail browser independently exercises trial, complimentary, expired and recovered access",
+      "file": "partial-rerun.spec.ts",
+      "status": "passed",
+      "duration_ms": 10965
+    },
+    {
+      "name": "real Hindi greeting request and honest missing provider/print states",
+      "file": "partial-rerun.spec.ts",
+      "status": "passed",
+      "duration_ms": 4530
+    },
+    {
+      "name": "WCAG automated serious/critical checks and keyboard focus across core light screens",
+      "file": "partial-rerun.spec.ts",
+      "status": "passed",
+      "duration_ms": 14969
+    },
+    {
+      "name": "Platform creates a usable shop and performs audited controls through the browser",
+      "file": "platform-control-plane.spec.ts",
+      "status": "passed",
+      "duration_ms": 29188
+    },
+    {
+      "name": "UPI setup, static QR download, invoice preference, manual amount QR and customer due QR",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 15134
+    },
+    {
+      "name": "report CSV preserves commas and quotes and neutralizes tenant spreadsheet formulas",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 5643
+    },
+    {
+      "name": "lost billing response retries the same operation without a second invoice",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 8414
+    },
+    {
+      "name": "Daily Galla opening, reconciliation, history, export and error recovery",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 6281
+    },
+    {
+      "name": "counter light and dark responsive 360",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7413
+    },
+    {
+      "name": "counter light and dark responsive 390",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7458
+    },
+    {
+      "name": "counter light and dark responsive 412",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 6828
+    },
+    {
+      "name": "counter light and dark responsive 1280",
+      "file": "production-readiness.spec.ts",
+      "status": "passed",
+      "duration_ms": 7047
+    },
+    {
+      "name": "advanced parties, multi-item purchase, photo retry, supplier payment, Quick Sale, Udhar and needs use real API",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 26800
+    },
+    {
+      "name": "field coverage responsive 360",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 6840
+    },
+    {
+      "name": "field coverage responsive 390",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 7138
+    },
+    {
+      "name": "field coverage responsive 412",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 6819
+    },
+    {
+      "name": "field coverage responsive 1280",
+      "file": "retail-field-coverage.spec.ts",
+      "status": "passed",
+      "duration_ms": 6975
+    },
+    {
+      "name": "price-only inline item, centred Bill, exact split UPI QR and one confirmed-payment greeting",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 11941
+    },
+    {
+      "name": "supplier monthly visits, tasks, holiday dates and promised Udhar repayment appear in Calendar",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 11424
+    },
+    {
+      "name": "Buy Stock searches the full catalog and Home exposes real modules without eight primary buttons",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 6076
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 360",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2755
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 390",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2716
+    },
+    {
+      "name": "centred Bill and Calendar are usable at 412",
+      "file": "retail-improvements.spec.ts",
+      "status": "passed",
+      "duration_ms": 2726
+    },
+    {
+      "name": "real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 50605
+    },
+    {
+      "name": "mobile 360: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 19915
+    },
+    {
+      "name": "mobile 390: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 20002
+    },
+    {
+      "name": "mobile 412: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 19729
+    },
+    {
+      "name": "desktop 1280: routes, navigation, bill and payment remain visible",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 20241
+    },
+    {
+      "name": "Retail shows recoverable API and render errors, loading, empty and setup states",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 5797
+    },
+    {
+      "name": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+      "file": "retail-smoke.spec.ts",
+      "status": "passed",
+      "duration_ms": 13233
+    },
+    {
+      "name": "saved customer phone and Udhar timeline open the correct receipt preview",
+      "file": "whatsapp-receipt.spec.ts",
+      "status": "passed",
+      "duration_ms": 5884
+    },
+    {
+      "name": "walk-in receipt accepts a one-off phone, rejects invalid destinations and handles a failed reload",
+      "file": "whatsapp-receipt.spec.ts",
+      "status": "passed",
+      "duration_ms": 6329
+    },
+    {
+      "name": "quick bill completion shares actual item lines and cash/UPI split without altering payment",
+      "file": "whatsapp-receipt.spec.ts",
+      "status": "passed",
+      "duration_ms": 6074
+    }
+  ],
+  "release_decision": "NOT PRODUCTION READY: provider/operator/physical-device release gates remain. No deployment or external customer messages performed."
+}

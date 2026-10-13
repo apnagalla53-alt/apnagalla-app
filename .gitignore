@@ -1,0 +1,114 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Environment / Secrets
+.env
+.env.local
+.env.production
+.env.*.local
+.env.test
+.env.staging
+.operator-access.local.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Database dumps
+*.sql.gz
+*.dump
+*.backup
+*.pgdump
+
+# Logs
+*.log
+logs/
+
+# Scratchpad — temporary/disposable files
+scratchpad/
+
+# Build artifacts
+*.pyc
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Alembic auto-generated
+# (versions/ is tracked, but keep awareness)
+
+# Added for AI / Structure Task
+coverage/
+.cache/
+.vite/
+*.tmp
+*.bak
+scratch/
+archive/
+
+# Storage/Uploads
+storage/
+!backend-typescript/src/attachments/storage/
+!backend-typescript/src/attachments/storage/**
+uploads/
+
+# Local browser verification and TypeScript incremental outputs
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+backend-typescript/.local-backups/
+
+# Sanitized release evidence is part of the review artifact.
+!docs/verification/2026-10-07-phase7/*.log
+!docs/verification/2026-10-07-phase8/*.log
+!docs/verification/2026-10-07-retail-improvements/*.log
+!docs/verification/2026-10-07-headed-manual/*.log
+
+# Rendered PDF review intermediates; local owner guides also remain ignored.
+/tmp/pdfs/
+
+# Browser sessions/traces can include credentials; keep local acceptance private.
+/.playwright-cli/
+/output/
+
+# Android signing material and generated web bundles
+*.jks
+*.keystore
+frontend/android/local.properties
+frontend/android/.gradle/
+frontend/android/app/src/main/assets/public/
+frontend/android/app/src/main/assets/capacitor.config.json

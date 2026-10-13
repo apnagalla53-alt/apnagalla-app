@@ -1,0 +1,401 @@
+{
+  "date": "2026-10-08",
+  "latestPassed": 4,
+  "latestFailed": 0,
+  "frontendTypecheckExitCode": 0,
+  "frontendBuildExitCode": 0,
+  "runs": [
+    {
+      "name": "initial",
+      "cases": [
+        {
+          "file": "partial-rerun.spec.ts",
+          "title": "WCAG automated serious/critical checks and keyboard focus across core light screens",
+          "status": "passed"
+        },
+        {
+          "file": "retail-improvements.spec.ts",
+          "title": "Buy Stock searches the full catalog and the top-left shop menu keeps Home clear",
+          "status": "passed"
+        },
+        {
+          "file": "retail-smoke.spec.ts",
+          "title": "real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports",
+          "status": "passed"
+        },
+        {
+          "file": "retail-smoke.spec.ts",
+          "title": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+          "status": "timedOut"
+        }
+      ]
+    },
+    {
+      "name": "header-correction",
+      "cases": [
+        {
+          "file": "retail-improvements.spec.ts",
+          "title": "Buy Stock searches the full catalog and the top-left shop menu keeps Home clear",
+          "status": "passed"
+        },
+        {
+          "file": "retail-smoke.spec.ts",
+          "title": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "held-date-recheck",
+      "cases": [
+        {
+          "file": "retail-smoke.spec.ts",
+          "title": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "resolvedRegression": "Stacked sticky module headers intercepted Held Bills Resume; module headers now scroll normally below the menu toolbar.",
+  "drawerChecks": {
+    "checks": 6,
+    "results": [
+      {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "text": "comfortable",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 316.8000183105469,
+          "width": 301,
+          "scrollWidth": 301,
+          "scrollHeight": 1352,
+          "height": 800
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "text": "comfortable",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 340,
+          "width": 324,
+          "scrollWidth": 324,
+          "scrollHeight": 1352,
+          "height": 844
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      },
+      {
+        "width": 412,
+        "height": 915,
+        "theme": "light",
+        "text": "comfortable",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 340,
+          "width": 324,
+          "scrollWidth": 324,
+          "scrollHeight": 1352,
+          "height": 915
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      },
+      {
+        "width": 1280,
+        "height": 900,
+        "theme": "light",
+        "text": "comfortable",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 340,
+          "width": 324,
+          "scrollWidth": 324,
+          "scrollHeight": 1352,
+          "height": 900
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "text": "comfortable",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 340,
+          "width": 324,
+          "scrollWidth": 324,
+          "scrollHeight": 1352,
+          "height": 844
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "text": "large",
+        "links": 20,
+        "focusTrapped": true,
+        "geometry": {
+          "left": 0,
+          "right": 340,
+          "width": 324,
+          "scrollWidth": 324,
+          "scrollHeight": 1472,
+          "height": 844
+        },
+        "violations": [],
+        "escape": true,
+        "backdrop": true
+      }
+    ]
+  },
+  "screenLayouts": {
+    "inspections": 24,
+    "results": [
+      {
+        "route": "home",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      }
+    ],
+    "errors": []
+  }
+}

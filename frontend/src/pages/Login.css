@@ -1,0 +1,34 @@
+.login-container{min-height:100dvh;display:grid;place-items:center;background:#fafbf9;color:#172a20;padding:24px;box-sizing:border-box}
+.login-card{width:100%;max-width:420px;background:#fff;border:1px solid #e2e8e2;border-radius:16px;padding:28px;box-sizing:border-box;box-shadow:0 2px 8px #18332208}
+.login-brand{font-weight:800;letter-spacing:.08em;color:#35634b;font-size:24px}.login-card h1{font-size:24px;margin:16px 0 8px}.login-card p{color:#53665a;line-height:1.5}
+.login-card form{display:grid;gap:16px;margin:24px 0}.login-card label{display:grid;gap:8px;font-size:14px;font-weight:600}.login-card input{border:1px solid #becfc3;border-radius:8px;padding:12px;font:inherit;width:100%;box-sizing:border-box;background:#fff;color:#172a20}
+.login-card .login-checkbox{display:flex;align-items:center;font-weight:400}.login-checkbox input{width:auto}.login-card button{background:#35634b;border:0;border-radius:8px;color:#fff;font-weight:700;padding:13px;font-size:16px;cursor:pointer}.login-card button:disabled{opacity:.65}.login-card a{color:#35634b;font-size:14px}.login-card .login-error{color:#b42318}
+.login-footer{margin-top:22px}.login-legal{display:flex;gap:20px;margin-top:24px;padding-top:20px;border-top:1px solid #e2e8e2}.login-divider{display:flex;align-items:center;gap:14px;margin:22px 0;color:#53665a;font-size:14px}.login-divider::before,.login-divider::after{content:'';height:1px;background:#e2e8e2;flex:1}.google-sign-in{max-width:100%;overflow:hidden}.google-sign-in>div{max-width:100%}.google-sign-in p{font-size:14px}.login-card .login-secondary{background:#fff;color:#35634b;border:1px solid #becfc3}.login-hint{font-size:14px}.login-card input:focus-visible,.login-card button:focus-visible,.login-card a:focus-visible{outline:3px solid #2fa75a;outline-offset:3px}.login-card button{min-height:48px}.security-sections .r-card{margin-bottom:16px}.security-sections h2{display:flex;gap:10px;align-items:center}.security-form{display:grid;gap:10px;margin-top:16px}.security-form label{font-weight:600}.security-form input{margin-bottom:6px}.security-sections p{line-height:1.55}.security-sections .r-btn{min-height:48px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+@media(max-width:400px){.login-container{padding:16px}.login-card{padding:22px 20px}.login-card h1{font-size:23px}}
+.login-card .google-native-button,.google-native-button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;border:1px solid #747775;border-radius:4px;background:#fff;color:#1f1f1f;padding:12px;font:500 14px/20px Arial,sans-serif;cursor:pointer}.google-native-button img{width:20px;height:20px;object-fit:contain;flex-shrink:0}.google-native-button:focus-visible{outline:3px solid #35634b;outline-offset:3px}.google-native-button:disabled{opacity:.6;cursor:default}
+.account-auth-tabs {display:flex;gap:8px;margin:20px 0;padding:5px;background:#f1f6f4;border-radius:12px}
+.account-auth-tabs a {flex:1;text-align:center;padding:10px;border-radius:9px;text-decoration:none;color:#466458;font-weight:600}
+.account-auth-tabs a[aria-current="page"] {background:white;color:#136958;box-shadow:0 2px 6px #19392c12}
+.account-provider-note {background:#f6f8f7;border:1px solid #dde8e3;border-radius:12px;padding:12px;font-size:14px}
+.account-security-note {display:flex;align-items:center;gap:6px;font-size:13px}
+.account-google-section {margin:24px 0}
+.account-google-section h2 {font-size:18px;margin:0 0 8px}
+.account-google-section .login-checkbox {align-items:flex-start;gap:10px;line-height:1.5;margin:16px 0}
+.account-google-section .login-checkbox input {margin-top:4px;flex-shrink:0}
+.account-google-section .login-checkbox span {font-weight:400}
+.login-card .login-action-link {display:block;border:1px solid #becfc3;border-radius:8px;padding:12px;text-align:center;text-decoration:none;font-weight:700;margin:12px 0;min-height:48px;box-sizing:border-box}
+.account-mobile-option {border-top:1px solid #e2e8e2;padding-top:18px;margin:20px 0}
+.account-mobile-option summary {cursor:pointer;font-weight:600;color:#35634b;padding:8px 0;min-height:44px;box-sizing:border-box}
+.account-mobile-option summary:focus-visible {outline:3px solid #2fa75a;outline-offset:3px}
+.account-referral {margin:16px 0}
+.login-footer {display:flex;flex-wrap:wrap;gap:12px 20px}
+.onboarding-card {max-width:640px!important}
+.onboarding-progress {font-size:13px;color:#557365}
+.business-type-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:320px;overflow:auto;margin-bottom:20px}
+.business-type-grid button {background:#f6f9f7;color:#315b49;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px;font-size:12px;border:1px solid #dee9e2;min-height:84px}
+.business-type-grid button.selected {background:#e0f0e8;border:2px solid #24775a}
+.onboarding-two {display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.onboarding-plans {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.onboarding-plans article {border:1px solid #dce7e1;padding:12px;border-radius:14px}
+.onboarding-plans h2 {font-size:17px}.onboarding-plans button{font-size:13px;margin-top:12px;padding:10px}
+@media(max-width:420px){.onboarding-plans{grid-template-columns:1fr}.onboarding-plans article{display:flex;align-items:center;justify-content:space-between;gap:8px}.onboarding-plans button{margin:0;width:auto}}

@@ -1,0 +1,577 @@
+{
+  "date": "2026-10-08",
+  "scope": [
+    "Home",
+    "Items",
+    "Stock",
+    "Add Item",
+    "Expenses",
+    "Add Expense"
+  ],
+  "environment": "Local disposable PostgreSQL browser database; API 8010, Vite 5173; Chromium headed",
+  "frontendTypecheckExitCode": 0,
+  "frontendBuildExitCode": 0,
+  "browserTests": {
+    "uniquePassed": 23,
+    "latestFailed": 0,
+    "runs": [
+      {
+        "name": "initial",
+        "passed": 19,
+        "failed": 1,
+        "cases": [
+          {
+            "file": "item-configuration.spec.ts",
+            "title": "owner configures a bundle, extras, variants and pack units and bills a kit through the UI",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "partial-rerun.spec.ts",
+            "title": "WCAG automated serious/critical checks and keyboard focus across core light screens",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "advanced parties, multi-item purchase, photo retry, supplier payment, Quick Sale, Udhar and needs use real API",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "field coverage responsive 360",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "field coverage responsive 390",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "field coverage responsive 412",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "field coverage responsive 1280",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "price-only inline item, centred Bill, exact split UPI QR and one confirmed-payment greeting",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "supplier monthly visits, tasks, holiday dates and promised Udhar repayment appear in Calendar",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "Buy Stock searches the full catalog and Home exposes real modules without eight primary buttons",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "centred Bill and Calendar are usable at 360",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "centred Bill and Calendar are usable at 390",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "centred Bill and Calendar are usable at 412",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports",
+            "project": "chromium",
+            "status": "failed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "mobile 360: routes, navigation, bill and payment remain visible",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "mobile 390: routes, navigation, bill and payment remain visible",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "mobile 412: routes, navigation, bill and payment remain visible",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "desktop 1280: routes, navigation, bill and payment remain visible",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "Retail shows recoverable API and render errors, loading, empty and setup states",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "quick item needs only name and price; failed sale preserves the cart; held bill cannot overwrite it",
+            "project": "chromium",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "corrected",
+        "passed": 4,
+        "failed": 0,
+        "cases": [
+          {
+            "file": "retail-field-coverage.spec.ts",
+            "title": "advanced parties, multi-item purchase, photo retry, supplier payment, Quick Sale, Udhar and needs use real API",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "price-only inline item, centred Bill, exact split UPI QR and one confirmed-payment greeting",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-improvements.spec.ts",
+            "title": "Buy Stock searches the full catalog and Home exposes real modules without eight primary buttons",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "retail-smoke.spec.ts",
+            "title": "real Retail lifecycle: items, all payment modes, khata, return, stock purchase, expense, needs and reports",
+            "project": "chromium",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "name": "manual-targeted",
+        "passed": 3,
+        "failed": 0,
+        "cases": [
+          {
+            "file": "manual-acceptance.spec.ts",
+            "title": "Manual 49–53: the exact drawer example is 2220, Short 20 persists, and UPI/Udhar stay outside cash",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "manual-acceptance.spec.ts",
+            "title": "Manual 04 / 05 / 55 / 72: real period/privacy changes, deep-link refresh and keyboard focus",
+            "project": "chromium",
+            "status": "passed"
+          },
+          {
+            "file": "manual-acceptance.spec.ts",
+            "title": "Manual 12: real low/out filters exclude uncounted goods and services",
+            "project": "chromium",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "initialFailureResolution": "Lifecycle expense category used an ambiguous select locator after adding Payment Method. Changed it to the Category accessible label; full lifecycle passed on rerun.",
+  "layout": {
+    "inspections": 24,
+    "results": [
+      {
+        "route": "home",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 345,
+        "mainWidth": 344.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 375,
+        "mainWidth": 375.20001220703125,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 412,
+        "mainWidth": 412,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 412,
+        "height": 915,
+        "scrollWidth": 397,
+        "mainWidth": 396.8000183105469,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "home",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "stock",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "items/add",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1280,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      },
+      {
+        "route": "expenses/add",
+        "width": 1280,
+        "height": 900,
+        "scrollWidth": 1265,
+        "mainWidth": 760,
+        "alerts": [],
+        "overflowing": []
+      }
+    ],
+    "errors": []
+  },
+  "accessibility": {
+    "scans": 18,
+    "seriousCritical": [],
+    "results": [
+      {
+        "route": "home",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "stock",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items/add",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses/add",
+        "theme": "light",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "home",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "stock",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items/add",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses/add",
+        "theme": "dark",
+        "text": "comfortable",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "home",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "stock",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "items/add",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      },
+      {
+        "route": "expenses/add",
+        "theme": "light",
+        "text": "large",
+        "width": 390,
+        "scrollWidth": 375,
+        "violations": []
+      }
+    ]
+  },
+  "backendScope": "No backend, schema, migration, accounting or inventory engine changes in this UI refresh."
+}

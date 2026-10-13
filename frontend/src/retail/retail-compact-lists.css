@@ -1,0 +1,190 @@
+/* Compact summaries retain full names and document numbers in item/detail views. */
+.retail-app .r-inventory-card-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.retail-app .r-inventory-card-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.retail-app .r-inventory-screen .r-inventory-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.retail-app .r-inventory-screen .r-inventory-card.r-list-item {
+  position: relative;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 0;
+  box-shadow: none;
+}
+.retail-app .r-inventory-screen .r-inventory-card-main {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+.retail-app .r-inventory-screen .r-inventory-card > .r-btn--icon {
+  position: absolute;
+  right: 5px;
+  top: 3px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.retail-app .r-inventory-screen .r-inventory-card-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  padding-right: 38px;
+}
+.retail-app .r-inventory-screen .r-inventory-card-heading strong {
+  min-width: 0;
+  font-size: .9375rem;
+  line-height: 1.4;
+}
+.retail-app .r-inventory-screen .r-inventory-card-heading strong:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.retail-app .r-inventory-screen .r-inventory-card-meta,
+.retail-app .r-inventory-screen .r-inventory-card-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin: 0 0 6px;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+.retail-app .r-inventory-screen .r-inventory-card-meta {
+  flex-wrap: nowrap;
+}
+.retail-app .r-inventory-screen .r-inventory-card-meta > span:first-child {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.retail-app .r-inventory-screen .r-inventory-card-meta .r-badge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  font-size: .6875rem;
+  line-height: 1.5;
+}
+.retail-app .r-inventory-screen .r-inventory-card-stock > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-inventory-screen .r-inventory-card-tags {
+  gap: 4px;
+}
+.retail-app .r-inventory-screen .r-inventory-card-tags span {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: .6875rem;
+  line-height: 1.5;
+}
+.retail-app .r-inventory-screen .r-inventory-card-main[aria-pressed="true"] {
+  outline-offset: 4px;
+}
+.retail-app .r-purchase-history.r-purchase-history--compact {
+  gap: 10px;
+  margin: 14px 0;
+}
+.retail-app .r-purchase-history--compact > .r-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+.retail-app .r-purchase-history--compact .r-purchase-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+}
+.retail-app .r-purchase-history--compact .r-purchase-row .item-info {
+  min-width: 0;
+  gap: 3px;
+}
+.retail-app .r-purchase-history--compact .item-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: .9375rem;
+  line-height: 1.4;
+}
+.retail-app .r-purchase-history--compact .r-caption {
+  font-size: .75rem;
+  line-height: 1.5;
+}
+.retail-app .r-purchase-history--compact .r-purchase-reference {
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+}
+.retail-app .r-purchase-history--compact .r-purchase-reference > span:not(:last-child) {
+  flex-shrink: 0;
+}
+.retail-app .r-purchase-history--compact .r-purchase-reference > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.retail-app .r-purchase-history--compact .r-purchase-photo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.retail-app .r-purchase-history--compact .r-purchase-row .r-list-item-right {
+  max-width: none;
+  gap: 4px;
+}
+.retail-app .r-purchase-history--compact .r-list-item-right > strong {
+  font-size: .9375rem;
+  white-space: nowrap;
+}
+.retail-app .r-purchase-history--compact .r-purchase-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.retail-app .r-purchase-history--compact .r-status-badge {
+  font-size: .6875rem;
+  padding: 3px 7px;
+}
+.retail-app .r-purchase-state .is-expanded {
+  transform: rotate(180deg);
+}
+.retail-app .r-purchase-history--compact .r-purchase-details {
+  padding: 12px;
+}
+.retail-app .r-purchase-identifiers {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: .8125rem;
+}
+.retail-app .r-purchase-identifiers dt {
+  color: var(--r-text-secondary);
+}
+.retail-app .r-purchase-identifiers dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.retail-app[data-text-size="large"] .r-inventory-screen .r-inventory-card-heading strong,
+.retail-app[data-text-size="large"] .r-purchase-history--compact .item-name,
+.retail-app[data-text-size="large"] .r-purchase-history--compact .r-list-item-right > strong {
+  font-size: 1.0625rem;
+}
+.retail-app[data-text-size="large"] .r-inventory-screen .r-inventory-card-stock,
+.retail-app[data-text-size="large"] .r-purchase-history--compact .r-caption {
+  font-size: .9375rem;
+}
+@media (min-width: 700px) {
+  .retail-app .r-inventory-screen .r-inventory-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

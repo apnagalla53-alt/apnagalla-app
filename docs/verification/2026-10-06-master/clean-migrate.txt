@@ -1,0 +1,66 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "evolix_master_20261006_test", schema "public" at "127.0.0.1:5432"
+
+18 migrations found in prisma/migrations
+
+Applying migration `0_baseline`
+Applying migration `20260928000000_phase2_platform_foundation`
+Applying migration `20260928_company_configurations`
+Applying migration `20260928_feature_entitlements`
+Applying migration `20260928_retail_pos`
+Applying migration `20260930123000_claims_replacement`
+Applying migration `20260930_add_quotation_rel`
+Applying migration `20261001120000_module_12_barcode_labels`
+Applying migration `20261001130000_module_13_pricing_schemes`
+Applying migration `20261002120000_add_dc_free_qty`
+Applying migration `20261005063134_retail_phase_2`
+Applying migration `20261005075537_attachments`
+Applying migration `20261005093028_init_expense`
+Applying migration `20261005230000_phase_5_5_universal_items`
+Applying migration `20261006073612_phase_5_5_batch_fefo`
+Applying migration `20261006150000_restore_batch_tenant_column`
+Applying migration `20261006162000_platform_control_plane`
+Applying migration `20261006163000_tenant_display_number`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 0_baseline/
+    └─ migration.sql
+  └─ 20260928000000_phase2_platform_foundation/
+    └─ migration.sql
+  └─ 20260928_company_configurations/
+    └─ migration.sql
+  └─ 20260928_feature_entitlements/
+    └─ migration.sql
+  └─ 20260928_retail_pos/
+    └─ migration.sql
+  └─ 20260930123000_claims_replacement/
+    └─ migration.sql
+  └─ 20260930_add_quotation_rel/
+    └─ migration.sql
+  └─ 20261001120000_module_12_barcode_labels/
+    └─ migration.sql
+  └─ 20261001130000_module_13_pricing_schemes/
+    └─ migration.sql
+  └─ 20261002120000_add_dc_free_qty/
+    └─ migration.sql
+  └─ 20261005063134_retail_phase_2/
+    └─ migration.sql
+  └─ 20261005075537_attachments/
+    └─ migration.sql
+  └─ 20261005093028_init_expense/
+    └─ migration.sql
+  └─ 20261005230000_phase_5_5_universal_items/
+    └─ migration.sql
+  └─ 20261006073612_phase_5_5_batch_fefo/
+    └─ migration.sql
+  └─ 20261006150000_restore_batch_tenant_column/
+    └─ migration.sql
+  └─ 20261006162000_platform_control_plane/
+    └─ migration.sql
+  └─ 20261006163000_tenant_display_number/
+    └─ migration.sql
+      
+All migrations have been successfully applied.

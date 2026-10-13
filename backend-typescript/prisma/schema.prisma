@@ -1,0 +1,3196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Assistant stores operational questions/context only; never financial responses.
+model AssistantIntentConfig {
+  code String @id @db.VarChar(60)
+  active Boolean @default(true)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+  @@map("assistant_intent_configs")
+}
+
+model AssistantExample {
+  id String @id @default(uuid()) @db.Uuid
+  intent_code String @db.VarChar(60)
+  phrase String @db.VarChar(400)
+  normalized String @unique @db.VarChar(400)
+  language String @db.VarChar(20)
+  source String @default("DEFAULT") @db.VarChar(30)
+  active Boolean @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+  @@index([intent_code,active])
+  @@map("assistant_examples")
+}
+
+model AssistantConversation {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  user_id String @db.Uuid
+  auth_session_id String @db.Uuid
+  context Json @default("{}") @db.JsonB
+  version Int @default(0)
+  expires_at DateTime @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Cascade)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Cascade)
+  user User @relation(fields:[user_id],references:[id],onDelete:Cascade)
+  @@index([company_id,user_id,expires_at])
+  @@index([expires_at])
+  @@map("assistant_conversations")
+}
+
+model AssistantQueryLog {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  user_id String @db.Uuid
+  original_message String @db.VarChar(400)
+  normalized_message String @db.VarChar(400)
+  intent_code String? @db.VarChar(60)
+  confidence Float?
+  router_type String @db.VarChar(20)
+  status String @db.VarChar(30)
+  timings Json @db.JsonB
+  total_ms Float
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Cascade)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Cascade)
+  user User @relation(fields:[user_id],references:[id],onDelete:Cascade)
+  @@index([created_at,status])
+  @@index([company_id,created_at])
+  @@index([intent_code,created_at])
+  @@map("assistant_query_logs")
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity Models ─────────────────────────────────────────────────────────
+
+model User {
+  referral_codes ReferralCode[]
+  referral_signup ReferralAttribution?
+  assistant_queries AssistantQueryLog[]
+  assistant_conversations AssistantConversation[]
+  import_jobs RetailImportJob[]
+  report_preferences RetailReportPreference[]
+  report_notifications RetailReportNotification[]
+  migration_choices RetailMigrationChoice[]
+  data_backup_requests RetailDataBackupRequest[]
+  id                 String    @id @default(uuid()) @db.Uuid
+  organization_id    String?   @db.Uuid
+  username           String    @unique @db.VarChar(255)
+  display_name       String    @db.VarChar(255)
+  email              String?   @db.VarChar(255)
+  email_verified_at  DateTime? @db.Timestamptz
+  phone              String?   @db.VarChar(50)
+  password_hash      String    @db.VarChar(255)
+  google_subject     String?   @unique @db.VarChar(255)
+  phone_e164         String?   @unique @db.VarChar(20)
+  phone_verified_at  DateTime? @db.Timestamptz
+  password_login_enabled Boolean @default(true)
+  onboarding_state   String @default("READY") @db.VarChar(40)
+  onboarding_data    Json @default("{}") @db.JsonB
+  must_change_password Boolean @default(false)
+  temporary_password_expires_at DateTime? @db.Timestamptz
+  password_changed_at DateTime? @db.Timestamptz
+  is_active          Boolean   @default(true)
+  is_locked          Boolean   @default(false)
+  failed_login_count Int       @default(0)
+  language           String    @default("en") @db.VarChar(10)
+  last_login_at      DateTime? @db.Timestamptz
+  last_active_at     DateTime? @db.Timestamptz
+  created_at         DateTime  @default(now()) @db.Timestamptz
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  roles            UserRole[]
+  sessions         Session[]
+  password_history PasswordHistory[]
+  auth_tokens      AuthToken[]
+
+  goods_receipts           GoodsReceipt[]
+  vouchers                 Voucher[]
+  reversed_vouchers        Voucher[]         @relation("VoucherReversedBy")
+  purchase_invoices        PurchaseInvoice[]
+  purchase_returns         PurchaseReturn[]
+  sales_quotations         SalesQuotation[]
+  sales_orders             SalesOrder[]
+  delivery_challans        DeliveryChallan[]
+  sales_invoices           SalesInvoice[]
+  sales_returns            SalesReturn[]
+  audit_logs               AuditLog[]
+  posted_stock_adjustments StockAdjustment[] @relation("StockAdjustmentPoster")
+  posted_stock_transfers   StockTransfer[]   @relation("StockTransferPoster")
+  posted_opening_stocks    OpeningStock[]    @relation("OpeningStockPoster")
+  counted_stock_counts     StockCount[]      @relation("StockCountCounter")
+  posted_stock_counts      StockCount[]      @relation("StockCountPoster")
+  PosShift                 PosShift[]
+  created_claims           Claim[]           @relation("ClaimCreator")
+  approved_claims          Claim[]           @relation("ClaimApprover")
+  settled_claims           Claim[]           @relation("ClaimSettler")
+  claim_events             ClaimEvent[]
+  need_lists               NeedList[]
+  Attachment               Attachment[]
+  Expense                  Expense[]
+
+  @@map("users")
+}
+
+model AuthToken {
+  id String @id @default(uuid()) @db.Uuid
+  user_id String? @db.Uuid
+  user User? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  purpose String @db.VarChar(32)
+  token_hash String @unique @db.VarChar(64)
+  pending_email String? @db.VarChar(255)
+  expires_at DateTime @db.Timestamptz
+  used_at DateTime? @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  @@index([user_id, purpose])
+  @@index([expires_at])
+  @@map("auth_tokens")
+}
+
+model PrivacyRequest {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  company_id String @db.Uuid
+  user_id String @db.Uuid
+  type String @db.VarChar(32)
+  status String @default("PENDING") @db.VarChar(32)
+  note String? @db.VarChar(2000)
+  created_at DateTime @default(now()) @db.Timestamptz
+  resolved_at DateTime? @db.Timestamptz
+  @@index([organization_id, created_at])
+  @@index([user_id, status])
+  @@map("privacy_requests")
+}
+
+model Role {
+  id              String  @id @default(uuid()) @db.Uuid
+  organization_id String? @db.Uuid
+  name            String  @db.VarChar(255)
+  description     String? @db.Text
+  system_role     Boolean @default(false)
+
+  role_permissions RolePermission[]
+  user_roles       UserRole[]
+
+  @@unique([organization_id, name], name: "uix_roles_org_name")
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String  @unique @db.VarChar(255)
+  module      String  @db.VarChar(50)
+  resource    String  @db.VarChar(100)
+  action      String  @db.VarChar(100)
+  description String? @db.Text
+
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  user_id    String  @db.Uuid
+  role_id    String  @db.Uuid
+  company_id String? @db.Uuid
+  branch_id  String? @db.Uuid
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, role_id])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+  scope         String @default("ALL_COMPANIES") @db.VarChar(50)
+
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  device_id  String?   @db.VarChar(255)
+  issued_at  DateTime  @default(now()) @db.Timestamptz
+  expires_at DateTime  @db.Timestamptz
+  revoked_at DateTime? @db.Timestamptz
+  ip_address String?   @db.VarChar(45)
+  user_agent String?   @db.VarChar(512)
+  last_active_at DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model PasswordHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  user_id       String   @db.Uuid
+  password_hash String   @db.VarChar(255)
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("password_history")
+}
+
+// ── Platform Identity Models ─────────────────────────────────────────────────
+
+model PlatformUser {
+  id                 String    @id @default(uuid()) @db.Uuid
+  username           String    @unique @db.VarChar(255)
+  display_name       String    @db.VarChar(255)
+  email              String?   @db.VarChar(255)
+  phone              String?   @db.VarChar(50)
+  password_hash      String    @db.VarChar(255)
+  mfa_secret_encrypted String? @db.Text
+  mfa_enabled_at DateTime? @db.Timestamptz
+  mfa_last_counter BigInt?
+  mfa_recovery_hashes String[] @default([])
+  is_active          Boolean   @default(true)
+  is_locked          Boolean   @default(false)
+  failed_login_count Int       @default(0)
+  last_login_at      DateTime? @db.Timestamptz
+  last_active_at     DateTime? @db.Timestamptz
+  created_at         DateTime  @default(now()) @db.Timestamptz
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  roles      PlatformUserRole[]
+  sessions   PlatformSession[]
+  audit_logs PlatformAuditLog[]
+  mfa_challenges PlatformMfaChallenge[]
+
+  @@map("platform_users")
+}
+
+model PlatformMfaChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+  purpose String @db.VarChar(10)
+  secret_encrypted String? @db.Text
+  device_id String? @db.Uuid
+  ip_address String? @db.VarChar(45)
+  user_agent String? @db.VarChar(512)
+  expires_at DateTime @db.Timestamptz
+  used_at DateTime? @db.Timestamptz
+  attempts Int @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz
+  user PlatformUser @relation(fields:[user_id],references:[id],onDelete:Cascade)
+  @@index([user_id,created_at])
+  @@index([expires_at])
+  @@map("platform_mfa_challenges")
+}
+
+model SecurityRateWindow {
+  key String @id @db.VarChar(100)
+  count Int @default(0)
+  expires_at DateTime @db.Timestamptz
+  @@index([expires_at])
+  @@map("security_rate_windows")
+}
+
+model PlatformRole {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(255)
+  description String? @db.Text
+  system_role Boolean @default(false)
+
+  role_permissions PlatformRolePermission[]
+  user_roles       PlatformUserRole[]
+
+  @@map("platform_roles")
+}
+
+model PlatformPermission {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String  @unique @db.VarChar(255)
+  module      String  @db.VarChar(50)
+  resource    String  @db.VarChar(100)
+  action      String  @db.VarChar(100)
+  description String? @db.Text
+
+  role_permissions PlatformRolePermission[]
+
+  @@map("platform_permissions")
+}
+
+model PlatformUserRole {
+  user_id String @db.Uuid
+  role_id String @db.Uuid
+
+  user PlatformUser @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role PlatformRole @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, role_id])
+  @@map("platform_user_roles")
+}
+
+model PlatformRolePermission {
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+
+  role       PlatformRole       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission PlatformPermission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("platform_role_permissions")
+}
+
+model PlatformSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  device_id  String?   @db.VarChar(255)
+  issued_at  DateTime  @default(now()) @db.Timestamptz
+  expires_at DateTime  @db.Timestamptz
+  revoked_at DateTime? @db.Timestamptz
+  ip_address String?   @db.VarChar(45)
+  user_agent String?   @db.VarChar(512)
+  last_active_at DateTime @default(now()) @db.Timestamptz
+
+  user PlatformUser @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("platform_sessions")
+}
+
+model PlatformAuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  user_id       String   @db.Uuid
+  action        String   @db.VarChar(100)
+  resource_type String?  @db.VarChar(100)
+  resource_id   String?  @db.Uuid
+  details       String?  @db.Text
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  user PlatformUser @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([resource_type, resource_id])
+  @@index([created_at])
+  @@map("platform_audit_logs")
+}
+
+// ── Platform Billing & Entitlement Models ────────────────────────────────────
+
+model Plan {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  monthly_price Decimal @default(0) @db.Decimal(15, 2)
+  limits Json @default("{\"users\":5,\"devices\":5,\"branches\":1,\"storage_mb\":100}") @db.JsonB
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organizations Organization[]
+  plan_features PlanFeature[]
+
+  @@map("plans")
+}
+
+model Feature {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  rollout_mode String @default("ON") @db.VarChar(20)
+  rollout_percent Int @default(100)
+  beta_tenants Json @default("[]") @db.JsonB
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  plan_features       PlanFeature[]
+  tenant_entitlements TenantEntitlement[]
+
+  @@map("features")
+}
+
+model PlanFeature {
+  plan_id    String @db.Uuid
+  feature_id String @db.Uuid
+
+  plan    Plan    @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  feature Feature @relation(fields: [feature_id], references: [id], onDelete: Cascade)
+
+  @@id([plan_id, feature_id])
+  @@map("plan_features")
+}
+
+model TenantEntitlement {
+  id              String   @id @default(uuid()) @db.Uuid
+  organization_id String   @db.Uuid
+  feature_id      String   @db.Uuid
+  is_enabled      Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  feature      Feature      @relation(fields: [feature_id], references: [id], onDelete: Cascade)
+
+  @@unique([organization_id, feature_id], name: "uix_tenant_entitlements")
+  @@map("tenant_entitlements")
+}
+
+model OwnerInvitation {
+  id              String    @id @default(uuid()) @db.Uuid
+  organization_id String    @db.Uuid
+  email           String    @db.VarChar(255)
+  name            String    @db.VarChar(255)
+  token_hash      String    @unique @db.VarChar(255)
+  expires_at      DateTime  @db.Timestamptz
+  accepted_at     DateTime? @db.Timestamptz
+  created_at      DateTime  @default(now()) @db.Timestamptz
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@map("owner_invitations")
+}
+
+model TenantSubscription {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @unique @db.Uuid
+  start_date DateTime @db.Timestamptz
+  expires_at DateTime @db.Timestamptz
+  status String @default("ACTIVE") @db.VarChar(30)
+  complimentary Boolean @default(false)
+  updated_at DateTime @updatedAt @db.Timestamptz
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  @@map("tenant_subscriptions")
+}
+
+model SubscriptionPayment {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  amount Decimal @db.Decimal(15, 2)
+  tax Decimal @default(0) @db.Decimal(15, 2)
+  discount Decimal @default(0) @db.Decimal(15, 2)
+  status String @db.VarChar(30)
+  method String @db.VarChar(30)
+  reference String? @db.VarChar(255)
+  period_months Int @default(1)
+  plan_name String @db.VarChar(255)
+  paid_at DateTime @db.Timestamptz
+  refund_amount Decimal @default(0) @db.Decimal(15, 2)
+  refund_at DateTime? @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  @@index([organization_id, paid_at])
+  @@map("subscription_payments")
+}
+
+model PlatformExpense {
+  id String @id @default(uuid()) @db.Uuid
+  category String @db.VarChar(100)
+  amount Decimal @db.Decimal(15, 2)
+  expense_date DateTime @db.Date
+  method String @db.VarChar(30)
+  reference String? @db.VarChar(255)
+  note String? @db.Text
+  created_by String @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  @@map("platform_expenses")
+}
+
+model PlatformBackup {
+  id String @id @default(uuid()) @db.Uuid
+  environment String @db.VarChar(50)
+  type String @default("MANUAL") @db.VarChar(30)
+  status String @db.VarChar(30)
+  storage_key String @db.Text
+  size_bytes BigInt @default(0)
+  verified_at DateTime? @db.Timestamptz
+  error String? @db.Text
+  created_by String @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  @@map("platform_backups")
+}
+
+model PlatformSupportSession {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  platform_user_id String @db.Uuid
+  reason String @db.Text
+  started_at DateTime @default(now()) @db.Timestamptz
+  expires_at DateTime @db.Timestamptz
+  ended_at DateTime? @db.Timestamptz
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  @@map("platform_support_sessions")
+}
+
+model PlatformAnnouncement {
+  id String @id @default(uuid()) @db.Uuid
+  title String @db.VarChar(255)
+  message String @db.Text
+  audience String @db.VarChar(30)
+  tenant_ids Json @default("[]") @db.JsonB
+  starts_at DateTime @db.Timestamptz
+  ends_at DateTime @db.Timestamptz
+  priority Int @default(0)
+  created_by String @db.Uuid
+  @@map("platform_announcements")
+}
+
+model PlatformSetting {
+  key String @id @db.VarChar(100)
+  value Json @db.JsonB
+  updated_at DateTime @updatedAt @db.Timestamptz
+  @@map("platform_settings")
+}
+
+// ── Organization Models ─────────────────────────────────────────────────────
+
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  ARCHIVED
+}
+
+model MobileOtpChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  phone_e164 String @db.VarChar(20)
+  purpose String @db.VarChar(20)
+  user_id String? @db.Uuid
+  otp_hash String @db.VarChar(64)
+  attempts Int @default(0)
+  used_at DateTime? @db.Timestamptz
+  expires_at DateTime @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  referral_code String? @db.VarChar(40)
+  terms_accepted_at DateTime? @db.Timestamptz
+  @@index([phone_e164,created_at])
+  @@index([expires_at])
+  @@map("mobile_otp_challenges")
+}
+
+model ReferralCampaign {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique @db.VarChar(40)
+  name String @db.VarChar(200)
+  enabled Boolean @default(false)
+  reward_type String @default("TRACKING_ONLY") @db.VarChar(30)
+  reward_value Decimal @default(0) @db.Decimal(12,2)
+  qualification String @default("PAID_SUBSCRIPTION") @db.VarChar(30)
+  active_days Int @default(0)
+  starts_at DateTime @db.Timestamptz
+  ends_at DateTime? @db.Timestamptz
+  rules String @db.VarChar(4000)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
+  codes ReferralCode[]
+  attributions ReferralAttribution[]
+  @@map("referral_campaigns")
+}
+
+model ReferralCode {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique @db.VarChar(40)
+  organization_id String? @unique @db.Uuid
+  user_id String? @db.Uuid
+  campaign_id String? @db.Uuid
+  enabled Boolean @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz
+  organization Organization? @relation(fields:[organization_id],references:[id],onDelete:SetNull)
+  user User? @relation(fields:[user_id],references:[id],onDelete:SetNull)
+  campaign ReferralCampaign? @relation(fields:[campaign_id],references:[id],onDelete:SetNull)
+  attributions ReferralAttribution[]
+  @@map("referral_codes")
+}
+
+model ReferralAttribution {
+  id String @id @default(uuid()) @db.Uuid
+  code_id String @db.Uuid
+  campaign_id String? @db.Uuid
+  referred_user_id String? @unique @db.Uuid
+  referred_organization_id String? @unique @db.Uuid
+  selected_plan String? @db.VarChar(20)
+  status String @default("SIGNED_UP") @db.VarChar(30)
+  reward_status String @default("NONE") @db.VarChar(30)
+  campaign_snapshot Json @default("{}") @db.JsonB
+  fraud_flags Json @default("[]") @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz
+  converted_at DateTime? @db.Timestamptz
+  qualified_at DateTime? @db.Timestamptz
+  rejected_reason String? @db.VarChar(2000)
+  code ReferralCode @relation(fields:[code_id],references:[id],onDelete:Restrict)
+  campaign ReferralCampaign? @relation(fields:[campaign_id],references:[id],onDelete:SetNull)
+  referred_user User? @relation(fields:[referred_user_id],references:[id],onDelete:SetNull)
+  referred_organization Organization? @relation(fields:[referred_organization_id],references:[id],onDelete:SetNull)
+  reward ReferralReward?
+  @@index([status,created_at])
+  @@map("referral_attributions")
+}
+
+model ReferralReward {
+  id String @id @default(uuid()) @db.Uuid
+  attribution_id String @unique @db.Uuid
+  beneficiary_organization_id String? @db.Uuid
+  type String @db.VarChar(30)
+  value Decimal @db.Decimal(12,2)
+  status String @db.VarChar(30)
+  actor_id String @db.Uuid
+  reference String? @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamptz
+  attribution ReferralAttribution @relation(fields:[attribution_id],references:[id],onDelete:Restrict)
+  @@index([beneficiary_organization_id,created_at])
+  @@map("referral_rewards")
+}
+
+model TenantDeletionJob {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @unique @db.Uuid
+  actor_id String @db.Uuid
+  status String @default("REQUESTED") @db.VarChar(30)
+  reason String @db.VarChar(2000)
+  snapshot Json @db.JsonB
+  counts Json @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz
+  finished_at DateTime? @db.Timestamptz
+  error_code String? @db.VarChar(100)
+  @@map("tenant_deletion_jobs")
+}
+
+model Organization {
+  referral_codes ReferralCode[]
+  referral_signup ReferralAttribution?
+  id         String       @id @default(uuid()) @db.Uuid
+  tenant_number Int @unique @default(autoincrement())
+  name       String       @db.VarChar(255)
+  legal_name String?      @db.VarChar(255)
+  code       String       @unique @db.VarChar(50)
+  status     TenantStatus @default(TRIAL)
+  archived_at DateTime? @db.Timestamptz
+  archive_previous_status String? @db.VarChar(30)
+  legal_hold Boolean @default(false)
+  is_active  Boolean      @default(true)
+  plan_id    String?      @db.Uuid
+
+  // Tenant Branding/Settings
+  logo_url       String? @db.VarChar(512)
+  primary_color  String? @db.VarChar(7)
+  invoice_footer String? @db.Text
+  business_type String? @db.VarChar(100)
+  internal_notes Json @default("[]") @db.JsonB
+  limit_overrides Json @default("{}") @db.JsonB
+  subscription TenantSubscription?
+  subscription_payments SubscriptionPayment[]
+  support_sessions PlatformSupportSession[]
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  plan                Plan?               @relation(fields: [plan_id], references: [id], onDelete: Restrict)
+  companies           Company[]
+  owner_invitations   OwnerInvitation[]
+  tenant_entitlements TenantEntitlement[]
+  need_lists          NeedList[]
+  Attachment          Attachment[]
+  ExpenseCategory     ExpenseCategory[]
+  Expense             Expense[]
+
+  @@index([code], name: "ix_organizations_code")
+  @@index([is_active], name: "ix_organizations_is_active")
+  @@index([status], name: "ix_organizations_status")
+  @@map("organizations")
+}
+
+model Company {
+  gst_invoice_documents RetailGstInvoice[]
+  gst_invoice_sequences RetailGstSequence[]
+  cost_states InventoryCostState[]
+  assistant_queries AssistantQueryLog[]
+  assistant_conversations AssistantConversation[]
+  import_jobs RetailImportJob[]
+  import_identities RetailImportIdentity[]
+  report_preferences RetailReportPreference[]
+  report_notifications RetailReportNotification[]
+  migration_choices RetailMigrationChoice[]
+  data_backup_requests RetailDataBackupRequest[]
+  retail_calendar_tasks RetailCalendarTask[]
+  id              String   @id @default(uuid()) @db.Uuid
+  organization_id String   @db.Uuid
+  code            String   @db.VarChar(50)
+  legal_name      String   @db.VarChar(255)
+  trade_name      String?  @db.VarChar(255)
+  address         String?  @db.Text
+  city            String?  @db.VarChar(100)
+  state           String?  @db.VarChar(100)
+  country         String   @default("India") @db.VarChar(100)
+  postal_code     String?  @db.VarChar(20)
+  phone           String?  @db.VarChar(50)
+  email           String?  @db.VarChar(255)
+  gstin           String?  @db.VarChar(15)
+  pan             String?  @db.VarChar(10)
+  timezone        String   @default("Asia/Kolkata") @db.VarChar(50)
+  fy_start_month  Int      @default(4)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization    Organization    @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  branches        Branch[]
+  financial_years FinancialYear[]
+
+  parties                    Party[]
+  units                      Unit[]
+  tax_classes                TaxClass[]
+  items                      Item[]
+  item_batches               ItemBatch[]
+  retail_capability_settings RetailCapabilitySettings?
+  variant_option_definitions VariantOptionDefinition[]
+  serial_allocations         SerialAllocation[]
+  purchase_orders            PurchaseOrder[]
+  goods_receipts             GoodsReceipt[]
+  purchase_invoices          PurchaseInvoice[]
+  purchase_returns           PurchaseReturn[]
+  sales_quotations           SalesQuotation[]
+  sales_orders               SalesOrder[]
+  delivery_challans          DeliveryChallan[]
+  sales_invoices             SalesInvoice[]
+  sales_returns              SalesReturn[]
+  stock_movements            StockMovement[]
+  stock_balance_projection   StockBalanceProjection[]
+  ledger_accounts            LedgerAccount[]
+  vouchers                   Voucher[]
+  bill_allocations           BillAllocation[]
+  audit_logs                 AuditLog[]
+  configuration              CompanyConfiguration?
+  StockAdjustment            StockAdjustment[]
+  StockTransfer              StockTransfer[]
+  OpeningStock               OpeningStock[]
+  StockCount                 StockCount[]
+  PosShift                   PosShift[]
+  return_reasons             ReturnReason[]
+  claims                     Claim[]
+  item_barcodes              ItemBarcode[]
+  label_templates            LabelTemplate[]
+  price_lists                PriceList[]
+  customer_item_prices       CustomerItemPrice[]
+  promotion_schemes          PromotionScheme[]
+  pricing_traces             PricingTrace[]
+  CreditOverride             CreditOverride[]
+  BankAccount                BankAccount[]
+  Cheque                     Cheque[]
+  BankReconciliation         BankReconciliation[]
+  need_lists                 NeedList[]
+  Attachment                 Attachment[]
+  ExpenseCategory            ExpenseCategory[]
+  Expense                    Expense[]
+
+  @@unique([organization_id, code], name: "uix_companies_org_code")
+  @@index([organization_id], name: "ix_companies_organization_id")
+  @@index([is_active], name: "ix_companies_is_active")
+  @@map("companies")
+}
+
+model CompanyConfiguration {
+  company_id             String   @id @db.Uuid
+  currency               String   @default("INR") @db.VarChar(10)
+  default_branch_id      String?  @db.Uuid
+  default_cash_ledger_id String?  @db.Uuid
+  default_bank_ledger_id String?  @db.Uuid
+  tax_configuration      Json?
+  invoice_configuration  Json?
+  payment_configuration  Json?
+  checkout_voice_configuration Json?
+  shop_feature_settings  Json @default("{}") @db.JsonB
+  created_at             DateTime @default(now()) @db.Timestamptz
+  updated_at             DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company     Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  branch      Branch?        @relation(fields: [default_branch_id], references: [id], onDelete: SetNull)
+  cash_ledger LedgerAccount? @relation("ConfigCashLedger", fields: [default_cash_ledger_id], references: [id], onDelete: SetNull)
+  bank_ledger LedgerAccount? @relation("ConfigBankLedger", fields: [default_bank_ledger_id], references: [id], onDelete: SetNull)
+
+  @@map("company_configurations")
+}
+
+model RequestIdempotency {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  key String @db.VarChar(100)
+  fingerprint String @db.VarChar(64)
+  user_id String @db.Uuid
+  response Json @db.JsonB
+  created_at DateTime @default(now())
+  @@unique([company_id,key])
+  @@map("request_idempotency")
+}
+
+model DailyCashCount {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  date DateTime @db.Date
+  opening_cash Decimal? @db.Decimal(15,2)
+  actual_cash Decimal? @db.Decimal(15,2)
+  note String? @db.VarChar(1000)
+  updated_by String @db.Uuid
+  updated_at DateTime @updatedAt
+  @@unique([company_id,branch_id,date])
+  @@map("daily_cash_counts")
+}
+
+model Branch {
+  assistant_queries AssistantQueryLog[]
+  assistant_conversations AssistantConversation[]
+  import_jobs RetailImportJob[]
+  report_preferences RetailReportPreference[]
+  report_notifications RetailReportNotification[]
+  retail_calendar_tasks RetailCalendarTask[]
+  id          String   @id @default(uuid()) @db.Uuid
+  company_id  String   @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  address     String?  @db.Text
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(100)
+  country     String   @default("India") @db.VarChar(100)
+  postal_code String?  @db.VarChar(20)
+  phone       String?  @db.VarChar(50)
+  email       String?  @db.VarChar(255)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company  @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  godowns Godown[]
+
+  purchase_orders          PurchaseOrder[]
+  goods_receipts           GoodsReceipt[]
+  purchase_invoices        PurchaseInvoice[]
+  purchase_returns         PurchaseReturn[]
+  sales_quotations         SalesQuotation[]
+  sales_orders             SalesOrder[]
+  delivery_challans        DeliveryChallan[]
+  sales_invoices           SalesInvoice[]
+  sales_returns            SalesReturn[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  ledger_accounts          LedgerAccount[]
+  vouchers                 Voucher[]
+  audit_logs               AuditLog[]
+  company_configurations   CompanyConfiguration[]
+  StockAdjustment          StockAdjustment[]
+  StockTransfer            StockTransfer[]
+  OpeningStock             OpeningStock[]
+  StockCount               StockCount[]
+  PosShift                 PosShift[]
+  claims                   Claim[]
+  price_lists              PriceList[]
+  promotion_schemes        PromotionScheme[]
+  BankAccount              BankAccount[]
+  Cheque                   Cheque[]
+  need_lists               NeedList[]
+  Attachment               Attachment[]
+  Expense                  Expense[]
+
+  @@unique([company_id, code], name: "uix_branches_company_code")
+  @@index([company_id], name: "ix_branches_company_id")
+  @@index([is_active], name: "ix_branches_is_active")
+  @@map("branches")
+}
+
+model Godown {
+  id          String   @id @default(uuid()) @db.Uuid
+  branch_id   String   @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  address     String?  @db.Text
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  branch Branch @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+
+  goods_receipt_lines      GoodsReceiptLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  purchase_return_lines    PurchaseReturnLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  sales_return_lines       SalesReturnLine[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+
+  stock_adjustments      StockAdjustmentLine[]
+  stock_transfers_source StockTransfer[]       @relation("TransferSource")
+  stock_transfers_dest   StockTransfer[]       @relation("TransferDestination")
+  opening_stock_lines    OpeningStockLine[]
+  stock_counts           StockCount[]
+
+  @@unique([branch_id, code], name: "uix_godowns_branch_code")
+  @@index([branch_id], name: "ix_godowns_branch_id")
+  @@index([is_active], name: "ix_godowns_is_active")
+  @@map("godowns")
+}
+
+model FinancialYear {
+  import_jobs RetailImportJob[]
+  id         String   @id @default(uuid()) @db.Uuid
+  company_id String   @db.Uuid
+  label      String   @db.VarChar(100)
+  start_date DateTime @db.Date
+  end_date   DateTime @db.Date
+  is_active  Boolean  @default(false)
+  is_closed  Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  purchase_invoices PurchaseInvoice[]
+  purchase_returns  PurchaseReturn[]
+  sales_invoices    SalesInvoice[]
+  sales_returns     SalesReturn[]
+  vouchers          Voucher[]
+  StockAdjustment   StockAdjustment[]
+  StockTransfer     StockTransfer[]
+  OpeningStock      OpeningStock[]
+  StockCount        StockCount[]
+
+  @@unique([company_id, label], name: "uix_fy_company_label")
+  @@index([company_id], name: "ix_financial_years_company_id")
+  @@index([is_active], name: "ix_financial_years_is_active")
+  @@map("financial_years")
+}
+
+// ── Master Models ───────────────────────────────────────────────────────────
+
+model Party {
+  item_serials ItemSerial[]
+
+  id                      String    @id @default(uuid()) @db.Uuid
+  company_id              String    @db.Uuid
+  code                    String    @db.VarChar(50)
+  party_type              String    @db.VarChar(50) // 'CUSTOMER' or 'SUPPLIER'
+  name                    String    @db.VarChar(255)
+  phone                   String? @db.VarChar(50)
+  email                   String? @db.VarChar(255)
+  address                 String? @db.Text
+  state                   String? @db.VarChar(100)
+  nickname                String? @db.VarChar(100)
+  supplier_category       String @default("REGULAR") @db.VarChar(30)
+  visit_date              DateTime? @db.Date
+  visit_cycle             String @default("NONE") @db.VarChar(20)
+  credit_allowed          Boolean @default(true)
+  max_credit_bills        Int?
+  preferred_items         Item[] @relation("PreferredSupplier")
+  legal_name              String?   @db.VarChar(255)
+  gstin                   String?   @db.VarChar(15)
+  pan                     String?   @db.VarChar(10)
+  state_code              String?   @db.VarChar(10)
+  credit_days             Int?
+  credit_limit            Decimal?  @db.Decimal(15, 6)
+  temporary_credit_limit  Decimal?  @db.Decimal(15, 6)
+  temporary_credit_expiry DateTime? @db.Date
+  is_blocked              Boolean   @default(false)
+  block_reason            String?   @db.Text
+  blocked_at              DateTime? @db.Timestamptz
+  is_active               Boolean   @default(true)
+  is_walkin               Boolean   @default(false)
+  price_list_id           String?   @db.Uuid
+
+  company    Company    @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  price_list PriceList? @relation(fields: [price_list_id], references: [id], onDelete: SetNull)
+
+  purchase_orders        PurchaseOrder[]
+  goods_receipts         GoodsReceipt[]
+  purchase_invoices      PurchaseInvoice[]
+  purchase_returns       PurchaseReturn[]
+  sales_quotations       SalesQuotation[]
+  sales_orders           SalesOrder[]
+  delivery_challans      DeliveryChallan[]
+  sales_invoices         SalesInvoice[]
+  sales_returns          SalesReturn[]
+  ledger_accounts        LedgerAccount[]
+  voucher_lines          VoucherLine[]
+  bill_allocations       BillAllocation[]
+  claims                 Claim[]
+  customer_item_prices   CustomerItemPrice[]
+  promotion_schemes      PromotionScheme[]
+  pricing_traces         PricingTrace[]
+  credit_overrides       CreditOverride[]
+  Cheque                 Cheque[]
+  need_lists_as_customer NeedList[]          @relation("NeedListCustomer")
+  need_lists_as_supplier NeedList[]          @relation("NeedListSupplier")
+
+  @@index([code])
+  @@index([name])
+  @@index([gstin])
+  @@unique([company_id,code], map:"uix_parties_company_code")
+  @@index([company_id,party_type,name], map:"ix_party_company_type_name")
+  @@map("parties")
+}
+
+model CreditOverride {
+  id                   String    @id @default(uuid()) @db.Uuid
+  company_id           String    @db.Uuid
+  party_id             String    @db.Uuid
+  override_type        String    @db.VarChar(50) // 'CREDIT_LIMIT_INCREASE', 'OVERDUE_BYPASS', 'BLOCK_OVERRIDE'
+  requested_by         String    @db.Uuid
+  approved_by          String?   @db.Uuid
+  status               String    @default("PENDING") @db.VarChar(50) // 'PENDING', 'APPROVED', 'REJECTED', 'EXPIRED'
+  override_amount      Decimal?  @db.Decimal(15, 6)
+  valid_until          DateTime? @db.Date
+  reason               String?   @db.Text
+  approval_notes       String?   @db.Text
+  source_document_type String?   @db.VarChar(100) // e.g. 'SALES_ORDER', 'SALES_INVOICE'
+  source_document_id   String?   @db.Uuid
+  created_at           DateTime  @default(now()) @db.Timestamptz
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  party   Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+
+  @@index([company_id, party_id])
+  @@index([status])
+  @@map("credit_overrides")
+}
+
+model Unit {
+  PurchaseOrderLine_entered_units   PurchaseOrderLine[]   @relation("LineEnteredUnit")
+  GoodsReceiptLine_entered_units    GoodsReceiptLine[]    @relation("LineEnteredUnit")
+  PurchaseInvoiceLine_entered_units PurchaseInvoiceLine[] @relation("LineEnteredUnit")
+  PurchaseReturnLine_entered_units  PurchaseReturnLine[]  @relation("LineEnteredUnit")
+  SalesQuotationLine_entered_units  SalesQuotationLine[]  @relation("LineEnteredUnit")
+  SalesOrderLine_entered_units      SalesOrderLine[]      @relation("LineEnteredUnit")
+  DeliveryChallanLine_entered_units DeliveryChallanLine[] @relation("LineEnteredUnit")
+  SalesInvoiceLine_entered_units    SalesInvoiceLine[]    @relation("LineEnteredUnit")
+  SalesReturnLine_entered_units     SalesReturnLine[]     @relation("LineEnteredUnit")
+  PosHeldBillLine_entered_units     PosHeldBillLine[]     @relation("LineEnteredUnit")
+
+  id             String @id @default(uuid()) @db.Uuid
+  company_id     String @db.Uuid
+  code           String @db.VarChar(50)
+  name           String @db.VarChar(255)
+  decimal_places Int    @default(0)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  items                  Item[]
+  conversion_from        ItemUnitConversion[]  @relation("ConversionFromUnit")
+  conversion_to          ItemUnitConversion[]  @relation("ConversionToUnit")
+  purchase_order_lines   PurchaseOrderLine[]
+  goods_receipt_lines    GoodsReceiptLine[]
+  purchase_invoice_lines PurchaseInvoiceLine[]
+  purchase_return_lines  PurchaseReturnLine[]
+  sales_quotation_lines  SalesQuotationLine[]
+  sales_order_lines      SalesOrderLine[]
+  delivery_challan_lines DeliveryChallanLine[]
+  sales_invoice_lines    SalesInvoiceLine[]
+  sales_return_lines     SalesReturnLine[]
+  stock_movements        StockMovement[]
+  StockAdjustmentLine    StockAdjustmentLine[]
+  StockTransferLine      StockTransferLine[]
+  OpeningStockLine       OpeningStockLine[]
+  StockCountLine         StockCountLine[]
+  claim_lines            ClaimLine[]
+  price_list_items       PriceListItem[]
+  customer_item_prices   CustomerItemPrice[]
+
+  @@map("units")
+}
+
+model TaxClass {
+  id         String  @id @default(uuid()) @db.Uuid
+  company_id String  @db.Uuid
+  name       String  @db.VarChar(255)
+  hsn_code   String  @db.VarChar(50)
+  tax_rate   Decimal @db.Decimal(10, 2)
+  cgst_rate  Decimal @db.Decimal(10, 2)
+  sgst_rate  Decimal @db.Decimal(10, 2)
+  igst_rate  Decimal @db.Decimal(10, 2)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  items Item[]
+
+  @@map("tax_classes")
+}
+
+model Item {
+  cost_states InventoryCostState[]
+  id                 String  @id @default(uuid()) @db.Uuid
+  company_id         String  @db.Uuid
+  sku                String  @db.VarChar(100)
+  name               String  @db.VarChar(255)
+  item_type          String  @db.VarChar(50) // 'STOCK_ITEM', 'SERVICE', or 'BUNDLE'
+  inventory_tracking Boolean @default(true)
+  primary_unit_id    String  @db.Uuid
+  tax_class_id       String? @db.Uuid
+  purchase_rate      Decimal @default(0) @db.Decimal(15, 6)
+  mrp                Decimal @default(0) @db.Decimal(15, 6)
+  default_sale_rate  Decimal @default(0) @db.Decimal(15, 6)
+  is_active          Boolean @default(true)
+  selling_mode       String  @default("PIECE") @db.VarChar(50)
+  has_variants       Boolean @default(false)
+  track_batch        Boolean @default(false)
+  track_serial       Boolean @default(false)
+  is_bundle          Boolean @default(false)
+  warranty_days      Int?
+  custom_attributes  Json?   @db.JsonB
+  compatibility_tags String? @db.Text
+  is_system Boolean @default(false)
+  category String? @db.VarChar(100)
+  hsn_sac String? @db.VarChar(50)
+  low_stock_threshold Decimal @default(0) @db.Decimal(15,6)
+  preferred_supplier_id String? @db.Uuid
+  preferred_supplier Party? @relation("PreferredSupplier", fields:[preferred_supplier_id], references:[id], onDelete:SetNull)
+
+  variants          ItemVariant[]
+  unit_conversions  ItemUnitConversion[]
+  batches           ItemBatch[]
+  serials           ItemSerial[]
+  bundle_components ItemBundleComponent[] @relation("BundleItem")
+  bundle_of         ItemBundleComponent[] @relation("ComponentItem")
+  modifier_groups   ItemModifierGroup[]
+
+  company      Company   @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  primary_unit Unit      @relation(fields: [primary_unit_id], references: [id], onDelete: Restrict)
+  tax_class    TaxClass? @relation(fields: [tax_class_id], references: [id], onDelete: SetNull)
+
+  purchase_order_lines     PurchaseOrderLine[]
+  goods_receipt_lines      GoodsReceiptLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  purchase_return_lines    PurchaseReturnLine[]
+  sales_quotation_lines    SalesQuotationLine[]
+  sales_order_lines        SalesOrderLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  sales_return_lines       SalesReturnLine[]
+  pos_held_bill_lines      PosHeldBillLine[]
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  StockAdjustmentLine      StockAdjustmentLine[]
+  StockTransferLine        StockTransferLine[]
+  OpeningStockLine         OpeningStockLine[]
+  StockCountLine           StockCountLine[]
+  claim_lines              ClaimLine[]
+  barcodes                 ItemBarcode[]
+  price_list_items         PriceListItem[]
+  customer_item_prices     CustomerItemPrice[]
+  promotion_schemes        PromotionScheme[]        @relation("SchemeItem")
+  free_promotion_schemes   PromotionScheme[]        @relation("SchemeFreeItem")
+  pricing_traces           PricingTrace[]
+
+  @@index([sku])
+  @@index([name])
+  @@unique([company_id,sku], map:"uix_items_company_sku")
+  @@map("items")
+}
+
+// ── Purchasing Models ───────────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id                     String    @id @default(uuid()) @db.Uuid
+  company_id             String    @db.Uuid
+  branch_id              String    @db.Uuid
+  party_id               String    @db.Uuid
+  document_number        String    @db.VarChar(100)
+  document_date          DateTime  @db.Date
+  status                 String    @db.VarChar(50) // 'DRAFT', 'CONFIRMED', 'PARTIALLY_RECEIVED', 'FULLY_RECEIVED', 'CLOSED', 'CANCELLED'
+  expected_delivery_date DateTime? @db.Date
+  notes                  String?   @db.Text
+  total                  Decimal   @default(0) @db.Decimal(15, 6)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party   Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+
+  lines          PurchaseOrderLine[]
+  goods_receipts GoodsReceipt[]
+
+  @@index([document_number])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  purchase_order_id String  @db.Uuid
+  item_id           String  @db.Uuid
+  unit_id           String  @db.Uuid
+  ordered_quantity  Decimal @db.Decimal(15, 6)
+  received_quantity Decimal @default(0) @db.Decimal(15, 6)
+  free_quantity     Decimal @default(0) @db.Decimal(15, 6)
+  rate              Decimal @db.Decimal(15, 6)
+  discount          Decimal @default(0) @db.Decimal(15, 6)
+  tax               Decimal @default(0) @db.Decimal(15, 6)
+  line_total        Decimal @default(0) @db.Decimal(15, 6)
+
+  purchase_order PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  item           Item          @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  unit Unit @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  goods_receipt_lines    GoodsReceiptLine[]
+  purchase_invoice_lines PurchaseInvoiceLine[]
+
+  @@map("purchase_order_lines")
+}
+
+model GoodsReceipt {
+  id                String    @id @default(uuid()) @db.Uuid
+  company_id        String    @db.Uuid
+  branch_id         String    @db.Uuid
+  party_id          String    @db.Uuid
+  purchase_order_id String?   @db.Uuid
+  document_number   String    @db.VarChar(100)
+  document_date     DateTime  @db.Date
+  status            String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  posted_at         DateTime? @db.Timestamptz
+  posted_by         String?   @db.Uuid
+
+  company        Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch         @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party          @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  purchase_order PurchaseOrder? @relation(fields: [purchase_order_id], references: [id], onDelete: SetNull)
+  posted_by_user User?          @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines GoodsReceiptLine[]
+
+  @@index([document_number])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  acquisition_cost_rate Decimal? @db.Decimal(24,12)
+  id                     String    @id @default(uuid()) @db.Uuid
+  goods_receipt_id       String    @db.Uuid
+  purchase_order_line_id String?   @db.Uuid
+  item_id                String    @db.Uuid
+  godown_id              String    @db.Uuid
+  unit_id                String    @db.Uuid
+  received_quantity      Decimal   @db.Decimal(15, 6)
+  free_quantity          Decimal   @default(0) @db.Decimal(15, 6)
+  batch_number           String?   @db.VarChar(100)
+  expiry_date            DateTime? @db.Date
+
+  goods_receipt       GoodsReceipt       @relation(fields: [goods_receipt_id], references: [id], onDelete: Cascade)
+  purchase_order_line PurchaseOrderLine? @relation(fields: [purchase_order_line_id], references: [id], onDelete: SetNull)
+  item                Item               @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  purchase_invoice_lines PurchaseInvoiceLine[]
+
+  @@map("goods_receipt_lines")
+}
+
+model PurchaseInvoice {
+  id                      String    @id @default(uuid()) @db.Uuid
+  company_id              String    @db.Uuid
+  branch_id               String    @db.Uuid
+  financial_year_id       String    @db.Uuid
+  party_id                String    @db.Uuid
+  supplier_invoice_number String?   @db.VarChar(100)
+  supplier_invoice_date   DateTime? @db.Date
+  notes                   String? @db.Text
+  purchase_category       String @default("REGULAR") @db.VarChar(30)
+  payment_snapshot        Json? @db.JsonB
+  document_number         String    @db.VarChar(100)
+  document_date           DateTime  @db.Date
+  status                  String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  payment_terms_days      Int?
+  due_date                DateTime? @db.Date
+  taxable_amount          Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount              Decimal   @default(0) @db.Decimal(15, 6)
+  discount_amount         Decimal   @default(0) @db.Decimal(15, 6)
+  landed_cost_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total             Decimal   @default(0) @db.Decimal(15, 6)
+  paid_amount             Decimal   @default(0) @db.Decimal(15, 6)
+  outstanding_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  replaced_return_id      String?   @db.Uuid
+  posted_at               DateTime? @db.Timestamptz
+  posted_by               String?   @db.Uuid
+
+  company         Company         @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch          Branch          @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year  FinancialYear   @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party           Party           @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user  User?           @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  replaced_return PurchaseReturn? @relation("PurchaseReplacement", fields: [replaced_return_id], references: [id], onDelete: SetNull)
+
+  lines  PurchaseInvoiceLine[]
+  claims Claim[]
+
+  @@index([document_number])
+  @@map("purchase_invoices")
+  @@index([company_id,branch_id,document_date], map:"ix_purchase_company_branch_date")
+}
+
+model PurchaseInvoiceLine {
+  entered_purchase_rate Decimal? @db.Decimal(24,12)
+  landed_cost_allocation Decimal? @db.Decimal(24,12)
+  effective_inventory_cost Decimal? @db.Decimal(24, 12)
+  base_unit_cost_snapshot Decimal? @db.Decimal(24, 12)
+  id                     String  @id @default(uuid()) @db.Uuid
+  purchase_invoice_id    String  @db.Uuid
+  goods_receipt_line_id  String? @db.Uuid
+  purchase_order_line_id String? @db.Uuid
+  item_id                String  @db.Uuid
+  godown_id              String  @db.Uuid
+  unit_id                String  @db.Uuid
+  quantity               Decimal @db.Decimal(15, 6)
+  free_quantity          Decimal @default(0) @db.Decimal(15, 6)
+  rate                   Decimal @db.Decimal(15, 6)
+  discount_amount        Decimal @default(0) @db.Decimal(15, 6)
+  taxable_value          Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount             Decimal @default(0) @db.Decimal(15, 6)
+  line_total             Decimal @default(0) @db.Decimal(15, 6)
+  tax_snapshot_json      String? @db.Text
+
+  purchase_invoice    PurchaseInvoice    @relation(fields: [purchase_invoice_id], references: [id], onDelete: Cascade)
+  goods_receipt_line  GoodsReceiptLine?  @relation(fields: [goods_receipt_line_id], references: [id], onDelete: SetNull)
+  purchase_order_line PurchaseOrderLine? @relation(fields: [purchase_order_line_id], references: [id], onDelete: SetNull)
+  item                Item               @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("purchase_invoice_lines")
+}
+
+model PurchaseReturn {
+  id                  String    @id @default(uuid()) @db.Uuid
+  company_id          String    @db.Uuid
+  branch_id           String    @db.Uuid
+  financial_year_id   String    @db.Uuid
+  party_id            String    @db.Uuid
+  original_invoice_id String?   @db.Uuid
+  document_number     String    @db.VarChar(100)
+  document_date       DateTime  @db.Date
+  status              String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  reason_id           String?   @db.Uuid
+  notes               String?   @db.Text
+  taxable_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount          Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total         Decimal   @default(0) @db.Decimal(15, 6)
+  posted_at           DateTime? @db.Timestamptz
+  posted_by           String?   @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party          Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  reason         ReturnReason? @relation(fields: [reason_id], references: [id], onDelete: Restrict)
+
+  lines                PurchaseReturnLine[]
+  claims               Claim[]
+  replacement_invoices PurchaseInvoice[]    @relation("PurchaseReplacement")
+
+  @@index([document_number])
+  @@map("purchase_returns")
+}
+
+model PurchaseReturnLine {
+  id                 String  @id @default(uuid()) @db.Uuid
+  purchase_return_id String  @db.Uuid
+  item_id            String  @db.Uuid
+  godown_id          String  @db.Uuid
+  unit_id            String  @db.Uuid
+  quantity           Decimal @db.Decimal(15, 6)
+  rate               Decimal @db.Decimal(15, 6)
+  taxable_value      Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount         Decimal @default(0) @db.Decimal(15, 6)
+  line_total         Decimal @default(0) @db.Decimal(15, 6)
+
+  purchase_return PurchaseReturn @relation(fields: [purchase_return_id], references: [id], onDelete: Cascade)
+  item            Item           @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("purchase_return_lines")
+}
+
+// ── Inventory Models ────────────────────────────────────────────────────────
+
+model StockMovement {
+  cost_status String? @db.VarChar(20)
+  unknown_quantity_delta Decimal? @db.Decimal(24, 12)
+  cost_line_id String? @db.Uuid
+  @@index([company_id, source_document_id, cost_line_id])
+  id                  String   @id @default(uuid()) @db.Uuid
+  company_id          String   @db.Uuid
+  branch_id           String   @db.Uuid
+  godown_id           String   @db.Uuid
+  item_id             String   @db.Uuid
+  business_date       DateTime @db.Date
+  movement_type       String   @db.VarChar(50) // 'PURCHASE_IN', 'SALE_OUT', etc.
+  quantity_delta      Decimal  @db.Decimal(15, 6)
+  base_quantity_delta Decimal  @db.Decimal(15, 6)
+  unit_id             String   @db.Uuid
+  variant_id          String?  @db.Uuid
+  batch_id            String?  @db.Uuid
+  serial_id           String?  @db.Uuid
+
+  variant ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch   ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+  serial  ItemSerial?  @relation(fields: [serial_id], references: [id], onDelete: Restrict)
+
+  source_document_type String   @db.VarChar(100)
+  source_document_id   String   @db.Uuid
+  source_line_id       String?  @db.Uuid
+  cost_rate            Decimal  @default(0) @db.Decimal(24, 12)
+  value_delta          Decimal  @default(0) @db.Decimal(24, 12)
+  created_at           DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  godown  Godown  @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit    Unit    @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@unique([company_id, source_document_type, source_document_id, source_line_id, movement_type], name: "uix_stock_movement_source")
+  @@map("stock_movements")
+}
+
+model StockBalanceProjection {
+  id         String  @id @default(uuid()) @db.Uuid
+  company_id String  @db.Uuid
+  branch_id  String  @db.Uuid
+  godown_id  String  @db.Uuid
+  item_id    String  @db.Uuid
+  quantity   Decimal @default(0) @db.Decimal(15, 6)
+  variant_id String? @db.Uuid
+  batch_id   String? @db.Uuid
+
+  variant ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch   ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  godown  Godown  @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  @@map("stock_balance_projection")
+  @@index([company_id,branch_id,godown_id,item_id,variant_id,batch_id], map:"ix_stock_company_location_item")
+}
+
+// ── Accounting Models ───────────────────────────────────────────────────────
+
+model LedgerAccount {
+  id             String   @id @default(uuid()) @db.Uuid
+  company_id     String   @db.Uuid
+  branch_id      String?  @db.Uuid
+  code           String   @db.VarChar(50)
+  name           String   @db.VarChar(255)
+  account_type   String   @default("ASSET") @db.VarChar(50) // 'ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'
+  normal_balance String   @default("DEBIT") @db.VarChar(10) // 'DEBIT' or 'CREDIT'
+  parent_id      String?  @db.Uuid
+  party_id       String?  @db.Uuid
+  is_system      Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now()) @db.Timestamptz
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch?        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party   Party?         @relation(fields: [party_id], references: [id], onDelete: SetNull)
+  parent  LedgerAccount? @relation("AccountHierarchy", fields: [parent_id], references: [id], onDelete: Restrict)
+
+  children      LedgerAccount[] @relation("AccountHierarchy")
+  voucher_lines VoucherLine[]
+
+  config_cash     CompanyConfiguration[] @relation("ConfigCashLedger")
+  config_bank     CompanyConfiguration[] @relation("ConfigBankLedger")
+  BankAccount     BankAccount?
+  ExpenseCategory ExpenseCategory[]
+
+  @@index([code])
+  @@index([account_type])
+  @@map("ledger_accounts")
+}
+
+model Voucher {
+  payment_method String? @db.VarChar(20)
+  id                   String    @id @default(uuid()) @db.Uuid
+  company_id           String    @db.Uuid
+  branch_id            String    @db.Uuid
+  financial_year_id    String    @db.Uuid
+  voucher_type         String    @db.VarChar(50) // 'JOURNAL', 'RECEIPT', 'PAYMENT', 'CONTRA', 'PURCHASE', 'SALES'
+  document_number      String    @db.VarChar(100)
+  voucher_date         DateTime  @db.Date
+  status               String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'REVERSED', 'CANCELLED'
+  source_document_type String?   @db.VarChar(100)
+  source_document_id   String?   @db.Uuid
+  narration            String?   @db.Text
+  posted_at            DateTime? @db.Timestamptz
+  posted_by            String?   @db.Uuid
+  reversed_voucher_id  String?   @unique @db.Uuid
+  reversed_by          String?   @db.Uuid
+  reversed_at          DateTime? @db.Timestamptz
+  reversal_reason      String?   @db.Text
+  created_at           DateTime  @default(now()) @db.Timestamptz
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company          Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch           Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year   FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  posted_by_user   User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  reversed_by_user User?         @relation("VoucherReversedBy", fields: [reversed_by], references: [id], onDelete: SetNull)
+
+  reversed_voucher  Voucher? @relation("VoucherReversal", fields: [reversed_voucher_id], references: [id], onDelete: Restrict)
+  reversing_voucher Voucher? @relation("VoucherReversal")
+
+  lines  VoucherLine[]
+  Cheque Cheque?
+
+  @@unique([company_id, voucher_type, source_document_type, source_document_id], name: "uix_voucher_source")
+  @@index([source_document_type, source_document_id])
+  @@map("vouchers")
+}
+
+model VoucherLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  voucher_id        String  @db.Uuid
+  ledger_account_id String  @db.Uuid
+  debit             Decimal @default(0) @db.Decimal(15, 6)
+  credit            Decimal @default(0) @db.Decimal(15, 6)
+  party_id          String? @db.Uuid
+  narration         String? @db.Text
+
+  voucher        Voucher       @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+  ledger_account LedgerAccount @relation(fields: [ledger_account_id], references: [id], onDelete: Restrict)
+  party          Party?        @relation(fields: [party_id], references: [id], onDelete: SetNull)
+
+  bill_allocations BillAllocation[]
+
+  @@map("voucher_lines")
+}
+
+model BillAllocation {
+  id                      String    @id @default(uuid()) @db.Uuid
+  company_id              String    @db.Uuid
+  party_id                String    @db.Uuid
+  voucher_line_id         String    @db.Uuid
+  reference_document_type String    @db.VarChar(100)
+  reference_document_id   String    @db.Uuid
+  allocation_type         String    @db.VarChar(50) // 'NEW_REFERENCE', 'AGAINST_REFERENCE'
+  amount                  Decimal   @db.Decimal(15, 6)
+  due_date                DateTime? @db.Date
+
+  company      Company     @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  party        Party       @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  voucher_line VoucherLine @relation(fields: [voucher_line_id], references: [id], onDelete: Restrict)
+
+  @@map("bill_allocations")
+  @@index([company_id,party_id,reference_document_id], map:"ix_bill_alloc_company_party_ref")
+}
+
+model AuditLog {
+  id                   String   @id @default(uuid()) @db.Uuid
+  company_id           String   @db.Uuid
+  branch_id            String?  @db.Uuid
+  user_id              String   @db.Uuid
+  action               String   @db.VarChar(100)
+  source_document_type String?  @db.VarChar(100)
+  source_document_id   String?  @db.Uuid
+  affected_voucher_id  String?  @db.Uuid
+  details              String?  @db.Text
+  created_at           DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch? @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([source_document_type, source_document_id])
+  @@index([company_id, created_at])
+  @@map("audit_logs")
+}
+
+// ── Sales Models ────────────────────────────────────────────────────────────
+
+model SalesQuotation {
+  id              String    @id @default(uuid()) @db.Uuid
+  company_id      String    @db.Uuid
+  branch_id       String    @db.Uuid
+  party_id        String    @db.Uuid
+  document_number String    @db.VarChar(100)
+  document_date   DateTime  @db.Date
+  status          String    @db.VarChar(50) // 'DRAFT', 'SUBMITTED', 'ACCEPTED', 'REJECTED', 'EXPIRED'
+  valid_until     DateTime? @db.Date
+  notes           String?   @db.Text
+  total           Decimal   @default(0) @db.Decimal(15, 6)
+  created_at      DateTime  @default(now()) @db.Timestamptz
+  posted_by       String?   @db.Uuid
+
+  company        Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?   @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines        SalesQuotationLine[]
+  sales_orders SalesOrder[]
+
+  @@index([document_number])
+  @@map("sales_quotations")
+}
+
+model SalesQuotationLine {
+  id                 String  @id @default(uuid()) @db.Uuid
+  sales_quotation_id String  @db.Uuid
+  item_id            String  @db.Uuid
+  unit_id            String  @db.Uuid
+  quantity           Decimal @db.Decimal(15, 6)
+  rate               Decimal @db.Decimal(15, 6)
+  discount           Decimal @default(0) @db.Decimal(15, 6)
+  tax                Decimal @default(0) @db.Decimal(15, 6)
+  free_quantity      Decimal @default(0) @db.Decimal(15, 6)
+  line_total         Decimal @default(0) @db.Decimal(15, 6)
+  pricing_trace_json String? @db.Text
+
+  sales_quotation SalesQuotation @relation(fields: [sales_quotation_id], references: [id], onDelete: Cascade)
+  item            Item           @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  unit Unit @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  sales_order_lines SalesOrderLine[]
+
+  @@map("sales_quotation_lines")
+}
+
+model SalesOrder {
+  id                     String    @id @default(uuid()) @db.Uuid
+  company_id             String    @db.Uuid
+  branch_id              String    @db.Uuid
+  party_id               String    @db.Uuid
+  sales_quotation_id     String?   @db.Uuid
+  document_number        String    @db.VarChar(100)
+  document_date          DateTime  @db.Date
+  status                 String    @db.VarChar(50) // 'DRAFT', 'CONFIRMED', 'PARTIALLY_DELIVERED', 'FULLY_DELIVERED', 'CLOSED', 'CANCELLED'
+  expected_delivery_date DateTime? @db.Date
+  notes                  String?   @db.Text
+  total                  Decimal   @default(0) @db.Decimal(15, 6)
+  created_at             DateTime  @default(now()) @db.Timestamptz
+  posted_by              String?   @db.Uuid
+
+  company         Company         @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch          Branch          @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party           Party           @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user  User?           @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  sales_quotation SalesQuotation? @relation(fields: [sales_quotation_id], references: [id], onDelete: SetNull)
+
+  lines             SalesOrderLine[]
+  delivery_challans DeliveryChallan[]
+
+  @@index([document_number])
+  @@map("sales_orders")
+}
+
+model SalesOrderLine {
+  id                      String  @id @default(uuid()) @db.Uuid
+  sales_order_id          String  @db.Uuid
+  sales_quotation_line_id String? @db.Uuid
+  item_id                 String  @db.Uuid
+  unit_id                 String  @db.Uuid
+  ordered_quantity        Decimal @db.Decimal(15, 6)
+  delivered_quantity      Decimal @default(0) @db.Decimal(15, 6)
+  rate                    Decimal @db.Decimal(15, 6)
+  discount                Decimal @default(0) @db.Decimal(15, 6)
+  tax                     Decimal @default(0) @db.Decimal(15, 6)
+  free_quantity           Decimal @default(0) @db.Decimal(15, 6)
+  line_total              Decimal @default(0) @db.Decimal(15, 6)
+  pricing_trace_json      String? @db.Text
+
+  sales_order          SalesOrder          @relation(fields: [sales_order_id], references: [id], onDelete: Cascade)
+  sales_quotation_line SalesQuotationLine? @relation(fields: [sales_quotation_line_id], references: [id], onDelete: SetNull)
+  item                 Item                @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  unit Unit @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  delivery_challan_lines DeliveryChallanLine[]
+  sales_invoice_lines    SalesInvoiceLine[]
+
+  @@map("sales_order_lines")
+}
+
+model DeliveryChallan {
+  id              String    @id @default(uuid()) @db.Uuid
+  company_id      String    @db.Uuid
+  branch_id       String    @db.Uuid
+  party_id        String    @db.Uuid
+  sales_order_id  String?   @db.Uuid
+  document_number String    @db.VarChar(100)
+  document_date   DateTime  @db.Date
+  status          String    @db.VarChar(50) // 'DRAFT', 'DISPATCHED', 'CANCELLED'
+  posted_at       DateTime? @db.Timestamptz
+  posted_by       String?   @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz
+
+  company        Company     @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch      @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party          Party       @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  sales_order    SalesOrder? @relation(fields: [sales_order_id], references: [id], onDelete: SetNull)
+  posted_by_user User?       @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+
+  lines DeliveryChallanLine[]
+
+  @@index([document_number])
+  @@map("delivery_challans")
+}
+
+model DeliveryChallanLine {
+  id                  String    @id @default(uuid()) @db.Uuid
+  delivery_challan_id String    @db.Uuid
+  sales_order_line_id String?   @db.Uuid
+  item_id             String    @db.Uuid
+  godown_id           String    @db.Uuid
+  unit_id             String    @db.Uuid
+  dispatched_quantity Decimal   @db.Decimal(15, 6)
+  free_quantity       Decimal   @default(0) @db.Decimal(15, 6)
+  batch_number        String?   @db.VarChar(100)
+  expiry_date         DateTime? @db.Date
+
+  delivery_challan DeliveryChallan @relation(fields: [delivery_challan_id], references: [id], onDelete: Cascade)
+  sales_order_line SalesOrderLine? @relation(fields: [sales_order_line_id], references: [id], onDelete: SetNull)
+  item             Item            @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  sales_invoice_lines SalesInvoiceLine[]
+
+  @@map("delivery_challan_lines")
+}
+
+model SalesInvoice {
+  gst_invoice RetailGstInvoice?
+  item_serials ItemSerial[]
+
+  id                 String    @id @default(uuid()) @db.Uuid
+  company_id         String    @db.Uuid
+  branch_id          String    @db.Uuid
+  financial_year_id  String    @db.Uuid
+  party_id           String    @db.Uuid
+  document_number    String    @db.VarChar(100)
+  document_date      DateTime  @db.Date
+  status             String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'
+  payment_terms_days Int?
+  due_date           DateTime? @db.Date
+  is_pos             Boolean   @default(false)
+  walkin_name        String?   @db.VarChar(255)
+  walkin_phone       String?   @db.VarChar(50)
+  notes String? @db.Text
+  sales_channel String @default("COUNTER") @db.VarChar(30)
+  payment_snapshot Json? @db.JsonB
+  taxable_amount     Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount         Decimal   @default(0) @db.Decimal(15, 6)
+  discount_amount    Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total        Decimal   @default(0) @db.Decimal(15, 6)
+  paid_amount        Decimal   @default(0) @db.Decimal(15, 6)
+  outstanding_amount Decimal   @default(0) @db.Decimal(15, 6)
+  replaced_return_id String?   @db.Uuid
+  posted_at          DateTime? @db.Timestamptz
+  posted_by          String?   @db.Uuid
+  created_at         DateTime  @default(now()) @db.Timestamptz
+
+  company         Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch          Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year  FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party           Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user  User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  replaced_return SalesReturn?  @relation("SalesReplacement", fields: [replaced_return_id], references: [id], onDelete: SetNull)
+
+  lines  SalesInvoiceLine[]
+  claims Claim[]
+
+  @@index([document_number])
+  @@map("sales_invoices")
+  @@index([company_id,branch_id,document_date], map:"ix_sales_company_branch_date")
+}
+
+model SalesInvoiceLine {
+  cost_status String? @db.VarChar(20)
+  cogs_total Decimal? @db.Decimal(24, 12)
+  cost_per_base_unit Decimal? @db.Decimal(24, 12)
+  net_revenue Decimal? @db.Decimal(24, 12)
+  gross_profit Decimal? @db.Decimal(24, 12)
+  cost_snapshot Json? @db.JsonB
+  inventory_tracked Boolean @default(true)
+  id                       String  @id @default(uuid()) @db.Uuid
+  sales_invoice_id         String  @db.Uuid
+  delivery_challan_line_id String? @db.Uuid
+  sales_order_line_id      String? @db.Uuid
+  item_id                  String  @db.Uuid
+  godown_id                String  @db.Uuid
+  unit_id                  String  @db.Uuid
+  quantity                 Decimal @db.Decimal(15, 6)
+  rate                     Decimal @db.Decimal(15, 6)
+  discount_amount          Decimal @default(0) @db.Decimal(15, 6)
+  free_quantity            Decimal @default(0) @db.Decimal(15, 6)
+  taxable_value            Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount               Decimal @default(0) @db.Decimal(15, 6)
+  line_total               Decimal @default(0) @db.Decimal(15, 6)
+  pricing_trace_json       String? @db.Text
+  tax_snapshot_json        String? @db.Text
+  bundle_snapshot          Json?   @db.JsonB
+  modifier_snapshot        Json?   @db.JsonB
+  warranty_snapshot        Json?   @db.JsonB
+
+  sales_invoice         SalesInvoice         @relation(fields: [sales_invoice_id], references: [id], onDelete: Cascade)
+  delivery_challan_line DeliveryChallanLine? @relation(fields: [delivery_challan_line_id], references: [id], onDelete: SetNull)
+  sales_order_line      SalesOrderLine?      @relation(fields: [sales_order_line_id], references: [id], onDelete: SetNull)
+  item                  Item                 @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  serial_allocations SerialAllocation[]
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  batch_allocations SalesInvoiceLineBatchAllocation[]
+
+  @@map("sales_invoice_lines")
+}
+
+// A print/tax document for an existing posted sale; never another financial posting.
+model RetailGstInvoice {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  sales_invoice_id String @unique @db.Uuid
+  financial_year String @db.VarChar(9)
+  document_number String @db.VarChar(16)
+  issue_date DateTime @db.Date
+  snapshot Json @db.JsonB
+  created_by String @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  sales_invoice SalesInvoice @relation(fields:[sales_invoice_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,financial_year,document_number])
+  @@index([company_id,branch_id,created_at])
+  @@map("retail_gst_invoices")
+}
+
+model RetailGstSequence {
+  company_id String @db.Uuid
+  financial_year String @db.VarChar(9)
+  last_number Int @default(0)
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  @@id([company_id,financial_year])
+  @@map("retail_gst_sequences")
+}
+
+model RetailCalendarTask {
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Restrict)
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  title String @db.VarChar(200)
+  date DateTime @db.Date
+  completed Boolean @default(false)
+  created_by String @db.Uuid
+  created_at DateTime @default(now())
+  @@index([company_id, branch_id, date])
+  @@map("retail_calendar_tasks")
+}
+
+model SalesInvoiceLineBatchAllocation {
+  id                    String           @id @default(uuid()) @db.Uuid
+  sales_invoice_line_id String           @db.Uuid
+  batch_id              String           @db.Uuid
+  quantity              Decimal          @db.Decimal(15, 6)
+  created_at            DateTime         @default(now()) @db.Timestamptz
+
+  sales_invoice_line    SalesInvoiceLine @relation(fields: [sales_invoice_line_id], references: [id], onDelete: Cascade)
+  batch                 ItemBatch        @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  @@map("sales_invoice_line_batch_allocations")
+}
+
+model SalesReturn {
+  id                  String    @id @default(uuid()) @db.Uuid
+  company_id          String    @db.Uuid
+  branch_id           String    @db.Uuid
+  financial_year_id   String    @db.Uuid
+  party_id            String    @db.Uuid
+  original_invoice_id String?   @db.Uuid
+  document_number     String    @db.VarChar(100)
+  document_date       DateTime  @db.Date
+  status              String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED'
+  reason_id           String?   @db.Uuid
+  notes               String?   @db.Text
+  taxable_amount      Decimal   @default(0) @db.Decimal(15, 6)
+  tax_amount          Decimal   @default(0) @db.Decimal(15, 6)
+  grand_total         Decimal   @default(0) @db.Decimal(15, 6)
+  posted_at           DateTime? @db.Timestamptz
+  posted_by           String?   @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  financial_year FinancialYear @relation(fields: [financial_year_id], references: [id], onDelete: Restrict)
+  party          Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  posted_by_user User?         @relation(fields: [posted_by], references: [id], onDelete: SetNull)
+  reason         ReturnReason? @relation(fields: [reason_id], references: [id], onDelete: Restrict)
+
+  lines                SalesReturnLine[]
+  claims               Claim[]
+  replacement_invoices SalesInvoice[]    @relation("SalesReplacement")
+
+  @@index([document_number])
+  @@map("sales_returns")
+}
+
+model SalesReturnLine {
+  cost_status String? @db.VarChar(20)
+  cogs_total Decimal? @db.Decimal(24, 12)
+  cost_per_base_unit Decimal? @db.Decimal(24, 12)
+  net_revenue Decimal? @db.Decimal(24, 12)
+  gross_profit Decimal? @db.Decimal(24, 12)
+  cost_snapshot Json? @db.JsonB
+  original_line_id String? @db.Uuid
+  id              String  @id @default(uuid()) @db.Uuid
+  sales_return_id String  @db.Uuid
+  item_id         String  @db.Uuid
+  godown_id       String  @db.Uuid
+  unit_id         String  @db.Uuid
+  quantity        Decimal @db.Decimal(15, 6)
+  rate            Decimal @db.Decimal(15, 6)
+  taxable_value   Decimal @default(0) @db.Decimal(15, 6)
+  tax_amount      Decimal @default(0) @db.Decimal(15, 6)
+  line_total      Decimal @default(0) @db.Decimal(15, 6)
+
+  sales_return SalesReturn @relation(fields: [sales_return_id], references: [id], onDelete: Cascade)
+  item         Item        @relation(fields: [item_id], references: [id], onDelete: Restrict)
+
+  entered_quantity  Decimal? @db.Decimal(15, 6)
+  entered_unit_id   String?  @db.Uuid
+  conversion_factor Decimal? @db.Decimal(15, 6)
+  base_quantity     Decimal? @db.Decimal(15, 6)
+  variant_id        String?  @db.Uuid
+  batch_id          String?  @db.Uuid
+  serial_ids        Json?    @db.JsonB
+  dimensions        Json?    @db.JsonB
+  modifiers         Json?    @db.JsonB
+
+  entered_unit Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant      ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch        ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  godown Godown @relation(fields: [godown_id], references: [id], onDelete: Restrict)
+  unit   Unit   @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  batch_allocations SalesReturnLineBatchAllocation[]
+
+  @@map("sales_return_lines")
+}
+
+model SalesReturnLineBatchAllocation {
+  id                    String          @id @default(uuid()) @db.Uuid
+  sales_return_line_id  String          @db.Uuid
+  batch_id              String          @db.Uuid
+  quantity              Decimal         @db.Decimal(15, 6)
+  created_at            DateTime        @default(now()) @db.Timestamptz
+
+  sales_return_line     SalesReturnLine @relation(fields: [sales_return_line_id], references: [id], onDelete: Cascade)
+  batch                 ItemBatch       @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  @@map("sales_return_line_batch_allocations")
+}
+
+model PosShift {
+  id               String    @id @default(uuid()) @db.Uuid
+  company_id       String    @db.Uuid
+  branch_id        String    @db.Uuid
+  user_id          String    @db.Uuid
+  status           String    @db.VarChar(50) // 'OPEN', 'CLOSED'
+  opened_at        DateTime  @default(now()) @db.Timestamptz
+  closed_at        DateTime? @db.Timestamptz
+  opening_balance  Decimal   @default(0) @db.Decimal(15, 6)
+  closing_balance  Decimal?  @db.Decimal(15, 6)
+  expected_balance Decimal?  @db.Decimal(15, 6)
+  variance         Decimal?  @db.Decimal(15, 6)
+  notes            String?   @db.Text
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@map("pos_shifts")
+}
+
+model PosHeldBill {
+  bill_discount Decimal @default(0) @db.Decimal(15, 6)
+  customer_id String? @db.Uuid
+  notes String? @db.Text
+  id             String   @id @default(uuid()) @db.Uuid
+  company_id     String   @db.Uuid
+  branch_id      String   @db.Uuid
+  user_id        String   @db.Uuid
+  reference_name String?  @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamptz
+  grand_total    Decimal  @default(0) @db.Decimal(15, 6)
+
+  lines PosHeldBillLine[]
+
+  @@map("pos_held_bills")
+}
+
+model PosHeldBillLine {
+  id                 String       @id @default(uuid()) @db.Uuid
+  pos_held_bill_id   String       @db.Uuid
+  item_id            String       @db.Uuid
+  godown_id          String       @db.Uuid
+  unit_id            String       @db.Uuid
+  quantity           Decimal      @db.Decimal(15, 6)
+  rate               Decimal      @db.Decimal(15, 6)
+  discount_amount    Decimal      @default(0) @db.Decimal(15, 6)
+  free_quantity      Decimal      @default(0) @db.Decimal(15, 6)
+  pricing_trace_json String?      @db.Text
+  entered_quantity   Decimal?     @db.Decimal(15, 6)
+  entered_unit_id    String?      @db.Uuid
+  conversion_factor  Decimal?     @db.Decimal(15, 6)
+  base_quantity      Decimal?     @db.Decimal(15, 6)
+  variant_id         String?      @db.Uuid
+  batch_id           String?      @db.Uuid
+  serial_ids         Json?        @db.JsonB
+  dimensions         Json?        @db.JsonB
+  modifiers          Json?        @db.JsonB
+  pos_held_bill      PosHeldBill  @relation(fields: [pos_held_bill_id], references: [id], onDelete: Cascade)
+  item               Item         @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  entered_unit       Unit?        @relation("LineEnteredUnit", fields: [entered_unit_id], references: [id], onDelete: Restrict)
+  variant            ItemVariant? @relation(fields: [variant_id], references: [id], onDelete: Restrict)
+  batch              ItemBatch?   @relation(fields: [batch_id], references: [id], onDelete: Restrict)
+
+  @@map("pos_held_bill_lines")
+}
+
+model alembic_version {
+  version_num String @id @db.VarChar(32)
+
+  @@ignore
+}
+
+model security_audit_logs {
+  id Int @id @default(autoincrement())
+
+  @@ignore
+}
+
+model StockAdjustment {
+  id                String    @id @default(uuid()) @db.Uuid
+  company_id        String    @db.Uuid
+  branch_id         String    @db.Uuid
+  financial_year_id String    @db.Uuid
+  document_number   String    @db.VarChar(100)
+  document_date     DateTime  @db.Date
+  adjustment_type   String    @db.VarChar(10) // 'IN' or 'OUT'
+  status            String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'
+  narration         String?   @db.Text
+  posted_at         DateTime? @db.Timestamptz
+  posted_by         String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  updated_at        DateTime  @updatedAt @db.Timestamptz
+
+  company        Company               @relation(fields: [company_id], references: [id])
+  branch         Branch                @relation(fields: [branch_id], references: [id])
+  financial_year FinancialYear         @relation(fields: [financial_year_id], references: [id])
+  poster         User?                 @relation("StockAdjustmentPoster", fields: [posted_by], references: [id])
+  lines          StockAdjustmentLine[]
+
+  @@unique([company_id, document_number])
+  @@map("stock_adjustments")
+}
+
+model StockAdjustmentLine {
+  id                  String  @id @default(uuid()) @db.Uuid
+  stock_adjustment_id String  @db.Uuid
+  item_id             String  @db.Uuid
+  godown_id           String  @db.Uuid
+  unit_id             String  @db.Uuid
+  quantity            Decimal @db.Decimal(15, 6)
+  cost_rate           Decimal @default(0) @db.Decimal(15, 6)
+  reason              String? @db.VarChar(255)
+
+  stock_adjustment StockAdjustment @relation(fields: [stock_adjustment_id], references: [id], onDelete: Cascade)
+  item             Item            @relation(fields: [item_id], references: [id])
+  godown           Godown          @relation(fields: [godown_id], references: [id])
+  unit             Unit            @relation(fields: [unit_id], references: [id])
+
+  @@map("stock_adjustment_lines")
+}
+
+model StockTransfer {
+  id                    String    @id @default(uuid()) @db.Uuid
+  company_id            String    @db.Uuid
+  branch_id             String    @db.Uuid
+  financial_year_id     String    @db.Uuid
+  document_number       String    @db.VarChar(100)
+  document_date         DateTime  @db.Date
+  source_godown_id      String    @db.Uuid
+  destination_godown_id String    @db.Uuid
+  status                String    @db.VarChar(50) // 'DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'
+  narration             String?   @db.Text
+  posted_at             DateTime? @db.Timestamptz
+  posted_by             String?   @db.Uuid
+  created_at            DateTime  @default(now()) @db.Timestamptz
+  updated_at            DateTime  @updatedAt @db.Timestamptz
+
+  company            Company             @relation(fields: [company_id], references: [id])
+  branch             Branch              @relation(fields: [branch_id], references: [id])
+  financial_year     FinancialYear       @relation(fields: [financial_year_id], references: [id])
+  source_godown      Godown              @relation("TransferSource", fields: [source_godown_id], references: [id])
+  destination_godown Godown              @relation("TransferDestination", fields: [destination_godown_id], references: [id])
+  poster             User?               @relation("StockTransferPoster", fields: [posted_by], references: [id])
+  lines              StockTransferLine[]
+
+  @@unique([company_id, document_number])
+  @@map("stock_transfers")
+}
+
+model StockTransferLine {
+  id                String  @id @default(uuid()) @db.Uuid
+  stock_transfer_id String  @db.Uuid
+  item_id           String  @db.Uuid
+  unit_id           String  @db.Uuid
+  quantity          Decimal @db.Decimal(15, 6)
+
+  stock_transfer StockTransfer @relation(fields: [stock_transfer_id], references: [id], onDelete: Cascade)
+  item           Item          @relation(fields: [item_id], references: [id])
+  unit           Unit          @relation(fields: [unit_id], references: [id])
+
+  @@map("stock_transfer_lines")
+}
+
+model OpeningStock {
+  id                String    @id @default(uuid()) @db.Uuid
+  company_id        String    @db.Uuid
+  branch_id         String    @db.Uuid
+  financial_year_id String    @db.Uuid
+  document_number   String    @db.VarChar(100)
+  document_date     DateTime  @db.Date
+  status            String    @db.VarChar(50) // POSTED, REVERSED
+  narration         String?   @db.Text
+  posted_at         DateTime? @db.Timestamptz
+  posted_by         String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  updated_at        DateTime  @updatedAt @db.Timestamptz
+
+  company        Company            @relation(fields: [company_id], references: [id])
+  branch         Branch             @relation(fields: [branch_id], references: [id])
+  financial_year FinancialYear      @relation(fields: [financial_year_id], references: [id])
+  poster         User?              @relation("OpeningStockPoster", fields: [posted_by], references: [id])
+  lines          OpeningStockLine[]
+
+  @@unique([company_id, document_number])
+  @@map("opening_stocks")
+}
+
+model OpeningStockLine {
+  id               String  @id @default(uuid()) @db.Uuid
+  opening_stock_id String  @db.Uuid
+  item_id          String  @db.Uuid
+  godown_id        String  @db.Uuid
+  unit_id          String  @db.Uuid
+  quantity         Decimal @db.Decimal(15, 6)
+  cost_rate        Decimal? @db.Decimal(15, 6)
+
+  opening_stock OpeningStock @relation(fields: [opening_stock_id], references: [id], onDelete: Cascade)
+  item          Item         @relation(fields: [item_id], references: [id])
+  godown        Godown       @relation(fields: [godown_id], references: [id])
+  unit          Unit         @relation(fields: [unit_id], references: [id])
+
+  @@map("opening_stock_lines")
+}
+
+model StockCount {
+  id                String   @id @default(uuid()) @db.Uuid
+  company_id        String   @db.Uuid
+  branch_id         String   @db.Uuid
+  financial_year_id String   @db.Uuid
+  document_number   String   @db.VarChar(100)
+  count_date        DateTime @db.Date
+  godown_id         String   @db.Uuid
+  status            String   @db.VarChar(50) // DRAFT, COMPLETED, POSTED
+  notes             String?  @db.Text
+  counted_by        String?  @db.Uuid
+  posted_by         String?  @db.Uuid
+  created_at        DateTime @default(now()) @db.Timestamptz
+  updated_at        DateTime @updatedAt @db.Timestamptz
+
+  company        Company          @relation(fields: [company_id], references: [id])
+  branch         Branch           @relation(fields: [branch_id], references: [id])
+  financial_year FinancialYear    @relation(fields: [financial_year_id], references: [id])
+  godown         Godown           @relation(fields: [godown_id], references: [id])
+  counter        User?            @relation("StockCountCounter", fields: [counted_by], references: [id])
+  poster         User?            @relation("StockCountPoster", fields: [posted_by], references: [id])
+  lines          StockCountLine[]
+
+  @@unique([company_id, document_number])
+  @@map("stock_counts")
+}
+
+model StockCountLine {
+  id               String  @id @default(uuid()) @db.Uuid
+  stock_count_id   String  @db.Uuid
+  item_id          String  @db.Uuid
+  unit_id          String  @db.Uuid
+  system_quantity  Decimal @db.Decimal(15, 6)
+  counted_quantity Decimal @db.Decimal(15, 6)
+  variance         Decimal @db.Decimal(15, 6)
+
+  stock_count StockCount @relation(fields: [stock_count_id], references: [id], onDelete: Cascade)
+  item        Item       @relation(fields: [item_id], references: [id])
+  unit        Unit       @relation(fields: [unit_id], references: [id])
+
+  @@map("stock_count_lines")
+}
+
+// ── Returns & Claims Models ─────────────────────────────────────────────────
+
+model ReturnReason {
+  id          String   @id @default(uuid()) @db.Uuid
+  company_id  String   @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company          Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  sales_returns    SalesReturn[]
+  purchase_returns PurchaseReturn[]
+  claims           Claim[]
+
+  @@unique([company_id, code])
+  @@map("return_reasons")
+}
+
+model Claim {
+  id              String   @id @default(uuid()) @db.Uuid
+  company_id      String   @db.Uuid
+  branch_id       String   @db.Uuid
+  party_id        String   @db.Uuid
+  claim_type      String   @db.VarChar(50) // 'CUSTOMER_CLAIM', 'SUPPLIER_CLAIM'
+  document_number String   @db.VarChar(100)
+  document_date   DateTime @db.Date
+  status          String   @db.VarChar(50) // 'OPEN', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'SETTLED', 'CLOSED'
+  reason_id       String?  @db.Uuid
+  notes           String?  @db.Text
+  total_amount    Decimal  @default(0) @db.Decimal(15, 6)
+
+  // Linkages to origin documents where applicable
+  sales_invoice_id    String? @db.Uuid
+  purchase_invoice_id String? @db.Uuid
+  sales_return_id     String? @db.Uuid
+  purchase_return_id  String? @db.Uuid
+
+  created_by  String?   @db.Uuid
+  approved_by String?   @db.Uuid
+  approved_at DateTime? @db.Timestamptz
+  settled_by  String?   @db.Uuid
+  settled_at  DateTime? @db.Timestamptz
+  created_at  DateTime  @default(now()) @db.Timestamptz
+  updated_at  DateTime  @updatedAt @db.Timestamptz
+
+  company  Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch   Branch        @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  party    Party         @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  reason   ReturnReason? @relation(fields: [reason_id], references: [id], onDelete: Restrict)
+  creator  User?         @relation("ClaimCreator", fields: [created_by], references: [id], onDelete: SetNull)
+  approver User?         @relation("ClaimApprover", fields: [approved_by], references: [id], onDelete: SetNull)
+  settler  User?         @relation("ClaimSettler", fields: [settled_by], references: [id], onDelete: SetNull)
+
+  // Back references to source documents
+  sales_invoice    SalesInvoice?    @relation(fields: [sales_invoice_id], references: [id], onDelete: SetNull)
+  purchase_invoice PurchaseInvoice? @relation(fields: [purchase_invoice_id], references: [id], onDelete: SetNull)
+  sales_return     SalesReturn?     @relation(fields: [sales_return_id], references: [id], onDelete: SetNull)
+  purchase_return  PurchaseReturn?  @relation(fields: [purchase_return_id], references: [id], onDelete: SetNull)
+
+  lines  ClaimLine[]
+  events ClaimEvent[]
+
+  @@unique([company_id, document_number])
+  @@index([party_id])
+  @@index([status])
+  @@map("claims")
+}
+
+model ClaimLine {
+  id       String  @id @default(uuid()) @db.Uuid
+  claim_id String  @db.Uuid
+  item_id  String  @db.Uuid
+  unit_id  String  @db.Uuid
+  quantity Decimal @db.Decimal(15, 6)
+  rate     Decimal @db.Decimal(15, 6)
+  amount   Decimal @default(0) @db.Decimal(15, 6)
+  notes    String? @db.Text
+
+  claim Claim @relation(fields: [claim_id], references: [id], onDelete: Cascade)
+  item  Item  @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit  Unit  @relation(fields: [unit_id], references: [id], onDelete: Restrict)
+
+  @@map("claim_lines")
+}
+
+model ClaimEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  claim_id   String   @db.Uuid
+  user_id    String   @db.Uuid
+  event_type String   @db.VarChar(50) // 'CREATED', 'STATUS_CHANGED', 'APPROVED', 'REJECTED', 'SETTLED', 'NOTE_ADDED'
+  old_status String?  @db.VarChar(50)
+  new_status String?  @db.VarChar(50)
+  notes      String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  claim Claim @relation(fields: [claim_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@index([claim_id])
+  @@map("claim_events")
+}
+
+// ── Barcode & Label Models (Module 12) ────────────────────────────────────
+
+model ItemBarcode {
+  id           String   @id @default(uuid()) @db.Uuid
+  company_id   String   @db.Uuid
+  item_id      String   @db.Uuid
+  barcode      String   @db.VarChar(100)
+  barcode_type String   @default("CODE128") @db.VarChar(50) // 'CODE128', 'EAN13', 'EAN8', 'UPC_A', 'QR', 'SUPPLIER', 'INTERNAL'
+  is_primary   Boolean  @default(false)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, barcode], name: "uix_item_barcode_company_barcode")
+  @@index([company_id, barcode, is_active])
+  @@index([item_id])
+  @@map("item_barcodes")
+}
+
+model LabelTemplate {
+  id            String   @id @default(uuid()) @db.Uuid
+  company_id    String   @db.Uuid
+  name          String   @db.VarChar(100)
+  template_type String   @default("PRODUCT") @db.VarChar(50) // 'PRODUCT', 'MRP', 'INWARD', 'SHELF'
+  paper_type    String   @default("ROLL") @db.VarChar(50) // 'ROLL', 'SHEET'
+  width_mm      Decimal  @default(50) @db.Decimal(8, 2)
+  height_mm     Decimal  @default(25) @db.Decimal(8, 2)
+  columns       Int      @default(1)
+  is_default    Boolean  @default(false)
+  is_active     Boolean  @default(true)
+  config_json   String?  @db.Text
+  created_at    DateTime @default(now()) @db.Timestamptz
+  updated_at    DateTime @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  @@index([company_id, template_type])
+  @@map("label_templates")
+}
+
+// ── Module 13: Pricing & Schemes Models ──────────────────────────────────────
+
+model PriceList {
+  id            String    @id @default(uuid()) @db.Uuid
+  company_id    String    @db.Uuid
+  branch_id     String?   @db.Uuid
+  code          String    @db.VarChar(50)
+  name          String    @db.VarChar(255)
+  currency      String    @default("INR") @db.VarChar(10)
+  status        String    @default("ACTIVE") @db.VarChar(50) // 'ACTIVE', 'INACTIVE'
+  valid_from    DateTime? @db.Date
+  valid_to      DateTime? @db.Date
+  priority      Int       @default(0)
+  customer_type String?   @db.VarChar(50) // 'WHOLESALE', 'RETAIL', etc. or null
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now()) @db.Timestamptz
+  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company Company         @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch  Branch?         @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  items   PriceListItem[]
+  parties Party[]
+
+  @@unique([company_id, code])
+  @@index([company_id, status])
+  @@index([valid_from, valid_to])
+  @@map("price_lists")
+}
+
+model PriceListItem {
+  id               String   @id @default(uuid()) @db.Uuid
+  price_list_id    String   @db.Uuid
+  item_id          String   @db.Uuid
+  unit_id          String?  @db.Uuid
+  rate             Decimal  @db.Decimal(15, 6)
+  min_qty          Decimal  @default(0) @db.Decimal(15, 6)
+  max_qty          Decimal? @db.Decimal(15, 6)
+  discount_percent Decimal  @default(0) @db.Decimal(10, 2)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now()) @db.Timestamptz
+  updated_at       DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  price_list PriceList @relation(fields: [price_list_id], references: [id], onDelete: Cascade)
+  item       Item      @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit       Unit?     @relation(fields: [unit_id], references: [id], onDelete: SetNull)
+
+  @@unique([price_list_id, item_id, min_qty])
+  @@index([price_list_id, item_id])
+  @@map("price_list_items")
+}
+
+model CustomerItemPrice {
+  id         String    @id @default(uuid()) @db.Uuid
+  company_id String    @db.Uuid
+  party_id   String    @db.Uuid
+  item_id    String    @db.Uuid
+  unit_id    String?   @db.Uuid
+  rate       Decimal   @db.Decimal(15, 6)
+  min_qty    Decimal   @default(0) @db.Decimal(15, 6)
+  max_qty    Decimal?  @db.Decimal(15, 6)
+  valid_from DateTime? @db.Date
+  valid_to   DateTime? @db.Date
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now()) @db.Timestamptz
+  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  party   Party   @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  unit    Unit?   @relation(fields: [unit_id], references: [id], onDelete: SetNull)
+
+  @@unique([party_id, item_id, min_qty])
+  @@index([company_id, party_id, item_id])
+  @@map("customer_item_prices")
+}
+
+model PromotionScheme {
+  id               String    @id @default(uuid()) @db.Uuid
+  company_id       String    @db.Uuid
+  branch_id        String?   @db.Uuid
+  code             String    @db.VarChar(50)
+  name             String    @db.VarChar(255)
+  scheme_type      String    @db.VarChar(50) // 'BUY_X_GET_Y', 'FREE_QUANTITY', 'ITEM_DISCOUNT', 'BILL_DISCOUNT', 'PROMOTIONAL'
+  status           String    @default("ACTIVE") @db.VarChar(50) // 'ACTIVE', 'INACTIVE'
+  valid_from       DateTime? @db.Date
+  valid_to         DateTime? @db.Date
+  priority         Int       @default(0)
+  stackable        Boolean   @default(false)
+  customer_type    String?   @db.VarChar(50) // 'WHOLESALE', 'RETAIL' or null
+  party_id         String?   @db.Uuid
+  item_id          String?   @db.Uuid
+  buy_quantity     Decimal?  @db.Decimal(15, 6)
+  get_quantity     Decimal?  @db.Decimal(15, 6)
+  free_item_id     String?   @db.Uuid
+  discount_percent Decimal?  @db.Decimal(10, 2)
+  discount_amount  Decimal?  @db.Decimal(15, 6)
+  min_order_amount Decimal?  @db.Decimal(15, 6)
+  max_benefit      Decimal?  @db.Decimal(15, 6)
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now()) @db.Timestamptz
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  company   Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch    Branch? @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  party     Party?  @relation(fields: [party_id], references: [id], onDelete: SetNull)
+  item      Item?   @relation("SchemeItem", fields: [item_id], references: [id], onDelete: SetNull)
+  free_item Item?   @relation("SchemeFreeItem", fields: [free_item_id], references: [id], onDelete: SetNull)
+
+  @@unique([company_id, code])
+  @@index([company_id, status])
+  @@index([valid_from, valid_to])
+  @@map("promotion_schemes")
+}
+
+model PricingTrace {
+  id                     String   @id @default(uuid()) @db.Uuid
+  company_id             String   @db.Uuid
+  document_type          String   @db.VarChar(50) // 'SALES_INVOICE', 'SALES_ORDER', 'SALES_QUOTATION', 'POS_SALE'
+  document_id            String   @db.Uuid
+  line_id                String?  @db.Uuid
+  item_id                String   @db.Uuid
+  party_id               String?  @db.Uuid
+  pricing_engine_version String   @default("1.0.0") @db.VarChar(20)
+  base_price             Decimal  @db.Decimal(15, 6)
+  resolved_rate          Decimal  @db.Decimal(15, 6)
+  price_list_id          String?  @db.Uuid
+  price_list_item_id     String?  @db.Uuid
+  customer_rate_id       String?  @db.Uuid
+  quantity_slab_id       String?  @db.Uuid
+  promotion_id           String?  @db.Uuid
+  original_quantity      Decimal  @db.Decimal(15, 6)
+  charged_quantity       Decimal  @db.Decimal(15, 6)
+  free_quantity          Decimal  @default(0) @db.Decimal(15, 6)
+  discount_amount        Decimal  @default(0) @db.Decimal(15, 6)
+  discount_percent       Decimal  @default(0) @db.Decimal(10, 2)
+  final_unit_price       Decimal  @db.Decimal(15, 6)
+  final_line_amount      Decimal  @db.Decimal(15, 6)
+  precedence_reason      String?  @db.VarChar(255)
+  trace_details_json     String   @db.Text
+  created_at             DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Restrict)
+  party   Party?  @relation(fields: [party_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, document_type, document_id])
+  @@index([line_id])
+  @@index([item_id])
+  @@map("pricing_traces")
+}
+
+model BankAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  company_id        String   @db.Uuid
+  branch_id         String?  @db.Uuid
+  ledger_account_id String   @unique @db.Uuid
+  bank_name         String   @db.VarChar(100)
+  account_number    String   @db.VarChar(50)
+  ifsc_code         String?  @db.VarChar(20)
+  branch_name       String?  @db.VarChar(100)
+  account_type      String   @default("CURRENT") @db.VarChar(20) // 'CURRENT', 'SAVINGS', 'OD', 'CC'
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Timestamptz
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company        Company       @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch         Branch?       @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  ledger_account LedgerAccount @relation(fields: [ledger_account_id], references: [id], onDelete: Restrict)
+  cheques        Cheque[]
+
+  @@map("bank_accounts")
+}
+
+model Cheque {
+  id                String   @id @default(uuid()) @db.Uuid
+  company_id        String   @db.Uuid
+  branch_id         String?  @db.Uuid
+  financial_year_id String?  @db.Uuid
+  cheque_type       String   @db.VarChar(20) // 'ISSUED', 'RECEIVED'
+  cheque_number     String   @db.VarChar(50)
+  cheque_date       DateTime @db.Date
+  amount            Decimal  @db.Decimal(15, 6)
+
+  party_id         String? @db.Uuid // If received from or issued to a Party
+  bank_account_id  String? @db.Uuid // If issued by us (our BankAccount)
+  drawee_bank_name String? @db.VarChar(100) // For received cheques, which bank the customer used
+
+  status String @default("PENDING") @db.VarChar(20) // 'PENDING', 'CLEARED', 'BOUNCED', 'CANCELLED', 'DEPOSITED'
+
+  voucher_id String? @unique @db.Uuid // Link to the accounting voucher once it's posted/cleared
+
+  cleared_date  DateTime? @db.Date
+  bounce_reason String?   @db.VarChar(255)
+  notes         String?   @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company      Company      @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch       Branch?      @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  party        Party?       @relation(fields: [party_id], references: [id], onDelete: Restrict)
+  bank_account BankAccount? @relation(fields: [bank_account_id], references: [id], onDelete: Restrict)
+  voucher      Voucher?     @relation(fields: [voucher_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id, status])
+  @@index([company_id, cheque_type])
+  @@index([cheque_date])
+  @@map("cheques")
+}
+
+model BankReconciliation {
+  id                  String   @id @default(uuid()) @db.Uuid
+  company_id          String   @db.Uuid
+  bank_account_id     String   @db.Uuid
+  reconciliation_date DateTime @db.Date
+  statement_balance   Decimal  @db.Decimal(15, 6)
+  book_balance        Decimal  @db.Decimal(15, 6)
+  difference          Decimal  @db.Decimal(15, 6)
+  status              String   @default("DRAFT") @db.VarChar(20) // 'DRAFT', 'COMPLETED'
+  created_at          DateTime @default(now()) @db.Timestamptz
+  updated_at          DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+
+  @@map("bank_reconciliations")
+}
+
+// ── Retail Phase 2 Models ───────────────────────────────────────────────────
+
+model NeedList {
+  id                    String    @id @default(uuid()) @db.Uuid
+  organization_id       String    @db.Uuid
+  company_id            String    @db.Uuid
+  branch_id             String?   @db.Uuid
+  name                  String    @db.VarChar(255)
+  quantity              Decimal   @default(1) @db.Decimal(15, 6)
+  customer_id           String?   @db.Uuid
+  customer_phone        String?   @db.VarChar(50)
+  preferred_supplier_id String?   @db.Uuid
+  needed_by             DateTime? @db.Date
+  priority              String    @default("NORMAL") @db.VarChar(50)
+  source                String    @default("SHOP") @db.VarChar(50)
+  status                String    @default("NEED") @db.VarChar(50) // 'NEED', 'ORDERED', 'RECEIVED', 'CANCELLED'
+  note                  String?   @db.Text
+  expected_price Decimal? @db.Decimal(15,6)
+  created_by            String?   @db.Uuid
+  created_at            DateTime  @default(now()) @db.Timestamptz
+  updated_at            DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company            Company      @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch             Branch?      @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  customer           Party?       @relation("NeedListCustomer", fields: [customer_id], references: [id], onDelete: SetNull)
+  preferred_supplier Party?       @relation("NeedListSupplier", fields: [preferred_supplier_id], references: [id], onDelete: SetNull)
+  user               User?        @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([company_id, status])
+  @@map("need_lists")
+}
+
+model Attachment {
+  id              String  @id @default(uuid()) @db.Uuid
+  organization_id String  @db.Uuid
+  company_id      String  @db.Uuid
+  branch_id       String? @db.Uuid
+
+  entity_type String @db.VarChar(100)
+  entity_id   String @db.Uuid
+  category    String @db.VarChar(100)
+
+  original_file_name String @db.VarChar(255)
+  stored_file_name   String @db.VarChar(255)
+  mime_type          String @db.VarChar(100)
+  file_size          Int
+
+  storage_provider String @db.VarChar(50)
+  storage_key      String @db.VarChar(500)
+
+  created_by String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company      Company      @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch       Branch?      @relation(fields: [branch_id], references: [id], onDelete: SetNull)
+  user         User?        @relation(fields: [created_by], references: [id], onDelete: SetNull)
+  expense      Expense?
+
+  @@index([company_id, entity_type, entity_id])
+  @@map("attachments")
+}
+
+// -- Retail Expense Models ----------------------------------------------------------
+
+model ExpenseCategory {
+  id              String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  company_id      String @db.Uuid
+
+  name      String  @db.VarChar(255)
+  icon      String? @db.VarChar(50)
+  is_active Boolean @default(true)
+  ledger_id String? @db.Uuid
+
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization   Organization   @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company        Company        @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  ledger_account LedgerAccount? @relation(fields: [ledger_id], references: [id], onDelete: SetNull)
+
+  expenses Expense[]
+
+  @@unique([company_id, name])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id              String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  company_id      String @db.Uuid
+  branch_id       String @db.Uuid
+
+  type        String  @db.VarChar(50) // 'BUSINESS_EXPENSE', 'OWNER_WITHDRAWAL'
+  category_id String? @db.Uuid
+
+  amount         Decimal  @db.Decimal(15, 6)
+  payment_method String   @db.VarChar(50) // 'CASH', 'UPI', 'BANK', 'CARD'
+  date           DateTime @db.Date
+
+  paid_to     String? @db.VarChar(255)
+  bill_number String? @db.VarChar(100)
+  note        String? @db.Text
+
+  status        String  @default("POSTED") @db.VarChar(50) // 'POSTED', 'CANCELLED'
+  voucher_id    String? @unique @db.Uuid
+  attachment_id String? @unique @db.Uuid
+
+  created_by String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  organization Organization     @relation(fields: [organization_id], references: [id], onDelete: Restrict)
+  company      Company          @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  branch       Branch           @relation(fields: [branch_id], references: [id], onDelete: Restrict)
+  category     ExpenseCategory? @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  attachment   Attachment?      @relation(fields: [attachment_id], references: [id], onDelete: SetNull)
+  user         User?            @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([company_id, branch_id, date])
+  @@map("expenses")
+}
+
+model RetailCapabilitySettings {
+  id                    String  @id @default(uuid()) @db.Uuid
+  company_id            String  @unique @db.Uuid
+  variants_enabled      Boolean @default(false)
+  multi_unit_enabled    Boolean @default(false)
+  weight_enabled        Boolean @default(false)
+  length_enabled        Boolean @default(false)
+  area_enabled          Boolean @default(false)
+  batch_enabled         Boolean @default(false)
+  serial_enabled        Boolean @default(false)
+  images_enabled        Boolean @default(false)
+  services_enabled      Boolean @default(false)
+  bundles_enabled       Boolean @default(false)
+  modifiers_enabled     Boolean @default(false)
+  compatibility_enabled Boolean @default(false)
+  advanced_pricing      Boolean @default(false)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("retail_capability_settings")
+}
+
+model ItemVariant {
+  id                String   @id @default(uuid()) @db.Uuid
+  item_id           String   @db.Uuid
+  sku               String?  @db.VarChar(100)
+  barcode           String?  @db.VarChar(100)
+  attributes        Json     @db.JsonB
+  purchase_rate     Decimal? @db.Decimal(15, 6)
+  mrp               Decimal? @db.Decimal(15, 6)
+  default_sale_rate Decimal? @db.Decimal(15, 6)
+  is_active         Boolean  @default(true)
+
+  item Item @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  pos_held_bill_lines      PosHeldBillLine[]
+  sales_return_lines       SalesReturnLine[]
+  purchase_return_lines    PurchaseReturnLine[]
+  purchase_order_lines     PurchaseOrderLine[]
+  goods_receipt_lines      GoodsReceiptLine[]
+  sales_quotation_lines    SalesQuotationLine[]
+  sales_order_lines        SalesOrderLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+
+  @@index([item_id])
+  @@map("item_variants")
+}
+
+model ItemUnitConversion {
+  id                String  @id @default(uuid()) @db.Uuid
+  item_id           String  @db.Uuid
+  from_unit_id      String  @db.Uuid
+  to_unit_id        String  @db.Uuid
+  conversion_factor Decimal @db.Decimal(15, 6)
+
+  item      Item @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  from_unit Unit @relation("ConversionFromUnit", fields: [from_unit_id], references: [id], onDelete: Restrict)
+  to_unit   Unit @relation("ConversionToUnit", fields: [to_unit_id], references: [id], onDelete: Restrict)
+
+  @@unique([item_id, from_unit_id, to_unit_id], name: "uix_item_unit_conversion")
+  @@map("item_unit_conversions")
+}
+
+model ItemBatch {
+  id                 String    @id @default(uuid()) @db.Uuid
+  company_id         String    @db.Uuid
+  item_id            String    @db.Uuid
+  batch_number       String    @db.VarChar(100)
+  manufacturing_date DateTime? @db.Date
+  expiry_date        DateTime? @db.Date
+  mrp                Decimal?  @db.Decimal(15, 6)
+  purchase_rate      Decimal?  @db.Decimal(15, 6)
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  item    Item    @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  stock_movements          StockMovement[]
+  stock_balance_projection StockBalanceProjection[]
+  sales_invoice_lines      SalesInvoiceLine[]
+  purchase_invoice_lines   PurchaseInvoiceLine[]
+  pos_held_bill_lines      PosHeldBillLine[]
+  sales_return_lines       SalesReturnLine[]
+  purchase_return_lines    PurchaseReturnLine[]
+  purchase_order_lines     PurchaseOrderLine[]
+  goods_receipt_lines      GoodsReceiptLine[]
+  sales_quotation_lines    SalesQuotationLine[]
+
+  sales_invoice_batch_allocations SalesInvoiceLineBatchAllocation[]
+  sales_return_batch_allocations  SalesReturnLineBatchAllocation[]
+  sales_order_lines        SalesOrderLine[]
+  delivery_challan_lines   DeliveryChallanLine[]
+
+  @@unique([item_id, batch_number], name: "uix_item_batch_number")
+  @@index([company_id])
+  @@map("item_batches")
+}
+
+model ItemSerial {
+  id               String    @id @default(uuid()) @db.Uuid
+  company_id       String    @db.Uuid
+  godown_id        String?   @db.Uuid
+  variant_id       String?   @db.Uuid
+  batch_id         String?   @db.Uuid
+  received_date    DateTime? @db.Date
+  receipt_document_id String? @db.Uuid
+  item_id          String    @db.Uuid
+  serial_number    String    @db.VarChar(100)
+  status           String    @default("AVAILABLE") @db.VarChar(50)
+  warranty_start   DateTime? @db.Date
+  warranty_end     DateTime? @db.Date
+  sold_to_id       String?   @db.Uuid
+  sales_invoice_id String?   @db.Uuid
+
+  item          Item          @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  sold_to       Party?        @relation(fields: [sold_to_id], references: [id], onDelete: SetNull)
+  sales_invoice SalesInvoice? @relation(fields: [sales_invoice_id], references: [id], onDelete: SetNull)
+
+  stock_movements StockMovement[]
+  allocations     SerialAllocation[]
+
+  @@unique([item_id, serial_number], name: "uix_item_serial_number")
+  @@unique([company_id, serial_number], name: "uix_company_serial_number", map: "uix_company_serial_number")
+  @@index([company_id, godown_id, status])
+  @@map("item_serials")
+}
+
+model ItemBundleComponent {
+  id                String  @id @default(uuid()) @db.Uuid
+  bundle_item_id    String  @db.Uuid
+  component_item_id String  @db.Uuid
+  quantity          Decimal @db.Decimal(15, 6)
+
+  bundle_item    Item @relation("BundleItem", fields: [bundle_item_id], references: [id], onDelete: Cascade)
+  component_item Item @relation("ComponentItem", fields: [component_item_id], references: [id], onDelete: Restrict)
+
+  @@map("item_bundle_components")
+}
+
+model ItemModifierGroup {
+  id         String @id @default(uuid()) @db.Uuid
+  item_id    String @db.Uuid
+  name       String @db.VarChar(100)
+  min_select Int    @default(0)
+  max_select Int    @default(1)
+
+  item    Item                 @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  options ItemModifierOption[]
+
+  @@map("item_modifier_groups")
+}
+
+model ItemModifierOption {
+  id                String  @id @default(uuid()) @db.Uuid
+  modifier_group_id String  @db.Uuid
+  name              String  @db.VarChar(100)
+  price_delta       Decimal @default(0) @db.Decimal(15, 6)
+
+  group ItemModifierGroup @relation(fields: [modifier_group_id], references: [id], onDelete: Cascade)
+
+  @@map("item_modifier_options")
+}
+
+model VariantOptionDefinition {
+  id         String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  name       String @db.VarChar(100)
+  values     Json   @db.JsonB
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, name], name: "uix_variant_option_name")
+  @@map("variant_option_definitions")
+}
+
+model SerialAllocation {
+  id                   String @id @default(uuid()) @db.Uuid
+  company_id           String @db.Uuid
+  serial_id            String @db.Uuid
+  source_document_type String @db.VarChar(100)
+  source_document_id   String @db.Uuid
+  source_line_id       String @db.Uuid
+  warranty_snapshot    Json? @db.JsonB
+  returned_at          DateTime?
+  return_document_id   String? @db.Uuid
+
+  serial             ItemSerial        @relation(fields: [serial_id], references: [id], onDelete: Restrict)
+  company            Company           @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  sales_invoice_line SalesInvoiceLine? @relation(fields: [source_line_id], references: [id], map: "fk_sil_sa", onDelete: Cascade)
+
+  @@index([source_document_type, source_document_id])
+  @@map("serial_allocations")
+}
+
+model RetailImportJob {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  financial_year_id String @db.Uuid
+  user_id String @db.Uuid
+  preset String @db.VarChar(30)
+  kind String @db.VarChar(30)
+  filename String @db.VarChar(255)
+  fingerprint String @db.VarChar(64)
+  configuration Json @db.JsonB
+  headers Json @db.JsonB
+  status String @default("PREVIEW") @db.VarChar(30)
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Restrict)
+  financial_year FinancialYear @relation(fields:[financial_year_id],references:[id],onDelete:Restrict)
+  user User @relation(fields:[user_id],references:[id],onDelete:Restrict)
+  rows RetailImportRow[]
+  @@unique([company_id,branch_id,fingerprint])
+  @@index([company_id,created_at])
+  @@map("retail_import_jobs")
+}
+model RetailImportRow {
+  id String @id @default(uuid()) @db.Uuid
+  job_id String @db.Uuid
+  number Int
+  source Json @db.JsonB
+  normalized Json @db.JsonB
+  errors Json @db.JsonB
+  status String @default("READY") @db.VarChar(30)
+  entity_id String? @db.Uuid
+  job RetailImportJob @relation(fields:[job_id],references:[id],onDelete:Cascade)
+  @@unique([job_id,number])
+  @@index([job_id,status,number])
+  @@map("retail_import_rows")
+}
+model RetailImportIdentity {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  kind String @db.VarChar(30)
+  source_key String @db.VarChar(64)
+  entity_id String @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,kind,source_key])
+  @@map("retail_import_identities")
+}
+model RetailMigrationChoice {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  user_id String @db.Uuid
+  choice String @db.VarChar(20)
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  user User @relation(fields:[user_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,user_id])
+  @@map("retail_migration_choices")
+}
+model RetailReportPreference {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  user_id String @db.Uuid
+  enabled Boolean @default(false)
+  time String @default("19:30") @db.VarChar(5)
+  language String @default("hi") @db.VarChar(5)
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Restrict)
+  user User @relation(fields:[user_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,branch_id,user_id])
+  @@index([enabled,time])
+  @@map("retail_report_preferences")
+}
+model RetailReportNotification {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  branch_id String @db.Uuid
+  user_id String @db.Uuid
+  day String @db.VarChar(10)
+  summary Json @db.JsonB
+  read_at DateTime? @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  branch Branch @relation(fields:[branch_id],references:[id],onDelete:Restrict)
+  user User @relation(fields:[user_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,branch_id,user_id,day])
+  @@index([company_id,user_id,created_at])
+  @@map("retail_report_notifications")
+}
+model RetailDataBackupRequest {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  user_id String @db.Uuid
+  request_key String @db.VarChar(64)
+  status String @default("REQUESTED") @db.VarChar(30)
+  contacted_at DateTime? @db.Timestamptz
+  created_at DateTime @default(now()) @db.Timestamptz
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict)
+  user User @relation(fields:[user_id],references:[id],onDelete:Restrict)
+  @@unique([company_id,user_id,request_key])
+  @@index([contacted_at,created_at])
+  @@map("retail_data_backup_requests")
+}
+
+// One WAC pool per company/item/variant; physical locations remain in Inventory.
+model InventoryCostState {
+  company Company @relation(fields:[company_id],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  item Item @relation(fields:[item_id],references:[id],onDelete:Cascade)
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  item_id String @db.Uuid
+  variant_key String @db.VarChar(40)
+  quantity Decimal @default(0) @db.Decimal(24, 12)
+  unknown_quantity Decimal @default(0) @db.Decimal(24, 12)
+  known_value Decimal @default(0) @db.Decimal(24, 12)
+  updated_at DateTime @updatedAt @db.Timestamptz
+  @@unique([company_id,item_id,variant_key])
+  @@index([company_id,item_id])
+  @@map("inventory_cost_states")
+}

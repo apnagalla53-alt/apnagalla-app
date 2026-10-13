@@ -1,0 +1,268 @@
+.retail-app .r-workflow-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--r-border);
+  padding: 8px 12px 0;
+  gap: 4px;
+  background: var(--r-surface);
+}
+.retail-app .r-workflow-tabs a {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1 0 105px;
+  padding: 12px 8px;
+  text-align: center;
+  color: var(--r-text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  border-bottom: 3px solid transparent;
+  border-radius: 14px 14px 0 0;
+}
+.retail-app .r-workflow-tabs a.is-active,
+.retail-app .r-workflow-tabs a[aria-current="page"] {
+  background: var(--r-primary-light);
+  border-bottom-color: var(--r-primary);
+  color: var(--r-primary-text);
+  font-weight: 650;
+}
+.retail-app .r-secondary-workflows {
+  display: flex;
+  gap: 5px;
+  border: 1px solid var(--r-border);
+  background: var(--r-surface);
+  border-radius: 17px;
+  padding: 6px;
+  margin: 16px 0 20px;
+}
+.retail-app .r-secondary-workflows > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 48px;
+  gap: 9px;
+  background: transparent;
+  border: 0;
+  color: var(--r-text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 10px;
+  border-radius: 12px;
+}
+.retail-app .r-secondary-workflows .is-active {
+  background: var(--r-primary-light);
+  color: var(--r-primary-text);
+  font-weight: 650;
+}
+.retail-app .r-inventory-toolbar,
+.retail-app .r-search-filter {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin: 12px 0;
+}
+.retail-app .r-inventory-toolbar > :first-child,
+.retail-app .r-search-filter > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.retail-app .r-inventory-toolbar > button,
+.retail-app .r-search-filter > button {
+  min-height: 54px;
+  min-width: 54px;
+}
+.retail-app .r-inventory-card.r-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  border: 1px solid var(--r-border-light);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--r-mobile-shadow);
+  margin-bottom: 14px;
+}
+.retail-app .r-inventory-card-main {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  color: var(--r-text);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.retail-app .r-inventory-card-heading,
+.retail-app .r-inventory-card-meta,
+.retail-app .r-inventory-card-stock {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 14px;
+}
+.retail-app .r-inventory-card-heading strong {
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-inventory-card-heading strong:last-child {
+  white-space: nowrap;
+}
+.retail-app .r-inventory-card-meta,
+.retail-app .r-inventory-card-stock {
+  font-size: 0.8rem;
+  color: var(--r-text-secondary);
+  flex-wrap: wrap;
+}
+.retail-app .r-inventory-card-meta > span:first-child {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-inventory-card-tags {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.retail-app .r-inventory-card-tags span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--r-primary-light);
+  color: var(--r-primary-text);
+}
+.retail-app .r-inventory-card-main[aria-pressed="true"] {
+  outline: 2px solid var(--r-primary);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+.retail-app .r-form-section,
+.retail-app .r-account-page > .r-card {
+  border-radius: 20px;
+  box-shadow: var(--r-mobile-shadow);
+}
+.retail-app .r-fieldset > label,
+.retail-app .r-sheet-body label {
+  display: block;
+  font-weight: 550;
+  font-size: 0.875rem;
+  margin: 16px 0 8px;
+}
+.retail-app .r-fieldset > .r-input {
+  margin-bottom: 10px;
+}
+.retail-app .r-fieldset > .r-list-item {
+  display: flex;
+  min-height: 54px;
+}
+.retail-app .r-input {
+  min-height: 52px;
+  border-radius: 14px;
+}
+.retail-app textarea.r-input {
+  min-height: 92px;
+}
+.retail-app .r-btn {
+  min-height: 44px;
+}
+.retail-app .r-btn--primary.r-w-full,
+.retail-app .r-btn--primary-lg {
+  min-height: 54px;
+}
+.retail-app input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--r-primary);
+}
+.retail-app .r-quick-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.retail-app .r-quick-action {
+  min-width: 0;
+  min-height: 110px;
+  padding: 14px 7px;
+  border-radius: 18px;
+  background: var(--r-surface);
+  border: 1px solid var(--r-border-light);
+  box-shadow: var(--r-mobile-shadow);
+}
+.retail-app .r-quick-action span {
+  font-size: 0.825rem;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-quick-action small {
+  font-size: 0.68rem;
+}
+.retail-app .r-btn:focus-visible,
+.retail-app .r-workflow-tabs a:focus-visible,
+.retail-app .r-inventory-card-main:focus-visible {
+  outline: 3px solid var(--r-primary);
+  outline-offset: 3px;
+}
+.retail-app .r-mobile-submit {
+  position: sticky;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  z-index: 15;
+  margin-top: 18px;
+  padding: 14px;
+  background: var(--r-primary);
+  color: white;
+}
+.retail-app .r-mobile-submit > button {
+  min-height: 54px;
+  width: 100%;
+}
+.retail-app .r-mobile-sheet .r-mobile-submit {
+  position: static;
+  margin-top: 18px;
+}
+@media (min-width: 700px) {
+  .retail-app .r-inventory-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .retail-app .r-inventory-card.r-list-item {
+    margin: 0;
+  }
+  .retail-app .r-quick-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 390px) {
+  .retail-app .r-inventory-card.r-list-item {
+    padding: 13px;
+  }
+  .retail-app .r-inventory-card-heading {
+    flex-wrap: wrap;
+  }
+  .retail-app .r-workflow-tabs a {
+    font-size: 0.78rem;
+    flex-basis: 97px;
+  }
+  .retail-app .r-workflow-tabs svg {
+    width: 18px;
+  }
+}
+/* Party amounts must remain visible even when names are very long. */
+.retail-app button.r-list-item {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  text-align: left;
+  background: var(--r-surface);
+  color: var(--r-text);
+  border: 1px solid var(--r-border);
+  border-radius: 16px;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.retail-app[data-theme="dark"] input {
+  color-scheme: dark;
+}

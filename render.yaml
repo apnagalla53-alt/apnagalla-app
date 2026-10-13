@@ -1,0 +1,57 @@
+# Review provider plan/costs and populate private settings in Render before creating this service.
+services:
+  - type: web
+    name: apna-galla-api
+    runtime: node
+    plan: starter
+    region: singapore
+    rootDir: backend-typescript
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: node dist/main.js
+    healthCheckPath: /api/v1/health/ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PLATFORM_JWT_SECRET
+        sync: false
+      - key: MFA_ENCRYPTION_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        value: https://app.apnagalla.in
+      - key: WEBSITE_ORIGIN
+        value: https://apnagalla.in
+      - key: API_ORIGIN
+        value: https://api.apnagalla.in
+      - key: PUBLIC_APP_URL
+        value: https://app.apnagalla.in
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: APP_VERSION
+        sync: false
+      - key: TRUSTED_PROXY_CIDRS
+        value: loopback
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: UPLOAD_DIR
+        value: /tmp/apna-galla/uploads
+      - key: BACKUP_PROVIDER
+        value: none
+      - key: EMAIL_PROVIDER
+        value: none
+      - key: SMS_PROVIDER
+        value: none
+# Migrate with Neon operator credentials before starting the API. Do not give the API database-owner credentials.
+# BACKUP_PROVIDER=none and EMAIL_PROVIDER=none describe unavailable providers, not production launch acceptance.

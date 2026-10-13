@@ -1,0 +1,3 @@
+import { Link } from 'react-router-dom';
+import { useRetailEntitlements } from './useRetailEntitlements';
+export default function TrialBanner(){const {data}=useRetailEntitlements();const current=data?.current;if(current?.status!=='TRIAL')return null;const days=Math.max(0,Math.ceil((new Date(current.expires_at).getTime()-Date.now())/86400000));return <div className="r-card" role="status" style={{margin:'8px 16px',padding:'10px 14px',background:'var(--r-surface, #f3f8f5)',fontSize:13}}>{current.plan_name} trial · {days} {days===1?'day':'days'} remaining. <Link to="/retail/more/subscription">View subscription</Link></div>;}

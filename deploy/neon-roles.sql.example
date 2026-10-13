@@ -1,0 +1,39 @@
+-- TEMPLATE: fresh dedicated staging database only; no passwords embedded.
+-- Phase A: use Neon SQL Editor as the trusted database administrator.
+-- These LOGIN roles have NO password until the operator sets one securely.
+-- Create them via SQL, not Neon's Add role UI (which grants neon_superuser membership).
+CREATE ROLE evolix_migrator LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+CREATE ROLE evolix_runtime LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+GRANT USAGE, CREATE ON SCHEMA public TO evolix_migrator;
+GRANT USAGE ON SCHEMA public TO evolix_runtime;
+-- Trusted migrations may need to read existing forced-RLS rows.
+ALTER ROLE evolix_migrator SET app.security_scope = 'system';
+
+-- STOP HERE. In a private psql administrator session, set distinct random passwords
+-- with \password evolix_migrator and \password evolix_runtime (interactive prompts).
+-- Apply all Prisma migrations using the DIRECT migrator URL in a separate job.
+
+-- Phase B: AFTER migration deploy, execute as the migration owner.
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO evolix_runtime;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO evolix_runtime;
+REVOKE ALL ON TABLE public._prisma_migrations FROM evolix_runtime;
+GRANT SELECT ON TABLE public._prisma_migrations TO evolix_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE evolix_migrator IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO evolix_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE evolix_migrator IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO evolix_runtime;
+
+-- Read-only verification: run these as the RUNTIME login.
+SELECT current_user, rolsuper, rolbypassrls, rolcreatedb, rolcreaterole
+  FROM pg_roles WHERE rolname = current_user;
+-- Every flag above must be false. No elevated/owner role membership is permitted.
+SELECT parent.rolname AS inherited_role
+  FROM pg_auth_members membership JOIN pg_roles parent ON parent.oid = membership.roleid
+  JOIN pg_roles child ON child.oid = membership.member
+  WHERE child.rolname = current_user;
+-- Must return zero rows for this dedicated runtime role.
+SELECT count(*) AS owned_application_tables FROM pg_class c
+  JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='public' AND c.relkind IN ('r','p')
+    AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname=current_user);
+-- Must return zero. Startup also checks forced tenant row security.

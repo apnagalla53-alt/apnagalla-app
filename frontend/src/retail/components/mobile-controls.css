@@ -1,0 +1,281 @@
+.retail-app {
+  --r-control-height: 52px;
+  --r-sheet-radius: 26px;
+  --r-mobile-card-radius: 20px;
+  --r-mobile-shadow: 0 5px 24px rgb(25 55 39 / 4%);
+}
+.retail-app .r-mobile-sheet {
+  padding: 0;
+  border: 1px solid var(--r-border);
+  background: var(--r-surface);
+  color: var(--r-text);
+  position: fixed;
+  inset: auto 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 750px;
+  max-height: calc(100dvh - 20px);
+  border-radius: var(--r-sheet-radius) var(--r-sheet-radius) 0 0;
+  overflow: hidden;
+  box-shadow: 0 -12px 60px rgb(12 35 23 / 18%);
+}
+.retail-app .r-mobile-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+.retail-app .r-mobile-sheet::backdrop {
+  background: rgb(13 29 21 / 40%);
+  backdrop-filter: blur(3px);
+}
+.retail-app .r-sheet-handle {
+  flex-shrink: 0;
+  height: 5px;
+  width: 42px;
+  background: var(--r-border);
+  border-radius: 8px;
+  margin: 10px auto 4px;
+}
+.retail-app .r-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid var(--r-border-light);
+  flex-shrink: 0;
+}
+.retail-app .r-sheet-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+.retail-app .r-sheet-header p {
+  margin: 5px 0 0;
+  font-size: 0.875rem;
+  color: var(--r-text-secondary);
+}
+.retail-app .r-sheet-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+.retail-app .r-sheet-body > .r-mobile-search {
+  position: sticky;
+  top: -16px;
+  z-index: 2;
+}
+.retail-app .r-sheet-options {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.retail-app .r-sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 16px;
+  border: 1px solid var(--r-border);
+  border-radius: 15px;
+  width: 100%;
+  background: var(--r-surface);
+  color: var(--r-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.retail-app .r-sheet-option > span {
+  flex: 1;
+  min-width: 0;
+}
+.retail-app .r-sheet-option strong {
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-sheet-option small {
+  display: block;
+  margin-top: 4px;
+  color: var(--r-text-secondary);
+}
+.retail-app .r-sheet-option.is-selected {
+  border-color: var(--r-primary);
+  background: var(--r-primary-light);
+  color: var(--r-primary-text);
+}
+.retail-app .r-sheet-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.retail-app .r-sheet-group {
+  color: var(--r-text-secondary);
+  font-size: 0.8rem;
+  padding: 16px 4px 8px;
+  margin: 0;
+}
+.retail-app .r-sheet-footer {
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--r-border);
+  flex-shrink: 0;
+}
+.retail-app .r-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.retail-app .r-sheet-actions > button {
+  flex: 1;
+}
+.retail-app .r-selection-field {
+  width: 100%;
+  min-height: var(--r-control-height);
+  border: 1px solid var(--r-border);
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--r-surface);
+  color: var(--r-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.retail-app .r-selection-field span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.retail-app .r-selection-field svg {
+  flex-shrink: 0;
+  color: var(--r-text-secondary);
+}
+.retail-app .r-selection-field:disabled {
+  opacity: 0.55;
+}
+.retail-app .r-mobile-segments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 5px;
+  background: var(--r-bg);
+  border: 1px solid var(--r-border);
+  border-radius: 16px;
+  margin: 8px 0 16px;
+}
+.retail-app .r-mobile-segments button {
+  display: flex;
+  flex: 1 1 100px;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--r-text-secondary);
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.retail-app .r-mobile-segments button.is-selected {
+  background: var(--r-primary-light);
+  color: var(--r-primary-text);
+  border-color: var(--r-primary);
+  font-weight: 650;
+}
+.retail-app .r-mobile-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--r-surface);
+  border: 1px solid var(--r-border);
+  border-radius: 15px;
+  min-height: 54px;
+  padding: 0 16px;
+}
+.retail-app .r-mobile-search input {
+  border: 0;
+  background: transparent;
+  color: var(--r-text);
+  width: 100%;
+  min-width: 0;
+  padding: 15px 0;
+  font: inherit;
+  outline: none;
+}
+.retail-app .r-mobile-search button {
+  border: 0;
+  background: transparent;
+  color: var(--r-text-secondary);
+  min-height: 44px;
+  min-width: 44px;
+}
+.retail-app .r-mobile-search:focus-within {
+  outline: 2px solid var(--r-primary);
+  outline-offset: 2px;
+}
+.retail-app .r-validation-proxy {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.retail-app .r-mobile-loading {
+  padding: 20px 0;
+}
+.retail-app .r-mobile-loading > span {
+  display: block;
+  height: 50px;
+  background: var(--r-bg);
+  border: 1px solid var(--r-border-light);
+  border-radius: 14px;
+  margin: 10px 0;
+}
+.retail-app .r-mobile-loading p {
+  color: var(--r-text-secondary);
+}
+.retail-app .r-mobile-sticky-actions {
+  position: sticky;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  padding: 12px 0;
+  background: var(--r-bg);
+  z-index: 20;
+}
+.retail-app .r-mobile-sticky-actions > button {
+  width: 100%;
+  min-height: 54px;
+}
+.retail-app .r-mobile-sheet :focus-visible {
+  outline: 3px solid var(--r-primary);
+  outline-offset: 3px;
+}
+@media (min-width: 800px) {
+  .retail-app .r-mobile-sheet {
+    inset: 50% 0 auto;
+    transform: translateY(-50%);
+    max-width: 560px;
+    max-height: 85dvh;
+    border-radius: var(--r-sheet-radius);
+  }
+  .retail-app .r-sheet-handle {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .retail-app .r-mobile-sheet[open] {
+    animation: r-sheet-enter 0.18s ease-out;
+  }
+  @keyframes r-sheet-enter {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

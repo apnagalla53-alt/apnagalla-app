@@ -1,0 +1,65 @@
+{
+  "verified_at": "2026-10-08",
+  "scope": "Deterministic in-app read-only Assistant V1; no deployment",
+  "intents": 50,
+  "curated_phrases": 511,
+  "distinct_curated_normalized": 506,
+  "reference_cases": 611,
+  "distinct_reference_aliases": 606,
+  "routing": {
+    "passed": 775,
+    "failed": 0,
+    "held_out_passed": 100,
+    "held_out_failed": 0,
+    "unsupported_negatives": 33,
+    "false_positive_tools": 0
+  },
+  "unit": {
+    "files": 31,
+    "passed": 1030,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "e2e": {
+    "files": 18,
+    "passed": 291,
+    "failed": 0,
+    "assistant_cases": 78,
+    "exit_code": 0
+  },
+  "browser": {
+    "headed": true,
+    "passed": 6,
+    "failed": 0,
+    "retries": 0,
+    "exit_code": 0,
+    "mobile_sizes": [
+      "360x800",
+      "390x844",
+      "412x915"
+    ],
+    "desktop": "1366x900"
+  },
+  "migrations": {
+    "total": 27,
+    "clean_deploy": true,
+    "status": "up_to_date",
+    "exit_code": 0
+  },
+  "builds": {
+    "prisma_validate": 0,
+    "prisma_generate": 0,
+    "backend_typecheck": 0,
+    "backend_build": 0,
+    "frontend_typecheck": 0,
+    "frontend_build": 0
+  },
+  "load_report": "ASSISTANT_LOAD_2026-10-08.json",
+  "normal_question_external_llm_calls": 0,
+  "remaining_limits": [
+    "50-concurrent processing P50 exceeds 150ms target",
+    "Local bursts are not sustained 500-user production evidence",
+    "Single-API process-local rate limits",
+    "Physical-device keyboard and broader provider/Android release gates separate"
+  ]
+}

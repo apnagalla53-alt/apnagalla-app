@@ -1,0 +1,33 @@
+# Authentication and shop setup
+
+Retail `/login` and `/signup` distinguish existing accounts from new accounts. Mobile OTP and Google are provider capabilities; password sign-in remains at `/password-login`. Platform sign-in stays separate. Unconfigured providers are clearly labelled and cannot return fake success.
+
+All methods use the existing User, Session, JWT and tenant provisioning infrastructure. A provider-only user receives an unusable random password hash and `password_login_enabled=false`. Verified mobile identity is normalized to Indian E.164 and uniquely stored in `phone_e164`; legacy `phone` remains contact data and cannot grant access. Google identity uses verified `sub`, audience, issuer, expiry and a one-use nonce. Matching an email or name cannot take over an existing account.
+
+OTP challenges expire in five minutes, allow five attempts and have one-minute resend and six-per-hour phone limits. Database advisory locks serialize requests across workers. Codes are HMAC protected, never returned or logged. Incorrect attempts commit before the error response; successful verification consumes the challenge once. SMS provider acceptance does not prove delivery.
+
+First-time Google setup progresses through BUSINESS_PROFILE_REQUIRED → PLAN_REQUIRED → MIGRATION_OFFERED → READY. Google’s verified display name pre-fills the editable owner field; shop name starts blank. A single Business Profile screen collects owner, shop, Indian mobile contact, category and address. Legacy OTP callers may still use OWNER_PROFILE_REQUIRED and the separate owner/business endpoints. Incomplete accounts resume the saved step; completed Google users go directly to Retail Home.
+
+`POST /api/v1/auth/account/onboarding/profile` accepts `owner_name`, `name`, `mobile`, `business_type`, `address`, optional `custom_business_type`, optional city/state/PIN and paired latitude/longitude. The authenticated account determines ownership; caller-supplied ownership or verification fields are rejected. A locked, atomic transaction provisions/reuses one organization, company, owner membership, default branch, stock location, current financial year, settings, ledgers and subscription. It initializes the ten expense categories once. Retry and Back/Edit reuse those records. Completed setup is edited through Settings instead.
+
+Mobile contact is normalized to +91 and stored in `User.phone` and the company contact. It does not create an OTP login identity: `phone_e164` and `phone_verified_at` remain unchanged. The response reports `mobile_verified=false` unless the contact matches a genuinely verified identity. A shared advisory lock and normalized identity/contact lookup reject another account’s number with `MOBILE_ALREADY_LINKED`; accounts are never silently merged.
+
+The category master now contains 59 stable keys across nine groups. Its full-height sheet supports immediate normalized search, aliases, selected state, Escape, focus return and an optional Other description. Categories remain metadata for one Retail core; suggested features do not grant plan entitlements. GPS is optional. Granted coordinates are saved; denied permission leaves manual entry usable. Reverse geocoding is not connected, so the screen truthfully asks for the street address even after obtaining location.
+
+The backend supplies stable STARTER/SMART/PRO keys and current prices; presentation shows Starter ₹75, Smart ₹120 and Pro ₹210 monthly in vertical cards. Smart carries MOST POPULAR. Pro voice is explicitly labelled not connected; no voice integration or automatic checkout is invented.
+
+Only an explicitly configured trial can activate without payment. Trial is SMART/STARTER/PRO plus TRIAL status and configured dates. A paid-plan request stays PENDING until an authorized operator approves documented complimentary access or verifies and records a real manual payment. Online checkout is not configured. Selecting a requested plan now opens the data choice immediately; FRESH/IMPORT is saved even while access is pending, with ACCESS_PENDING and no Retail access. After actual activation, Check activation status refreshes the owner session and opens Home or the saved Import choice. Choosing a plan or data option never fabricates payment or access.
+
+FRESH opens Home when authorized. IMPORT opens the real file → mapping → validation → preview → commit → summary workflow; a completed import has Continue to Home. Existing history resumes previous jobs. Supported formats are CSV, TSV, XLSX, XLS, ODS, JSON and XML within the importer’s documented schemas/limits. Source-app guides/presets are file mapping aids, not direct third-party connections. Once access and the data choice are complete, subsequent Google login opens Home; importing remains available in the shop menu.
+
+Verification evidence and live-provider limits: `docs/verification/GOOGLE_BUSINESS_ONBOARDING_20261012.md`.
+
+## Configure providers
+
+1. Create a Google Cloud project for EVOLIX Studio. Configure its OAuth consent screen, verified domain and test users; create a Web OAuth client with the exact local and production JavaScript origins. Put its public client ID in `GOOGLE_CLIENT_ID`; never put client secrets in frontend code. Test first on the consent screen's allowed accounts, then complete Google's publication/verification requirements where applicable.
+2. Use Google's official Identity Services button. The backend verifies credentials with `google-auth-library`. Follow [Google server verification](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token). Connecting an existing account requires explicit reauthentication.
+3. If choosing Twilio, create its account and a suitable messaging service/sending number. Complete sender registration and applicable Indian messaging requirements with the provider before production sending. Store `SMS_PROVIDER=twilio`, account SID, auth token and messaging service SID (or sender) in the hosting secret manager. The backend uses [Twilio's Messages API](https://www.twilio.com/docs/messaging/api/message-resource).
+4. Run live OTP expiry, resend, delivery failure and real Google consent/sign-in/linking tests on a staging domain. Test-boundary providers used in automated tests are not production transports.
+5. In Platform → Accounts & trial policy, choose the base plan and duration explicitly. Defaults offer no trial. Connect production SMTP for verified-email recovery; configure HTTPS origins and distinct platform/tenant JWT secrets according to PRODUCTION_DEPLOYMENT.md.
+
+Live Google and SMS acceptance remain blocked until these accounts are configured. No credentials should be pasted into tracked source or this document.

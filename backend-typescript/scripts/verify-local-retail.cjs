@@ -1,0 +1,47 @@
+// Read-only evidence for the latest complete Playwright Retail lifecycle.
+require('dotenv').config({ quiet: true });
+const assert = require('node:assert/strict');
+const { PrismaClient } = require('@prisma/client');
+const p = new PrismaClient();
+(async () => {
+  const database = new URL(process.env.DATABASE_URL);
+  assert(['localhost', '127.0.0.1'].includes(database.hostname) && database.pathname === '/evolix_trade_dev', 'Use the local Retail verification database');
+  const company = await p.company.findFirst({ where: { code: 'DEF-COMP' } });
+  assert(company, 'Default company must exist');
+  const item = await p.item.findFirst({ where: { company_id: company.id, name: { startsWith: 'Test Product ' } }, orderBy: { name: 'desc' } });
+  assert(item, 'Run the complete Retail browser lifecycle first');
+  const invoices = await p.salesInvoice.findMany({ where: { company_id: company.id, lines: { some: { item_id: item.id } } }, orderBy: { created_at: 'asc' } });
+  assert.equal(invoices.length, 4);
+  for (const invoice of invoices) { assert.equal(invoice.status, 'POSTED'); assert.equal(Number(invoice.grand_total), 100); }
+  const receipts = await p.voucher.findMany({ where: { company_id: company.id, source_document_type: 'POS_RECEIPT', source_document_id: { in: invoices.map(i => i.id) } }, include: { lines: { include: { ledger_account: true } } } });
+  const paymentLines = receipts.flatMap(v => v.lines.filter(l => Number(l.debit) > 0));
+  const cash = paymentLines.filter(l => l.ledger_account.code === 'CASH_IN_HAND').reduce((sum,l) => sum + Number(l.debit), 0);
+  const bank = paymentLines.filter(l => l.ledger_account.code === 'DEFAULT_BANK').reduce((sum,l) => sum + Number(l.debit), 0);
+  assert.equal(cash, 140); assert.equal(bank, 160);
+  assert(receipts.some(v => v.source_document_id === invoices[3].id && v.lines.some(l => Number(l.debit) === 40) && v.lines.some(l => Number(l.debit) === 60)), 'Split must post both tender amounts');
+  assert.equal(Number(invoices[2].outstanding_amount), 0, 'Received customer payment must settle Udhar');
+  const returns = await p.salesReturn.findMany({ where: { original_invoice_id: invoices[0].id } });
+  assert.equal(returns.length, 1); assert.equal(Number(returns[0].grand_total), 100);
+  const refund = await p.voucher.findMany({ where: { source_document_type: 'POS_REFUND', source_document_id: returns[0].id }, include: { lines: true } });
+  assert.equal(refund.length, 1); assert(refund[0].lines.some(l => Number(l.credit) === 100));
+  const purchases = await p.purchaseInvoice.findMany({ where: { company_id: company.id, lines: { some: { item_id: item.id } } }, include: { lines: true } });
+  assert.equal(purchases.length, 1); assert.equal(Number(purchases[0].grand_total), 300);
+  assert.equal(Number(purchases[0].outstanding_amount), 300);
+  assert.equal(Number(purchases[0].lines[0].quantity), 5); assert.equal(Number(purchases[0].lines[0].rate), 60);
+  const purchaseAllocation = await p.billAllocation.findFirst({ where: { company_id: company.id, reference_document_id: purchases[0].id, allocation_type: 'NEW_REFERENCE' }, include: { voucher_line: { include: { voucher: { include: { lines: true } } } } } });
+  assert(purchaseAllocation, 'Credit purchase must have an accounting allocation'); assert.equal(Number(purchaseAllocation.amount), 300);
+  const movements = await p.stockMovement.findMany({ where: { item_id: item.id } });
+  const stock = await p.stockBalanceProjection.aggregate({ where: { item_id: item.id }, _sum: { quantity: true } });
+  assert.equal(Number(stock._sum.quantity), 12);
+  assert.equal(movements.reduce((sum,m) => sum + Number(m.base_quantity_delta),0), 12);
+  const sources = [...invoices.map(i => i.id), ...returns.map(r => r.id), ...purchases.map(i => i.id)];
+  const vouchers = await p.voucher.findMany({ where: { company_id: company.id, source_document_id: { in: sources }, status: 'POSTED' }, include: { lines: true } });
+  vouchers.push(purchaseAllocation.voucher_line.voucher);
+  for (const voucher of vouchers) assert(Math.abs(voucher.lines.reduce((sum,l) => sum + Number(l.debit) - Number(l.credit),0)) < 0.001, 'Voucher must balance');
+  const suffix = item.name.replace('Test Product ', '');
+  const expense = await p.expense.findFirst({ where: { company_id: company.id, category: { name: `Tea ${suffix}` } } });
+  assert(expense); assert.equal(Number(expense.amount), 50); assert.equal(expense.payment_method, 'CASH'); assert.equal(expense.status, 'POSTED');
+  const need = await p.needList.findFirst({ where: { company_id: company.id, name: `Test Missing Item ${suffix}` } });
+  assert(need); assert.equal(Number(need.quantity), 2); assert.equal(need.status, 'NEED');
+  console.log(JSON.stringify({ item: item.name, invoices: invoices.map(i => i.document_number), cash_receipts: cash, bank_receipts: bank, split: [40,60], customer_due_after_payment: 0, return: 100, refund: 100, purchase: { quantity: 5, rate: 60, total: 300 }, stock: 12, movement_total: 12, expense: { amount: 50, method: 'CASH' }, need: { quantity: 2, status: 'NEED' }, checked_vouchers: vouchers.length, balanced: true }, null, 2));
+})().catch(e => { console.error(e.message); process.exitCode = 1; }).finally(() => p.$disconnect());

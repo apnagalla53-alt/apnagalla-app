@@ -1,0 +1,372 @@
+{
+  "verified_at": "2026-10-13T08:10:10.160Z",
+  "revision": "APNA_GALLA_LAUNCH_PLANS_V2",
+  "acceptance": "APNA GALLA LAUNCH PLANS LOCKED",
+  "scope": "Final launch-plan restructuring; no production provider/deployment readiness claim",
+  "plans": [
+    {
+      "code": "STARTER",
+      "name": "Apna Galla Starter",
+      "monthly_price": 75,
+      "description": "Run your shop",
+      "limits": {
+        "users": 1,
+        "staff": 0,
+        "devices": 2,
+        "branches": 1,
+        "stock_locations": 1,
+        "companies": 1
+      },
+      "feature_count": 16,
+      "feature_codes": [
+        "RETAIL_POS",
+        "SALES",
+        "KHATA",
+        "PURCHASING",
+        "EXPENSES",
+        "DAILY_GALLA",
+        "NEED_LIST",
+        "INVENTORY",
+        "SERVICES",
+        "ACCOUNTING",
+        "REPORTS",
+        "ASSISTANT_TEXT",
+        "BACKUP",
+        "EXPORT_ITEMS",
+        "EXPORT_STOCK",
+        "EXPORT_SALES"
+      ]
+    },
+    {
+      "code": "SMART",
+      "name": "Apna Galla Smart",
+      "monthly_price": 120,
+      "description": "Run it better. Understand your business.",
+      "limits": {
+        "users": 3,
+        "staff": 2,
+        "devices": 5,
+        "branches": 1,
+        "stock_locations": 1,
+        "companies": 1
+      },
+      "feature_count": 38,
+      "feature_codes": [
+        "RETAIL_POS",
+        "SALES",
+        "KHATA",
+        "PURCHASING",
+        "EXPENSES",
+        "DAILY_GALLA",
+        "NEED_LIST",
+        "INVENTORY",
+        "SERVICES",
+        "VARIANTS",
+        "MULTI_UNIT",
+        "WEIGHT",
+        "VOLUME",
+        "LENGTH",
+        "AREA",
+        "BATCH_TRACKING",
+        "BUNDLES",
+        "MODIFIERS",
+        "WASTAGE",
+        "ACCOUNTING",
+        "REPORTS",
+        "GST_INVOICES",
+        "PROFIT_REPORTING",
+        "ASSISTANT_TEXT",
+        "BUSINESS_INSIGHTS",
+        "STAFF",
+        "ITEM_IMAGES",
+        "BACKUP",
+        "EXPORT_ITEMS",
+        "EXPORT_STOCK",
+        "EXPORT_SALES",
+        "EXPORT_CUSTOMERS",
+        "EXPORT_SUPPLIERS",
+        "EXPORT_KHATA",
+        "EXPORT_PURCHASES",
+        "EXPORT_EXPENSES",
+        "EXPORT_GST",
+        "EXPORT_PROFIT"
+      ]
+    },
+    {
+      "code": "PRO",
+      "name": "Apna Galla Pro",
+      "monthly_price": 210,
+      "description": "Advanced Control",
+      "limits": {
+        "users": 6,
+        "staff": 5,
+        "devices": 10,
+        "branches": 1,
+        "stock_locations": 1,
+        "companies": 1
+      },
+      "feature_count": 45,
+      "feature_codes": [
+        "RETAIL_POS",
+        "SALES",
+        "KHATA",
+        "PURCHASING",
+        "EXPENSES",
+        "DAILY_GALLA",
+        "NEED_LIST",
+        "INVENTORY",
+        "SERVICES",
+        "VARIANTS",
+        "MULTI_UNIT",
+        "WEIGHT",
+        "VOLUME",
+        "LENGTH",
+        "AREA",
+        "BATCH_TRACKING",
+        "BUNDLES",
+        "MODIFIERS",
+        "WASTAGE",
+        "SERIAL_TRACKING",
+        "COMPATIBILITY",
+        "ACCOUNTING",
+        "REPORTS",
+        "GST_INVOICES",
+        "PROFIT_REPORTING",
+        "ADVANCED_PRICING",
+        "ASSISTANT_TEXT",
+        "BUSINESS_INSIGHTS",
+        "STAFF",
+        "ADVANCED_STAFF",
+        "ITEM_IMAGES",
+        "BACKUP",
+        "EXPORT_ITEMS",
+        "EXPORT_STOCK",
+        "EXPORT_SALES",
+        "EXPORT_CUSTOMERS",
+        "EXPORT_SUPPLIERS",
+        "EXPORT_KHATA",
+        "EXPORT_PURCHASES",
+        "EXPORT_EXPENSES",
+        "EXPORT_GST",
+        "EXPORT_PROFIT",
+        "EXPORT_STAFF",
+        "EXPORT_DOCUMENTS",
+        "EXPORT_FULL_BUSINESS"
+      ]
+    }
+  ],
+  "suites": {
+    "focused": {
+      "passed": 1054,
+      "failed": 0,
+      "exit_code": 0,
+      "files": [
+        {
+          "file": "business-insight.service.spec.ts",
+          "passed": 5,
+          "failed": 0
+        },
+        {
+          "file": "intent-router.spec.ts",
+          "passed": 1021,
+          "failed": 0
+        },
+        {
+          "file": "launch-plans.spec.ts",
+          "passed": 8,
+          "failed": 0
+        },
+        {
+          "file": "import-format.spec.ts",
+          "passed": 20,
+          "failed": 0
+        }
+      ]
+    },
+    "entitlements": {
+      "passed": 91,
+      "failed": 0,
+      "exit_code": 0,
+      "files": [
+        {
+          "file": "final-launch-plans.e2e-spec.ts",
+          "passed": 24,
+          "failed": 0
+        },
+        {
+          "file": "subscription-entitlements.e2e-spec.ts",
+          "passed": 67,
+          "failed": 0
+        }
+      ],
+      "dedicated_launch_groups": {
+        "STARTER": {
+          "passed": 7,
+          "failed": 0
+        },
+        "SMART": {
+          "passed": 6,
+          "failed": 0
+        },
+        "PRO": {
+          "passed": 7,
+          "failed": 0
+        },
+        "Overrides": {
+          "passed": 3,
+          "failed": 0
+        },
+        "Downgrade safety": {
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "regression": {
+      "passed": 166,
+      "failed": 0,
+      "exit_code": 0,
+      "files": [
+        {
+          "file": "batch-fefo.e2e-spec.ts",
+          "passed": 17,
+          "failed": 0
+        },
+        {
+          "file": "bundle-modifier.e2e-spec.ts",
+          "passed": 15,
+          "failed": 0
+        },
+        {
+          "file": "costing-profit.e2e-spec.ts",
+          "passed": 39,
+          "failed": 0
+        },
+        {
+          "file": "google-business-onboarding.e2e-spec.ts",
+          "passed": 14,
+          "failed": 0
+        },
+        {
+          "file": "import-report.e2e-spec.ts",
+          "passed": 23,
+          "failed": 0
+        },
+        {
+          "file": "retail-flow.e2e-spec.ts",
+          "passed": 19,
+          "failed": 0
+        },
+        {
+          "file": "tenant-administration.e2e-spec.ts",
+          "passed": 19,
+          "failed": 0
+        },
+        {
+          "file": "universal-item-flow.e2e-spec.ts",
+          "passed": 20,
+          "failed": 0
+        }
+      ]
+    },
+    "browser": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "exit_code": 0,
+      "headed": true,
+      "mobile_viewport": "390x844",
+      "platform_viewport": "1366x900",
+      "live_google_oauth_tested": false
+    }
+  },
+  "total": {
+    "passed": 1316,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "builds": {
+    "backend": {
+      "command": "npm run build",
+      "exit_code": 0
+    },
+    "frontend": {
+      "command": "npm run build",
+      "exit_code": 0
+    },
+    "backend_typecheck": {
+      "command": "npx tsc --noEmit",
+      "exit_code": 0
+    },
+    "frontend_typecheck": {
+      "command": "npx tsc --noEmit -p tsconfig.app.json",
+      "exit_code": 0
+    }
+  },
+  "migration": {
+    "isolated_local_test_database": true,
+    "migrations": 35,
+    "migrate_deploy_exit_code": 0,
+    "migrate_status_exit_code": 0,
+    "validate_exit_code": 0
+  },
+  "local_application": {
+    "checked_at": "2026-10-13T07:58:37.947Z",
+    "scope": "Local EVOLIX application database",
+    "revision_applied": true,
+    "business_tables_checked": 128,
+    "business_counts_unchanged": true,
+    "tenant_overrides_unchanged": true,
+    "tenant_plan_links_and_limit_overrides_unchanged": true,
+    "plans": [
+      {
+        "code": "STARTER",
+        "name": "Apna Galla Starter",
+        "price": "75",
+        "feature_count": 16,
+        "limits": {
+          "staff": 0,
+          "users": 1,
+          "devices": 2,
+          "branches": 1,
+          "companies": 1,
+          "stock_locations": 1
+        }
+      },
+      {
+        "code": "SMART",
+        "name": "Apna Galla Smart",
+        "price": "120",
+        "feature_count": 38,
+        "limits": {
+          "staff": 2,
+          "users": 3,
+          "devices": 5,
+          "branches": 1,
+          "companies": 1,
+          "stock_locations": 1
+        }
+      },
+      {
+        "code": "PRO",
+        "name": "Apna Galla Pro",
+        "price": "210",
+        "feature_count": 45,
+        "limits": {
+          "staff": 5,
+          "users": 6,
+          "devices": 10,
+          "branches": 1,
+          "companies": 1,
+          "stock_locations": 1
+        }
+      }
+    ]
+  },
+  "safety": {
+    "test_data_only_in_disposable_database": true,
+    "private_environment_and_fixtures_ignored": true,
+    "historical_business_data_preserved": true
+  }
+}
