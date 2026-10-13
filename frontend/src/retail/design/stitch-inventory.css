@@ -1,0 +1,31 @@
+.retail-app.retail-stitch .r-stitch-inventory .r-section { display:flex;flex-direction:column;gap:16px; }
+.retail-app.retail-stitch .r-stitch-inventory .r-search-filter { margin:0; }
+.retail-app.retail-stitch .r-inventory-new { box-shadow:0 4px 12px #176b6326; }
+.retail-app.retail-stitch .r-stitch-inventory .r-segmented { display:flex;padding:0;background:none;gap:8px;overflow:auto; }
+.retail-app.retail-stitch .r-stitch-inventory .r-segmented > button { flex:0 0 auto;border:0;background:var(--r-surface);border-radius:9999px;padding:10px 16px;font-size:13px;min-height:44px; }
+.retail-app.retail-stitch .r-stitch-inventory .r-segmented > button.active { background:var(--r-primary);color:#fff; }
+.retail-app.retail-stitch .r-inventory-count { margin:0;font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-stock-alerts { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.retail-app.retail-stitch .r-stock-alerts button { display:flex;gap:12px;align-items:center;text-align:left;min-height:76px;padding:16px;border:0;border-radius:16px;background:var(--r-warning-light);color:var(--r-warning-text);font:inherit; }
+.retail-app.retail-stitch .r-stock-alerts button:last-child { background:var(--r-danger-light);color:var(--r-danger); }
+.retail-app.retail-stitch .r-stock-alerts :is(strong,small) { display:block; }
+.retail-app.retail-stitch .r-inventory-tools { padding:16px;border-radius:12px;background:var(--r-bg-secondary); }
+.retail-app.retail-stitch .r-inventory-tools summary { min-height:32px;cursor:pointer;font-weight:600; }
+.retail-app.retail-stitch .r-inventory-screen .r-inventory-card.r-list-item { padding:0;overflow:hidden;border:0;border-radius:12px; }
+.retail-app.retail-stitch .r-inventory-screen .r-inventory-card-main { padding:16px;text-align:left; }
+.retail-app.retail-stitch .r-inventory-screen .r-inventory-card-heading { align-items:start;padding-right:28px;gap:8px; }
+.retail-app.retail-stitch .r-inventory-card-identity > span:last-child { min-width:0; }
+.retail-app.retail-stitch .r-inventory-card-identity strong { display:block;font-size:17px; }
+.retail-app.retail-stitch .r-inventory-card-identity small { display:block;color:var(--r-text-muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.retail-app.retail-stitch .r-inventory-card-heading > strong { font-size:16px;color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-inventory-screen .r-inventory-card-stock { margin:0;padding:8px 16px;background:var(--r-bg-secondary);gap:12px;min-height:52px; }
+.retail-app.retail-stitch .r-inventory-card-stock strong { font-size:15px;color:var(--r-success); }
+.retail-app.retail-stitch .r-inventory-card-stock small { display:block;font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-inventory-card-stock .r-btn { min-height:44px;padding:8px 12px;font-size:13px;background:var(--r-surface);color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-inventory-card-tags > span:first-child { display:none; }
+.retail-app.retail-stitch .r-inventory-card-tags span { font-size:13px!important; }
+.retail-app.retail-stitch .r-inventory-card-meta .r-badge { font-size:13px!important; }
+.retail-app.retail-stitch .r-inventory-card > .r-btn--icon { width:44px;min-width:44px;min-height:44px; }
+.retail-app.retail-stitch .r-stitch-stock { padding-bottom:96px; }
+.retail-app.retail-stitch .r-stitch-stock .r-mobile-sticky { display:flex;gap:10px; }
+.retail-app.retail-stitch .r-stitch-stock .r-mobile-sticky > button { flex:1; }

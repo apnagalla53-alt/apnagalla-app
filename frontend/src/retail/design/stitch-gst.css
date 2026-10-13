@@ -1,0 +1,28 @@
+@media screen {
+  .retail-app.retail-stitch .gst-page { padding:20px; max-width:none; }
+  .retail-app.retail-stitch .gst-page > .r-page-header { padding:0 0 20px; min-height:64px; margin:0; }
+  .retail-app.retail-stitch .gst-page > .r-page-header h1 { display:flex; align-items:center; gap:10px; }
+  .retail-app.retail-stitch .gst-page .gst-field label { font-size:var(--r-text-sm); }
+  .retail-app.retail-stitch .gst-page .gst-grid { gap:20px; }
+  .retail-app.retail-stitch .gst-page .gst-disclosure { margin-top:20px; }
+  .retail-app.retail-stitch .gst-page .gst-disclosure summary { min-height:48px; padding:12px; border-radius:var(--r-radius); background:var(--r-bg-secondary); color:var(--r-primary-text); font-weight:600; cursor:pointer; }
+  .retail-app.retail-stitch .gst-page .gst-disclosure[open] .gst-grid { margin-top:16px; }
+  .retail-app.retail-stitch .gst-page .gst-check { padding:12px 0; }
+  .retail-app.retail-stitch .gst-page .gst-check input { margin:3px 6px 0 0; }
+  .retail-app.retail-stitch .gst-page .gst-bill-row { padding:16px; border-radius:var(--r-radius-lg); box-shadow:var(--r-shadow-sm); }
+  .retail-app.retail-stitch .gst-page .gst-bill-row small { font-size:var(--r-text-xs); }
+  .retail-app.retail-stitch .gst-page .gst-bill-row > svg { color:var(--r-primary); flex-shrink:0; }
+  .retail-app.retail-stitch .gst-page .gst-bill-row > strong { font-variant-numeric:tabular-nums; }
+  .retail-app.retail-stitch .gst-page .gst-bill-row:disabled { cursor:not-allowed; opacity:.7; background:var(--r-bg-secondary); }
+  .retail-app.retail-stitch .gst-page .gst-preview-scroll { background:var(--r-bg-secondary); padding:16px; border:1px solid var(--r-border); border-radius:var(--r-radius-lg); }
+  .retail-app.retail-stitch .gst-reporting-block { margin-bottom:20px; }
+  .retail-app.retail-stitch .gst-reporting-block .r-ledger-status { margin-bottom:12px; }
+  .retail-app.retail-stitch .gst-page > section > .r-mobile-search { margin:16px 0; }
+  @media(min-width:1024px) {
+    .retail-app.retail-stitch .gst-page:has(.gst-preview-scroll) { display:grid; grid-template-columns:minmax(320px,.8fr) minmax(0,1.4fr); gap:20px; align-items:start; }
+    .retail-app.retail-stitch .gst-page:has(.gst-preview-scroll) > .r-page-header { grid-column:1/-1; }
+    .retail-app.retail-stitch .gst-page:has(.gst-preview-scroll) > .gst-preview-scroll { grid-column:2; grid-row:2/span 12; position:sticky; top:20px; }
+    .retail-app.retail-stitch .gst-page:has(.gst-preview-scroll) > :not(.gst-preview-scroll):not(.r-page-header) { grid-column:1; }
+    .retail-app.retail-stitch .gst-page:has(.gst-preview-scroll) .gst-grid { grid-template-columns:1fr; }
+  }
+}

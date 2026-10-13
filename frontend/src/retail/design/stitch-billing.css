@@ -1,0 +1,67 @@
+.retail-app.retail-stitch .r-stitch-bill-layout { padding-bottom:100px; }
+.retail-app.retail-stitch .r-stitch-bill-layout > .r-section { padding:16px 20px 0; }
+.retail-app.retail-stitch .r-stitch-bill-layout #customer-selector { padding:20px;min-height:104px;margin:0;border:0; }
+.retail-app.retail-stitch .r-stitch-bill-layout #customer-selector > div:first-child { width:44px!important;height:44px!important;border-radius:12px!important;background:var(--r-primary-light)!important;color:var(--r-primary-text)!important; }
+.retail-app.retail-stitch .r-stitch-bill-layout #customer-selector > div:nth-child(2) > div:first-child { font-size:17px!important;font-weight:600!important; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-search-filter { display:flex;gap:8px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-search-filter .r-btn { min-width:60px;min-height:52px;background:var(--r-primary-text);color:#fff; }
+.retail-app.retail-stitch .r-stitch-active-bill { display:flex;justify-content:space-between;align-items:center;font-size:20px;line-height:28px;margin:0 0 16px; }
+.retail-app.retail-stitch .r-stitch-active-bill span { font-size:13px;font-weight:400;padding:8px 12px;background:var(--r-primary-light);border-radius:9999px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item { background:var(--r-surface);border:0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:12px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info { width:100%; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-name { font-size:17px;font-weight:600; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-price { font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info > button { float:right;margin:0;min-height:44px;background:var(--r-bg-secondary);border-radius:9999px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-right { display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;width:100%; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-total { font-size:22px;font-weight:700; }
+.retail-app.retail-stitch .r-qty-control { background:var(--r-bg-secondary);border:0;border-radius:12px;padding:4px;min-height:48px;gap:8px; }
+.retail-app.retail-stitch .r-qty-btn { min-width:40px;min-height:40px;background:var(--r-surface);border-radius:8px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-billing-summary { background:var(--r-surface);border-radius:16px;padding:20px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-billing-row { min-height:36px;font-size:15px; }
+.retail-app.retail-stitch .r-stitch-bill-layout #billing-footer { display:flex;align-items:center;gap:12px; }
+.retail-app.retail-stitch .r-counter-total { min-width:100px;flex:1; }
+.retail-app.retail-stitch .r-counter-total small { display:block;font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-counter-total strong { display:block;font-size:22px;font-variant-numeric:tabular-nums; }
+.retail-app.retail-stitch .r-stitch-bill-layout #pay-btn { width:auto;min-width:180px;min-height:56px;margin:0!important; }
+.retail-app.retail-stitch .r-stitch-bill-layout details > summary { display:flex;align-items:center;min-height:44px;font-size:17px;font-weight:600; }
+.retail-app.retail-stitch .r-stitch-bill-layout details[open] > summary { margin-bottom:16px; }
+@media(min-width:1024px){.retail-app.retail-stitch .r-stitch-bill-layout > .r-section{max-width:800px;margin:auto;}.retail-app.retail-stitch .r-stitch-bill-layout #billing-footer{max-width:800px;}}
+.retail-app.retail-stitch .r-stitch-bill-history { max-width:800px;margin:auto; }
+.retail-app.retail-stitch .r-stitch-bill-history .r-report-periods { flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:16px 0 20px; }
+.retail-app.retail-stitch .r-stitch-bill-history .r-report-periods .r-btn { flex:0 0 auto;border-radius:9999px;min-height:44px;font-size:14px;padding:10px 16px; }
+.retail-app.retail-stitch .r-stitch-history-summary { display:flex;align-items:center;gap:12px;padding:16px; }
+.retail-app.retail-stitch .r-stitch-history-summary > div { flex:1;min-width:0; }
+.retail-app.retail-stitch .r-stitch-history-summary > div:last-child { text-align:right; }
+.retail-app.retail-stitch .r-stitch-history-summary :is(small,strong) { display:block; }
+.retail-app.retail-stitch .r-stitch-history-summary strong { font-size:18px; }
+.retail-app.retail-stitch .r-stitch-bill-history-row { padding:16px;text-align:left; }
+.retail-app.retail-stitch .r-stitch-history-identity { display:flex;gap:12px;align-items:center; }
+.retail-app.retail-stitch .r-stitch-history-identity > div { flex:1;min-width:0; }
+.retail-app.retail-stitch .r-stitch-history-identity :is(strong,small) { display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.retail-app.retail-stitch .r-stitch-history-identity strong { font-size:17px; }
+.retail-app.retail-stitch .r-stitch-history-identity small { color:var(--r-text-muted);font-weight:400; }
+.retail-app.retail-stitch .r-stitch-history-money { text-align:right;flex:0 0 auto!important;max-width:40%; }
+.retail-app.retail-stitch .r-stitch-history-money strong { font-size:20px; }
+.retail-app.retail-stitch .r-stitch-history-money .r-badge { display:inline-block;margin-top:6px; }
+.retail-app.retail-stitch .r-stitch-history-footer { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;margin-top:16px;background:var(--r-bg-secondary);border-radius:8px;font-size:14px; }
+.retail-app.retail-stitch .r-stitch-history-footer > span:last-child { display:flex;align-items:center;gap:4px;color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-stitch-payment { max-width:800px;margin:auto; }
+.retail-app.retail-stitch .r-stitch-payment-total { margin:20px 20px 16px;padding:24px;text-align:left; }
+.retail-app.retail-stitch .r-stitch-payment-total > div:nth-child(2) { font-size:36px!important;margin:8px 0 12px; }
+.retail-app.retail-stitch .r-stitch-payment-method-wrap { padding:0 20px 20px; }
+.retail-app.retail-stitch .r-stitch-payment .r-payment-methods { gap:12px; }
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method { display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;text-align:left;min-height:80px;padding:12px;background:var(--r-surface);border:0;border-radius:16px;box-shadow:var(--r-shadow-sm);font-size:17px;font-weight:600; }
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method > div { width:40px!important;height:40px!important;flex:0 0 40px; }
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method.is-selected { color:var(--r-surface);background:var(--r-primary-text); }
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method.is-selected svg { color:inherit!important; }
+.retail-app.retail-stitch .r-stitch-cash-payment { margin:0 20px 20px;padding:24px; }
+.retail-app.retail-stitch .r-stitch-change-method { display:none; }
+.retail-app.retail-stitch #cash-received-input { height:64px;background:var(--r-bg-secondary);font-size:30px;font-weight:700; }
+.retail-app.retail-stitch .r-stitch-payment .r-sticky-footer { max-width:800px; }
+.retail-app.retail-stitch .r-expense-form .r-content { max-width:720px;margin:auto; }
+.retail-app.retail-stitch .r-expense-form .r-currency-input { height:64px;font-size:30px;font-weight:700;background:var(--r-bg-secondary); }
+.retail-app.retail-stitch .r-expense-form .r-payment-choices { grid-template-columns:1fr; }
+.retail-app.retail-stitch .r-expense-form .r-payment-choice { flex-direction:row;justify-content:flex-start;min-height:64px; }
+.retail-app.retail-stitch .r-expense-form details > summary { font-size:17px;font-weight:600;min-height:32px; }
+.retail-app.retail-stitch .r-expense-form details[open] > summary { margin-bottom:20px; }
+.retail-app.retail-stitch .r-stitch-expense-summary strong { display:block;font-size:36px;margin:12px 0; }

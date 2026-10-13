@@ -1,0 +1,54 @@
+.retail-app.retail-stitch:is([data-route='/retail/items'],[data-route='/retail/items/add'],[data-route^='/retail/items/'],[data-route^='/retail/khata'],[data-route='/retail/customers/add'],[data-route='/retail/receive-payment'],[data-route='/retail/suppliers'],[data-route='/retail/purchases'],[data-route='/retail/purchases/new'],[data-route^='/retail/expenses'],[data-route='/retail/more/business'],[data-route='/retail/more/profile'],[data-route='/retail/more/subscription'],[data-route='/retail/more/features'],[data-route='/retail/more/backup']) { --r-bg:#f2fbf6; }
+.retail-app.retail-stitch[data-theme='dark'] { --r-bg:#141a17;--r-border:#28322e;--r-surface:#1b2724;--r-bg-secondary:#263530; }
+.retail-app.retail-stitch .r-stitch-entry-intro { display:flex;align-items:center;gap:16px;padding:20px;background:var(--r-primary-light);border-radius:12px;margin-bottom:8px; }
+.retail-app.retail-stitch .r-stitch-entry-intro > div { min-width:0;flex:1; }
+.retail-app.retail-stitch .r-stitch-entry-intro strong { display:block;font-size:17px;color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-stitch-entry-intro small { display:block;font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-stitch-entry-intro > .r-badge { background:var(--r-surface);font-size:13px; }
+.retail-app.retail-stitch .r-stitch-item-form .r-section { display:flex;flex-direction:column;gap:16px;padding-bottom:120px; }
+.retail-app.retail-stitch .r-stitch-item-form .r-card { padding:24px;margin:0 0 16px;border:0; }
+.retail-app.retail-stitch .r-stitch-quick-entry h2 { font-size:22px;line-height:30px;margin:0 0 4px; }
+.retail-app.retail-stitch .r-stitch-quick-entry > .r-caption { font-size:15px;line-height:22px;margin:0 0 24px; }
+.retail-app.retail-stitch .r-stitch-quick-entry .r-input-group { margin:0 0 24px; }
+.retail-app.retail-stitch .r-stitch-quick-entry .r-label { color:var(--r-text);font-size:14px;margin:0 0 8px; }
+.retail-app.retail-stitch .r-stitch-quick-entry .r-input--lg { height:64px;background:var(--r-bg-secondary);font-size:28px;line-height:36px;font-weight:700; }
+.retail-app.retail-stitch .r-stitch-unit-choices > label { color:var(--r-text);font-size:14px; }
+.retail-app.retail-stitch .r-stitch-unit-choices > div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 12px; }
+.retail-app.retail-stitch .r-stitch-unit-choices button { border:0;min-height:44px;padding:8px;background:var(--r-bg-secondary);border-radius:8px;color:var(--r-text);font:inherit;font-size:13px; }
+.retail-app.retail-stitch .r-stitch-unit-choices button.active { background:var(--r-primary-text);color:#fff; }
+.retail-app.retail-stitch .r-stitch-disclosure { width:100%;display:flex;align-items:center;gap:16px;min-height:88px;padding:20px 16px;text-align:left;background:var(--r-surface);border:0;border-radius:16px;margin-bottom:16px;color:var(--r-text);font:inherit;box-shadow:var(--r-shadow-sm); }
+.retail-app.retail-stitch .r-stitch-disclosure > span:nth-child(2) { flex:1;min-width:0; }
+.retail-app.retail-stitch .r-stitch-disclosure :is(strong,small) { display:block; }
+.retail-app.retail-stitch .r-stitch-disclosure strong { font-size:17px; }
+.retail-app.retail-stitch .r-stitch-disclosure small { font-size:13px;color:var(--r-text-muted);margin-top:4px; }
+.retail-app.retail-stitch .r-stitch-two-actions { display:flex;gap:10px; }
+.retail-app.retail-stitch .r-stitch-two-actions > button:last-child { width:auto;flex:1; }
+.retail-app.retail-stitch .r-stitch-photo summary { display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer; }
+.retail-app.retail-stitch .r-stitch-header .r-header-title { flex:1;min-width:0;font-size:20px;line-height:28px;font-weight:600; }
+.retail-app.retail-stitch .r-stitch-header > div[style*='width: 48px'] { display:none; }
+.retail-app.retail-stitch .r-stitch-header .r-page-header-action .r-btn { min-height:40px;background:var(--r-bg-secondary);border-radius:9999px;font-size:14px;padding:8px 12px; }
+.retail-app.retail-stitch .r-currency-input { height:64px;min-height:64px;background:var(--r-bg-secondary)!important;font-size:28px!important;font-weight:700;line-height:36px; }
+.retail-app.retail-stitch .r-amount-shortcuts { display:flex;gap:8px;margin-top:12px; }
+.retail-app.retail-stitch .r-amount-shortcuts button { flex:1;min-height:36px;padding:6px;border:0;border-radius:9999px;background:var(--r-primary-light);color:var(--r-primary-text);font:inherit;font-size:13px; }
+.retail-app.retail-stitch .r-stitch-amount-sale .r-card { border:0;border-radius:16px; }
+.retail-app.retail-stitch .r-stitch-amount-sale .r-entry-intro { display:flex;align-items:center;gap:12px;padding:20px;background:var(--r-primary-light);border-radius:12px;margin-bottom:20px; }
+.retail-app.retail-stitch .r-stitch-amount-sale .r-entry-intro p { flex:1;min-width:0;margin:0;font-size:13px; }
+.retail-app.retail-stitch .r-stitch-amount-sale .r-entry-intro .r-btn { min-height:44px;padding:8px;font-size:13px; }
+.retail-app.retail-stitch .r-stitch-amount-sale label { display:block;margin:0 0 8px; }
+.retail-app.retail-stitch .r-stitch-amount-sale details > summary { min-height:44px;cursor:pointer;font-weight:600; }
+.retail-app.retail-stitch .r-stitch-amount-sale details[open] > summary { margin-bottom:16px; }
+.retail-app.retail-stitch .r-sale-guarantee h2 { font-size:17px; }
+@media(min-width:768px){.retail-app.retail-stitch .r-stitch-item-form main { max-width:720px;margin:auto; }.retail-app.retail-stitch .r-stitch-item-form .r-sticky-footer { max-width:720px; }}
+.retail-app.retail-stitch .r-stitch-intro { display:flex;align-items:center;gap:16px; }
+.retail-app.retail-stitch .r-stitch-intro h2,.retail-app.retail-stitch .r-stitch-intro p { margin:0; }
+.retail-app.retail-stitch .r-stitch-dual-cta { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.retail-app.retail-stitch .r-stitch-dual-cta .r-btn { width:100%;min-width:0;font-size:14px;padding:12px 10px; }
+.retail-app.retail-stitch .r-stitch-voice,.retail-app.retail-stitch .r-stitch-staff { max-width:720px;margin:auto; }
+.retail-app.retail-stitch .r-stitch-voice > .r-caption { display:flex;align-items:flex-start;gap:8px;margin-top:0; }
+.retail-app.retail-stitch .r-stitch-voice h2 { margin-top:0; }
+.retail-app.retail-stitch .r-stitch-voice .r-stitch-greeting-presets { display:grid;gap:10px; }
+.retail-app.retail-stitch .r-stitch-voice .r-stitch-greeting-presets .r-btn { justify-content:flex-start;text-align:left;background:var(--r-bg-secondary);border-color:transparent;min-height:72px; }
+.retail-app.retail-stitch .r-stitch-voice #greeting-language > .r-mobile-segments { flex-direction:column; }
+.retail-app.retail-stitch .r-stitch-voice .r-mobile-segments > button { min-height:52px; }
+.retail-app.retail-stitch .r-stitch-voice .r-toggle-row { display:flex;align-items:center;gap:12px;font-size:15px;color:var(--r-text); }
+.retail-app.retail-stitch .r-stitch-voice textarea { min-height:110px; }

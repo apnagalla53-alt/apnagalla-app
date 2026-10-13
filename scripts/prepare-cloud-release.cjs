@@ -9,7 +9,7 @@ if (fs.existsSync(destination)) throw new Error('Release snapshot already exists
 const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: root }).toString().split('\0');
 const allowedRoots = ['backend-typescript/', 'frontend/', 'deploy/', 'scripts/', 'docs/'];
 const allowedRootFiles = ['.gitignore', '.dockerignore', '.env.example', 'AGENTS.md', 'AI_CONTEXT.md', 'README.md', 'netlify.toml', 'render.yaml'];
-const exclude = /(?:^|\/)(?:node_modules|dist|build|storage|uploads|test-results|playwright-report|\.astro|\.gradle|\.local-backups|output|tmp|Downloads|vyapar_ref|review-support|design|EVOLIX_Intelligence_Day0_Pack)(?:\/|$)/i;
+const exclude = /(?:^|\/)(?:node_modules|dist|build|storage|uploads|test-results|playwright-report|\.astro|\.gradle|\.local-backups|output|tmp)(?:\/|$)|^docs\/(?:Downloads|vyapar_ref|review-support|design|EVOLIX_Intelligence_Day0_Pack)(?:\/|$)/i;
 const secretFile = /(?:^|\/)(?:\.env(?:\..*)?|\.operator-access\..*|local\.properties|.*\.(?:jks|keystore|dump|backup|pgdump|log|zip|mp4|pdf|docx|tsbuildinfo))$/i;
 const checks = [
   ['google-client-secret', /GOCSPX-[\w-]{12,}/g],

@@ -1,0 +1,47 @@
+.retail-app.retail-stitch .r-party-overview { background:var(--r-primary-light);padding:20px; }
+.retail-app.retail-stitch .r-party-overview > :is(strong,small) { display:block; }
+.retail-app.retail-stitch .r-party-overview > strong { font-size:30px;line-height:38px;font-variant-numeric:tabular-nums;margin:8px 0;color:var(--r-text); }
+.retail-app.retail-stitch .r-party-overview > small { font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-party-quick-actions { display:flex;gap:10px;margin-bottom:16px; }
+.retail-app.retail-stitch .r-party-quick-actions > button { flex:1; }
+.retail-app.retail-stitch .r-party-filters { display:flex;margin:16px 0; }
+.retail-app.retail-stitch .r-party-filters button { flex:1; }
+.retail-app.retail-stitch .r-party-tabs { display:flex;padding:5px;margin:16px 20px 0;border-radius:9999px;background:var(--r-bg-secondary); }
+.retail-app.retail-stitch .r-party-tabs .r-btn { flex:1;border:0;border-radius:9999px;min-height:44px; }
+.retail-app.retail-stitch .r-stitch-khata .r-section { padding-top:16px;padding-bottom:0; }
+.retail-app.retail-stitch .r-stitch-khata #khata-summary { text-align:left; }
+.retail-app.retail-stitch .r-stitch-khata #khata-summary .r-card-value { font-size:30px;line-height:38px; }
+.retail-app.retail-stitch .r-party-card { padding:16px;min-height:76px;border:0;border-radius:12px;background:var(--r-surface);box-shadow:var(--r-shadow-sm); }
+.retail-app.retail-stitch .r-party-card .item-name { font-size:17px;font-weight:600; }
+.retail-app.retail-stitch .r-party-card .item-meta { font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-party-identity { display:flex;align-items:center;gap:12px; }
+.retail-app.retail-stitch .r-party-identity strong { font-size:17px; }
+.retail-app.retail-stitch .r-party-identity small { display:block;font-size:13px;color:var(--r-text-muted); }
+.retail-app.retail-stitch .r-party-avatar { display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:var(--r-primary-light);color:var(--r-primary-text); }
+.retail-app.retail-stitch .khata-summary { margin:0 20px 20px;padding:20px;border-radius:16px; }
+.retail-app.retail-stitch .khata-summary .khata-amount { font-size:30px;line-height:38px; }
+.retail-app.retail-stitch .khata-actions { display:grid;gap:10px;grid-template-columns:1fr; }
+.retail-app.retail-stitch .r-timeline { padding:0; }
+.retail-app.retail-stitch .r-timeline-item { background:var(--r-surface);padding:16px;border-radius:12px;margin-bottom:12px;border:0; }
+.retail-app.retail-stitch .r-timeline-dot { display:none; }
+.retail-app.retail-stitch .r-timeline-amount--credit { color:var(--r-warning); }
+.retail-app.retail-stitch .r-timeline-amount--debit { color:var(--r-success); }
+.retail-app.retail-stitch .timeline-item { background:var(--r-surface);padding:16px;border-radius:12px; }
+.retail-app.retail-stitch .r-stitch-party-payment .r-section { max-width:720px;margin:auto; }
+.retail-app.retail-stitch .r-stitch-party-payment .r-fieldset { display:block;padding:0;border:0;min-width:0; }
+.retail-app.retail-stitch .r-stitch-party-outstanding { margin-top:20px;padding:16px;border-radius:12px;background:var(--r-primary-light);display:flex;flex-direction:column;gap:8px; }
+.retail-app.retail-stitch .r-stitch-party-outstanding strong { font-size:30px;color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-stitch-party-payment--supplier .r-stitch-party-outstanding { background:var(--r-warning-light); }
+.retail-app.retail-stitch .r-stitch-party-payment--supplier .r-stitch-party-outstanding strong { color:var(--r-warning-text); }
+.retail-app.retail-stitch .r-stitch-party-payment .r-currency-input { height:64px;font-size:30px;font-weight:700;margin-top:8px; }
+.retail-app.retail-stitch .r-stitch-amount-shortcuts { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+.retail-app.retail-stitch .r-stitch-amount-shortcuts .r-btn { min-height:40px;padding:8px 12px;font-size:13px; }
+.retail-app.retail-stitch .r-stitch-remaining { padding:12px;background:var(--r-bg-secondary);border-radius:8px;font-size:14px;margin-bottom:0; }
+.retail-app.retail-stitch .r-stitch-party-payment details summary { min-height:32px;font-weight:600;color:var(--r-primary-text); }
+.retail-app.retail-stitch .r-stitch-party-payment details[open] summary { margin-bottom:16px; }
+.retail-app.retail-stitch .r-stitch-party-payment--supplier .r-payment-choices { display:grid;grid-template-columns:1fr;gap:10px; }
+.retail-app.retail-stitch .r-stitch-party-payment--supplier .r-payment-choice { flex-direction:row;justify-content:flex-start;min-height:64px; }
+.retail-app.retail-stitch .r-stitch-ledger-note { padding:16px;border:1px solid var(--r-border);background:var(--r-primary-light);border-radius:12px; }
+.retail-app.retail-stitch .r-stitch-customer-account .r-section { max-width:720px;margin:auto; }
+.retail-app.retail-stitch .r-stitch-customer-balance { background:var(--r-primary-light);text-align:left; }
+.retail-app.retail-stitch .r-stitch-account-amount { font-size:30px;font-weight:700;color:var(--r-primary-text);margin-top:8px; }

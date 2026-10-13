@@ -105,6 +105,11 @@ backend-typescript/.local-backups/
 /.playwright-cli/
 /output/
 
+# Unrelated personal downloads and unguarded obsolete SQL utilities stay local.
+/docs/Downloads/
+/backend-typescript/drop.js
+/backend-typescript/drop2.js
+
 # Android signing material and generated web bundles
 *.jks
 *.keystore
