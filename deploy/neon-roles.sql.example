@@ -2,12 +2,26 @@
 -- Phase A: use Neon SQL Editor as the trusted database administrator.
 -- These LOGIN roles have NO password until the operator sets one securely.
 -- Create them via SQL, not Neon's Add role UI (which grants neon_superuser membership).
-CREATE ROLE evolix_migrator LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
-CREATE ROLE evolix_runtime LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='evolix_migrator') THEN
+    CREATE ROLE evolix_migrator LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='evolix_runtime') THEN
+    CREATE ROLE evolix_runtime LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+  END IF;
+END $$;
 GRANT USAGE, CREATE ON SCHEMA public TO evolix_migrator;
 GRANT USAGE ON SCHEMA public TO evolix_runtime;
--- Trusted migrations may need to read existing forced-RLS rows.
-ALTER ROLE evolix_migrator SET app.security_scope = 'system';
+-- Do not persist app.security_scope with ALTER ROLE. Neon can reject custom
+-- parameter role defaults. The API sets its verified scope transaction-locally.
+-- Current fresh-schema migrations enable forced RLS last. Future data migrations
+-- touching protected rows must explicitly set their authorized transaction scope;
+-- do not solve that by disabling RLS or granting elevated runtime privileges.
+
+SELECT rolname,rolcanlogin,rolsuper,rolbypassrls,rolcreatedb,rolcreaterole
+  FROM pg_roles WHERE rolname IN ('evolix_migrator','evolix_runtime') ORDER BY rolname;
+-- Two rows: LOGIN true; all four privileged flags false.
 
 -- STOP HERE. In a private psql administrator session, set distinct random passwords
 -- with \password evolix_migrator and \password evolix_runtime (interactive prompts).
