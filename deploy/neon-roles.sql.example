@@ -23,8 +23,11 @@ SELECT rolname,rolcanlogin,rolsuper,rolbypassrls,rolcreatedb,rolcreaterole
   FROM pg_roles WHERE rolname IN ('evolix_migrator','evolix_runtime') ORDER BY rolname;
 -- Two rows: LOGIN true; all four privileged flags false.
 
--- STOP HERE. In a private psql administrator session, set distinct random passwords
--- with \password evolix_migrator and \password evolix_runtime (interactive prompts).
+-- STOP HERE. Neon Console reset can reject roles without an initial password.
+-- For NEW UNUSED roles only, follow neon-initialize-passwords.sql.example;
+-- then use Console Reset password and save the two final passwords privately.
+-- Neon requires plaintext input for SQL password changes, so do not assume
+-- psql \password/client-side hashed verifiers are supported by this provider.
 -- Apply all Prisma migrations using the DIRECT migrator URL in a separate job.
 
 -- Phase B: AFTER migration deploy, execute as the migration owner.
