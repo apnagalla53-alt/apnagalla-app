@@ -50,7 +50,7 @@ Use a paid, continuously available Web Service for retail counter use. Render do
 
 The active repository-root [Render template](../render.yaml) specifies native Node, `backend-typescript` root, manual deployments, a paid persistent disk and `/api/v1/health/ready`. Creating a paid service requires your chosen billing plan. [The older Docker template](../deploy/render.yaml.example) remains an alternative; its images have not been built in this local environment. Neither configuration has deployed a service.
 
-Use `PORT=8010` with this image because its internal Docker health check uses that port. Render routes the service using its PORT setting. The Nest API already listens on that port without a localhost-only binding. For a native Node deployment instead, build with `npm ci && npx prisma generate && npm run build` and start `npm run start:prod`; separately supply a compatible `pg_dump`/`pg_restore` runtime before claiming backups work.
+Use `PORT=8010` with this image because its internal Docker health check uses that port. Render routes the service using its PORT setting. The Nest API already listens on that port without a localhost-only binding. For a native Node deployment instead, build with `npm ci --include=dev && npx prisma generate && npm run build` and start `npm run start:prod`; separately supply a compatible `pg_dump`/`pg_restore` runtime before claiming backups work.
 
 Backend environment values:
 

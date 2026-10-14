@@ -102,7 +102,7 @@ The repository-root [render.yaml](../render.yaml) is the active preparation temp
 | Repository | `apnagalla53-alt/apnagalla-app` |
 | Root directory | `backend-typescript` |
 | Runtime | Node 24 |
-| Build command | `npm ci && npx prisma generate && npm run build` |
+| Build command | `npm ci --include=dev && npx prisma generate && npm run build` |
 | Start command | `node dist/main.js` |
 | Health check | `/api/v1/health/ready` |
 | Automatic deploy | Off initially |
