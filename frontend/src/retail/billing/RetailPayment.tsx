@@ -1,3 +1,4 @@
+import { trackExperience } from '../experience/experienceEvents';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 /**
@@ -25,11 +26,14 @@ import {
   Check,
 } from "lucide-react";
 import {
+  billLinePayload,
   useBillStore,
   useSaleCompleteStore,
   type PaymentSplit,
 } from "../retailStore";
 import { khataApi, posApi, type RetailCustomer } from "../retailApi";
+import RetailPartyForm from '../RetailPartyForm';
+import InlineEntitySheet from '../experience/InlineEntitySheet';
 
 type PaymentMode = "CASH" | "UPI" | "UDHAR" | "SPLIT";
 
@@ -79,6 +83,7 @@ const RetailPayment = () => {
 
   // Udhar state
   const [showUdharCustomerSelect, setShowUdharCustomerSelect] = useState(false);
+  const [addingCustomer,setAddingCustomer]=useState(false);
 
   // Split state
   const [splitCash, setSplitCash] = useState("");
@@ -125,18 +130,7 @@ const RetailPayment = () => {
       return;
     }
     const body = {
-      items: items.map((i) => ({
-        item_id: i.item_id,
-        variant_id: i.variant_id,
-        batch_id: i.batch_id,
-        unit_id: i.unit_id,
-        dimensions: i.dimensions,
-        serial_ids: i.serial_ids,
-        modifier_option_ids: i.modifier_option_ids,
-        quantity: i.quantity,
-        rate: i.rate,
-        discount_amount: i.discount_amount,
-      })),
+      items: items.map(billLinePayload),
       customer_id: customer?.id,
       date: details.date,
       payment_splits: [],
@@ -204,23 +198,14 @@ const RetailPayment = () => {
     if (!savedSale && (selectedMode==='UPI' || selectedMode==='SPLIT' && splitUPIAmt>0) && !upiConfirmed) return;
     setSaving(true);
     setError("");
+    let posted=!!savedSale;
+    if(!posted)trackExperience('bill_save_attempted',{workflow:'PAYMENT'});
     try {
       // POST to actual backend POS endpoint
       const res = savedSale
         ? { data: savedSale.invoice }
         : await posApi.postSale({
-            items: items.map((i) => ({
-              item_id: i.item_id,
-              variant_id: i.variant_id,
-              batch_id: i.batch_id,
-              unit_id: i.unit_id,
-              dimensions: i.dimensions,
-              serial_ids: i.serial_ids,
-              modifier_option_ids: i.modifier_option_ids,
-              quantity: i.quantity,
-              rate: i.rate,
-              discount_amount: i.discount_amount,
-            })),
+            items: items.map(billLinePayload),
             customer_id: customer?.id,
             payment_splits:
               payments ||
@@ -237,7 +222,9 @@ const RetailPayment = () => {
           });
       if (!res.data?.id || !res.data?.document_number)
         throw new Error("Sale confirmation missing");
+      posted=true;
       const completedMode = savedSale?.mode || mode;
+      if(!savedSale)trackExperience('bill_saved',{workflow:'PAYMENT'});
       setSavedSale({ invoice: res.data, mode: completedMode });
       if (completedMode !== "Udhar") void notifyPayment(res.data.id, Number(res.data.paid_amount));
       await photoUpload.upload('SALES_INVOICE',res.data.id,'SALE_PROOF');
@@ -255,6 +242,7 @@ const RetailPayment = () => {
 
       navigate("/retail/sale-complete", { replace: true });
     } catch (e) {
+      if(!posted)trackExperience('bill_failed',{workflow:'PAYMENT'});
       setError(getApiErrorMessage(e));
     } finally {
       setSaving(false);
@@ -445,7 +433,6 @@ const RetailPayment = () => {
               placeholder={total.toString()}
               value={cashReceived}
               onChange={(e) => setCashReceived(e.target.value)}
-              autoFocus
               id="cash-received-input"
             />
           </div>
@@ -683,7 +670,6 @@ const RetailPayment = () => {
               placeholder="0"
               value={splitCash}
               onChange={(e) => setSplitCash(e.target.value)}
-              autoFocus
               id="split-cash-input"
             />
           </div>
@@ -897,7 +883,7 @@ const RetailPayment = () => {
             ? () => setCustomerOffset((n) => n + 100)
             : undefined
         }
-        onAdd={() => navigate("/retail/customers/add")}
+        onAdd={() => {setShowUdharCustomerSelect(false);setAddingCustomer(true);}}
         addLabel={ui("Add Customer")}
         onSelect={(id) => {
           const chosen = customers.find((c) => c.id === id);
@@ -907,6 +893,7 @@ const RetailPayment = () => {
           setSelectedMode(selectedMode === "SPLIT" ? "SPLIT" : "UDHAR");
         }}
       />
+      <InlineEntitySheet open={addingCustomer} onClose={()=>setAddingCustomer(false)} title="Add Customer" context="Your payment and bill stay here.">{addingCustomer&&<RetailPartyForm initialName={customerSearch} onSaved={async id=>{trackExperience('customer_inline_created',{workflow:'PAYMENT'});try{const response=await khataApi.getTimeline(id);const chosen=response.data.data.customer;setCustomer({...chosen,balance:Number(response.data.data.balance)});setAddingCustomer(false);setSelectedMode(selectedMode==='SPLIT'?'SPLIT':'UDHAR');}catch(err){setCustomerError(getApiErrorMessage(err));}}}/>}</InlineEntitySheet>
     </div>
   );
 };

@@ -2,22 +2,22 @@ import { ui, useUiLanguage } from "../../i18n";
 import { MobileSelect } from "./MobileControls";
 import { useEffect, useState } from "react";
 import { itemApi, type RetailItem } from "../retailApi";
-import { useNavigate } from "react-router-dom";
 export default function PurchaseItemSearch({
   index,
   value,
   selected,
   onSelect,
   onLoaded,
+  onCreate,
 }: {
   index: number;
   value: string;
   selected?: RetailItem;
   onSelect: (id: string) => void;
   onLoaded: (items: RetailItem[]) => void;
+  onCreate?: (query:string) => void;
 }) {
   useUiLanguage();
-  const navigate = useNavigate();
   const [query, setQuery] = useState(""),
     [rows, setRows] = useState<RetailItem[]>([]),
     [loading, setLoading] = useState(false),
@@ -73,7 +73,7 @@ export default function PurchaseItemSearch({
         error={error}
         onRetry={() => setRetry((n) => n + 1)}
         onMore={more && !loading ? () => setOffset((n) => n + 100) : undefined}
-        onAdd={() => navigate("/retail/items/add")}
+        onAdd={onCreate?() => onCreate(query):undefined}
         addLabel={ui("Add Item")}
       >
         <option value="">Choose Item</option>

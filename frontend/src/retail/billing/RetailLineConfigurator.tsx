@@ -6,11 +6,11 @@ import api, { getApiErrorMessage } from '../../shared/api';
 import { useBillStore, type BillLineItem } from '../retailStore';
 import {stockWarning} from './stockWarning';
 
-export default function RetailLineConfigurator({ itemId, existing, close }: { itemId: string; existing?: BillLineItem; close: () => void }) {
+export default function RetailLineConfigurator({ itemId, existing, close,initialQuantity=1 }: { itemId: string; existing?: BillLineItem; close: () => void;initialQuantity?:number }) {
   useUiLanguage();
   const [item, setItem] = useState<any>(null), [error, setError] = useState(''), [saving, setSaving] = useState(false);
   const [features, setFeatures] = useState<string[]>([]), [baseChoice, setBaseChoice] = useState<RetailUnitChoice | null>(null), [sellingMode, setSellingMode] = useState('PIECE');
-  const [quantity, setQuantity] = useState(String(existing?.quantity || 1)), [rate, setRate] = useState(existing ? String(existing.rate) : '');
+  const [quantity, setQuantity] = useState(String(existing?.quantity || initialQuantity)), [rate, setRate] = useState(existing ? String(existing.rate) : '');
   const [discount, setDiscount] = useState(String(existing?.discount_amount || 0)), [unit, setUnit] = useState(existing?.unit_id || '');
   const [variant, setVariant] = useState(existing?.variant_id || ''), [batch, setBatch] = useState(existing?.batch_id || '');
   const [serials, setSerials] = useState<string[]>(existing?.serial_ids || []), [dimensions, setDimensions] = useState<any>(existing?.dimensions || {});
@@ -32,6 +32,7 @@ export default function RetailLineConfigurator({ itemId, existing, close }: { it
   const dimensionUnit = canChooseBase ? baseChoice?.code : allowedUnits.find((choice: any) => choice.id === unit)?.code || item?.primary_unit.code;
   const dimensionMeasure = ['SQFT', 'CFT'].includes(dimensionUnit || '') ? 'feet' : dimensionUnit === 'SQIN' ? 'inches' : ['SQM', 'CBM'].includes(dimensionUnit || '') ? 'metres' : `the measure represented by ${dimensionUnit}`;
   const warning=stockWarning(item,{quantity:Number(quantity),unit_id:unit,variant_id:variant,batch_id:batch,dimensions:measured?dimensions:undefined},useBillStore.getState().items.filter(l=>l.item_id===itemId&&l.row_id!==existing?.row_id));
+  const unitRate=(unitId:string,variantId=variant)=>{const base=item.variants.find((v:any)=>v.id===variantId)?.default_sale_rate??item.default_sale_rate;const conversion=item.unit_conversions.find((c:any)=>c.from_unit_id===unitId);return String(conversion?.selling_price??(Number(base)*Number(conversion?.conversion_factor||1)));};
   const save = async (event: React.FormEvent) => {
     event.preventDefault(); if (saving) return; setError('');
     const groups = item.modifier_groups || [];
@@ -64,7 +65,7 @@ export default function RetailLineConfigurator({ itemId, existing, close }: { it
     {item && <form onSubmit={save}><fieldset className="r-fieldset" disabled={saving}>
       {item.is_bundle && <div className="r-card"><h3>Included in this kit</h3>{item.bundle_components.length ? item.bundle_components.map((component: any) => <p key={component.id}>{component.component_item.name} × {Number(component.quantity)}</p>) : <p role="alert">Set up the bundle components in Item Details before billing.</p>}</div>}
       {(item.modifier_groups || []).map((group: any) => <fieldset key={group.id} className="r-fieldset"><legend>{group.name} · choose {group.min_select}–{group.max_select}</legend>{group.options.map((option: any) => <label className="r-list-item" key={option.id}><input type="checkbox" checked={modifiers.includes(option.id)} onChange={event => setModifiers(event.target.checked ? [...modifiers, option.id] : modifiers.filter(id => id !== option.id))} />{option.name} · {Number(option.price_delta) >= 0 ? '+' : ''}₹{Number(option.price_delta)}</label>)}</fieldset>)}
-      {item.has_variants && <><label htmlFor="line-variant">Variant</label><MobileSelect id="line-variant" required value={variant} onChange={event => { setVariant(event.target.value); const choice = item.variants.find((choice: any) => choice.id === event.target.value); if (choice?.default_sale_rate) setRate(String(choice.default_sale_rate)); setSerials([]); }}><option value="">Select variant</option>{item.variants.map((choice: any) => <option key={choice.id} value={choice.id}>{Object.values(choice.attributes || {}).join(' / ') || choice.sku}</option>)}</MobileSelect></>}
+      {item.has_variants && <><label htmlFor="line-variant">Variant</label><MobileSelect id="line-variant" required value={variant} onChange={event => { setVariant(event.target.value); setRate(unitRate(unit,event.target.value)); setSerials([]); }}><option value="">Select variant</option>{item.variants.map((choice: any) => <option key={choice.id} value={choice.id}>{Object.values(choice.attributes || {}).join(' / ') || choice.sku}</option>)}</MobileSelect></>}
       <label htmlFor="line-unit">{ui("Unit")}</label>
       {canChooseBase && baseChoice ? <>
         <UnitPicker id="line-unit" value={baseChoice.code} disabled={saving} allowedModes={['PIECE', ...features]} onChange={choice => {
@@ -76,7 +77,7 @@ export default function RetailLineConfigurator({ itemId, existing, close }: { it
         </MobileSelect>
         <p className="r-caption">Choose the base unit before this item's first saved bill or purchase. Stock remains uncounted until you receive it.</p>
       </> : <>
-        <MobileSelect id="line-unit" value={unit} onChange={event => setUnit(event.target.value)}>{allowedUnits.map((choice: any) => <option key={choice.id} value={choice.id}>{unitLabel(choice)}</option>)}</MobileSelect>
+        <MobileSelect id="line-unit" value={unit} onChange={event => {setUnit(event.target.value);setRate(unitRate(event.target.value));}}>{allowedUnits.map((choice: any) => <option key={choice.id} value={choice.id}>{unitLabel(choice)} · ₹{unitRate(choice.id)}</option>)}</MobileSelect>
         {allowedUnits.length === 1 && <p className="r-caption">This item's base unit is {unitLabel(item.primary_unit)}. Add selling packs in Item Details → Units &amp; packs.</p>}
       </>}
       <label htmlFor="line-quantity">{mode === 'WEIGHT' ? ['LTR', 'ML'].includes(baseChoice?.code || item.primary_unit.code) ? ui("Volume / quantity") : ui("Weight / quantity") : mode === 'LENGTH' ? ui("Length / quantity") : ui("Quantity")}</label>

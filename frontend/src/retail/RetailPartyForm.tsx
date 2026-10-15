@@ -5,9 +5,9 @@ import { khataApi, supplierApi } from './retailApi';
 import api, { getApiErrorMessage } from '../shared/api';
 import { ChevronDown, UserRound, MapPin, BadgeIndianRupee } from 'lucide-react';
 
-export default function RetailPartyForm({ supplier = false, stickyActions = false, initial, onSaved }: { supplier?: boolean; stickyActions?: boolean; initial?: any; onSaved: (id: string) => void }) {
+export default function RetailPartyForm({ supplier = false, stickyActions = false, initial,initialName='', onSaved }: { supplier?: boolean; stickyActions?: boolean; initial?: any;initialName?:string; onSaved: (id: string) => void }) {
   useUiLanguage();
-  const [form, setForm] = useState<Record<string, string>>(() => { const values:Record<string,string>={name:'',mobile:'',supplier_category:'REGULAR',credit_days:'0'}; if(initial)for(const key of ['name','mobile','code','nickname','supplier_category','credit_days','credit_limit','max_credit_bills','address','state','email','gstin','pan','visit_cycle','visit_date'])values[key]=initial[key]==null?'':key==='visit_date'?String(initial[key]).slice(0,10):String(initial[key]);return values; });
+  const [form, setForm] = useState<Record<string, string>>(() => { const values:Record<string,string>={name:initialName,mobile:'',supplier_category:'REGULAR',credit_days:'0'}; if(initial)for(const key of ['name','mobile','code','nickname','supplier_category','credit_days','credit_limit','max_credit_bills','address','state','email','gstin','pan','visit_cycle','visit_date'])values[key]=initial[key]==null?'':key==='visit_date'?String(initial[key]).slice(0,10):String(initial[key]);return values; });
   const [credit, setCredit] = useState(initial?.credit_allowed ?? true); const [advanced, setAdvanced] = useState(false);
   const [saving, setSaving] = useState(false); const [error, setError] = useState('');
   const field = (key: string, label: string, type = 'text', required = false, placeholder?: string) => <div className="form-group" key={key}>

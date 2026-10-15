@@ -24,6 +24,7 @@
 .login-footer {display:flex;flex-wrap:wrap;gap:12px 20px}
 .onboarding-card {max-width:640px!important}
 .onboarding-progress {font-size:13px;color:#557365}
+.login-brand img { display:block; width:min(240px,100%); height:auto; margin:auto; }
 .business-type-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:320px;overflow:auto;margin-bottom:20px}
 .business-type-grid button {background:#f6f9f7;color:#315b49;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px;font-size:12px;border:1px solid #dee9e2;min-height:84px}
 .business-type-grid button.selected {background:#e0f0e8;border:2px solid #24775a}

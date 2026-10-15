@@ -6,17 +6,27 @@ import { useAuthStore } from '../shared/store/authStore';
 import BusinessTypeSheet from './BusinessTypeSheet';
 import { onboardingPlanBenefits,onboardingPlanDescriptions,onboardingPlanNames } from './onboardingPresentation';
 import './Onboarding.css';
+import '../shared/apna-theme.css';
+import { ui, useUiLanguage } from '../i18n';
 type Profile={owner_name:string;name:string;mobile:string;business_type:string;custom_business_type:string;address:string;city:string;state:string;postal_code:string};
 const emptyProfile:Profile={owner_name:'',name:'',mobile:'',business_type:'',custom_business_type:'',address:'',city:'',state:'',postal_code:''};
 const localPhone=(phone:string)=>phone.replace(/^\+91/,'').replace(/\D/g,'');
 const device=()=>localStorage.getItem('evolix-device-id')||undefined;
 export default function Onboarding(){
+ useUiLanguage();
+ const [theme,setTheme]=useState(localStorage.getItem('evolix-theme')||'light'),startPath=useRef('');
+ useEffect(()=>{const update=()=>setTheme(localStorage.getItem('evolix-theme')||'light');window.addEventListener('evolix-theme',update);return()=>window.removeEventListener('evolix-theme',update);},[]);
  const user=useAuthStore(s=>s.user),navigate=useNavigate();
  const [data,setData]=useState<any>(null),[profile,setProfile]=useState<Profile>(emptyProfile),[view,setView]=useState(''),[error,setError]=useState(''),[errorCode,setErrorCode]=useState(''),[busy,setBusy]=useState(false),[sheet,setSheet]=useState(false),[gps,setGps]=useState<{latitude:number;longitude:number}|null>(null),[locationStatus,setLocationStatus]=useState(''),[locating,setLocating]=useState(false);
  const loaded=useRef(false),mounted=useRef(true);
+ const [activationCode,setActivationCode]=useState(''),[codeMessage,setCodeMessage]=useState('');
  const step=view||data?.state;
  async function install(result:any,hydrate=false){
-  if(result.session_mode==='cookie'||result.access_token){useAuthStore.getState().login(result.access_token,result.user,result.csrf_token);if(result.tenant_context)useAuthStore.getState().setTenantContext(result.tenant_context);navigate(result.next,{replace:true});return;}
+  if(result.state==='PLAN_REQUIRED'){
+   await install((await api.post('/auth/account/onboarding/activation-request')).data,hydrate);return;
+  }
+  if(result.code_result)setCodeMessage(result.code_result.kind==='TRIAL'?'Your campaign trial is activated. Choose how to start below.':'Referral saved. Your trial activation is still awaiting administrator approval.');
+  if(result.session_mode==='cookie'||result.access_token){useAuthStore.getState().login(result.access_token,result.user,result.csrf_token);if(result.tenant_context)useAuthStore.getState().setTenantContext(result.tenant_context);navigate(startPath.current||result.next,{replace:true});return;}
   if(result.state==='READY'){
    if(user?.onboarding_state!=='READY'){
     const completed=(await api.post('/auth/account/onboarding/migration',{choice:result.data?.migration_choice==='IMPORT'?'IMPORT':'FRESH',device_id:device()})).data;
@@ -24,13 +34,18 @@ export default function Onboarding(){
    }
    if(result.tenant_context)useAuthStore.getState().setTenantContext(result.tenant_context);
    useAuthStore.setState(s=>({user:s.user?{...s.user,onboarding_state:'READY'}:null}));
-   navigate('/retail/home',{replace:true});return;
+   navigate(startPath.current||'/retail/home',{replace:true});return;
   }
   setData(result);setView('');
   if(hydrate){const saved=result.data?.profile||{};setProfile({...emptyProfile,...saved,owner_name:saved.owner_name||result.owner_name||'',name:saved.name||result.business?.name||'',mobile:localPhone(saved.mobile||result.phone||''),business_type:saved.business_type||result.business?.business_type||'',address:saved.address||result.business?.address||'',city:saved.city||result.business?.city||'',state:saved.state||result.business?.state||'',postal_code:saved.postal_code||result.business?.postal_code||''});if(result.data?.location)setGps(result.data.location);}
  }
  async function reload(){setError('');setBusy(true);try{const result=(await api.get('/auth/account/onboarding')).data;if(mounted.current)await install(result,true);}catch(e:any){if(mounted.current)setError(e.response?.data?.message||'Cannot load your setup. Please retry.');}finally{if(mounted.current)setBusy(false);}}
  useEffect(()=>{mounted.current=true;if(!loaded.current&&!user?.is_platform){loaded.current=true;void reload();}return()=>{mounted.current=false;};},[]);
+ useEffect(()=>{
+  if(data?.state!=='ACCESS_PENDING'||view||busy)return;
+  const timer=window.setInterval(()=>{if(!document.hidden)void reload();},30000);
+  return()=>window.clearInterval(timer);
+ },[data?.state,view,busy]);
  async function save(path:string,body:any){if(busy)return;setError('');setErrorCode('');setBusy(true);try{await install((await api.post('/auth/account/onboarding/'+path,body)).data);}catch(e:any){const m=e.response?.data?.message;setError(Array.isArray(m)?m.join('. '):m||'Could not save. Your details are still here; please retry.');setErrorCode(e.response?.data?.code||'');}finally{setBusy(false);}}
  function field(key:keyof Profile,value:string){setProfile(p=>({...p,[key]:value}));}
  function locate(){
@@ -40,13 +55,14 @@ export default function Onboarding(){
  if(user?.is_platform)return <Navigate to="/platform/dashboard" replace/>;
  const profileStep=['OWNER_PROFILE_REQUIRED','BUSINESS_PROFILE_REQUIRED'].includes(step),planStep=step==='PLAN_REQUIRED',migrationStep=step==='MIGRATION_OFFERED',pendingStep=step==='ACCESS_PENDING';
  const category=data?.business_types.find((t:any)=>t.code===profile.business_type);
- const stepNumber=profileStep?1:planStep?2:3;
- return <main className="ob-page">
-  <header className="ob-brand"><span aria-hidden="true"><Store size={25}/></span><strong>Apna Galla</strong><small>by Evolix Studio</small></header>
+ const stepNumber=profileStep?1:planStep||pendingStep?2:3;
+ return <main className="ob-page" data-theme={theme}>
+  <header className="ob-brand"><span aria-hidden="true"><img src="/brand/apna-galla-app-192.png" width="40" height="40" alt=""/></span><strong>Apna Galla</strong><small>{ui('Dukaan ka hisaab. Bas poochho.')}</small></header>
   <section className="ob-card" aria-busy={busy}>
-   <ol className="ob-progress" aria-label="Setup progress">{['Business','Plan','Your data'].map((label,i)=><li key={label} aria-current={stepNumber===i+1?'step':undefined}><span>{stepNumber>i+1?<Check size={15}/>:i+1}</span>{label}</li>)}</ol>
+   <ol className="ob-progress" aria-label="Setup progress">{['Business','Activation','Your data'].map((label,i)=><li key={label} aria-current={stepNumber===i+1?'step':undefined}><span>{stepNumber>i+1?<Check size={15}/>:i+1}</span>{label}</li>)}</ol>
    {!data&&!error&&<div className="ob-loading" role="status">Loading your saved progress…</div>}
    {error&&<div className="ob-error" role="alert">{error}{errorCode==='MOBILE_ALREADY_LINKED'&&<Link to="/support">Contact Support</Link>}{!data&&<button type="button" onClick={()=>void reload()}>Retry setup</button>}</div>}
+   {codeMessage&&<p className="ob-code-success" role="status">{codeMessage}</p>}
    {profileStep&&<form onSubmit={event=>{event.preventDefault();void save('profile',{...profile,mobile:'+91'+localPhone(profile.mobile),...(gps||{})});}}>
     <div className="ob-intro-icon"><Store size={27}/></div><h1>Set Up Your Business</h1><p className="ob-subtitle">Bas kuch details batayein, phir Apna Galla aapki dukaan ke liye ready ho jayega.</p>
     <label htmlFor="ob-owner">Owner Name <span>*</span></label><input id="ob-owner" autoComplete="name" required maxLength={255} value={profile.owner_name} onChange={e=>field('owner_name',e.target.value)} placeholder="Your full name"/>
@@ -71,15 +87,17 @@ export default function Onboarding(){
      <button type="button" disabled={busy||data.access_active} onClick={()=>void save('plan',{choice:'REQUEST',plan_code:plan.code})}>Choose {plan.code[0]+plan.code.slice(1).toLowerCase()}</button>
     </article>)}</div>
     <p className="ob-provider-note"><ShieldCheck size={19}/>Online payments are not connected. Choosing a plan saves your request; support must confirm activation.</p>
-    {data.trial.trial_enabled&&!data.access_active&&<button type="button" className="ob-primary" disabled={busy} onClick={()=>void save('plan',{choice:'TRIAL'})}>Start {data.trial.trial_days}-day {data.trial.trial_plan.toLowerCase()} trial</button>}
    </>}
-   {migrationStep&&<><div className="ob-intro-icon"><Layers size={27}/></div><h1>Bring Your Existing Data?</h1><p className="ob-subtitle">A fresh start, or the records you already have. You can import later too.</p>
+   {migrationStep&&<><div className="ob-intro-icon"><Layers size={27}/></div><h1>How would you like to start?</h1><p className="ob-subtitle">Make a bill straight away. Adding or importing items can wait.</p>
     {!data.access_active&&<p className="ob-provider-note">Your {data.data?.requested_plan_code?.toLowerCase()} plan request is saved. Access is pending confirmation; no payment has been recorded.</p>}
     <button type="button" className="ob-back" disabled={busy} onClick={()=>setView('PLAN_REQUIRED')}><ArrowLeft size={18}/>Review or change plan</button>
-    <div className="ob-migration"><button type="button" disabled={busy} onClick={()=>void save('migration',{choice:'FRESH',device_id:device()})}><span className="ob-choice-icon"><Store size={27}/></span><strong>Start fresh</strong><span>Apna Galla mein nayi shuruaat kijiye.</span><ArrowRight size={21}/></button><button type="button" disabled={busy} onClick={()=>void save('migration',{choice:'IMPORT',device_id:device()})}><span className="ob-choice-icon"><FileUp size={27}/></span><strong>Import existing data</strong><span>Supported Excel/CSV files se existing records import kijiye.</span><ArrowRight size={21}/></button></div>
+    <div className="ob-migration"><button type="button" disabled={busy} onClick={()=>{startPath.current='/retail/bill';void save('migration',{choice:'FRESH',device_id:device()});}}><span className="ob-choice-icon"><Store size={27}/></span><strong>Make First Bill</strong><span>No setup needed. Add items as you sell.</span><ArrowRight size={21}/></button><button type="button" disabled={busy} onClick={()=>{startPath.current='/retail/more/import';void save('migration',{choice:'IMPORT',device_id:device()});}}><span className="ob-choice-icon"><FileUp size={27}/></span><strong>Import existing data</strong><span>Supported Excel/CSV files se existing records import kijiye.</span><ArrowRight size={21}/></button><button type="button" disabled={busy} onClick={()=>{startPath.current='/retail/items/bulk';void save('migration',{choice:'FRESH',device_id:device()});}}><span className="ob-choice-icon"><Layers size={27}/></span><strong>Set up my items</strong><span>Optional. Add a few products together.</span><ArrowRight size={21}/></button></div>
     <p className="ob-field-note">Items, customers, suppliers, opening stock and opening dues. Upload → map → validate → preview → import. Supported formats: {data.import_formats.join(', ')}. Source guides help you prepare exports; a direct connection to other apps is not provided.</p>
    </>}
-   {pendingStep&&<><div className="ob-intro-icon"><ShieldCheck size={27}/></div><h1>Your setup is saved</h1><p className="ob-subtitle">Your {data.data?.requested_plan_code?.toLowerCase()} plan is awaiting activation. Once support confirms it, you can {data.data?.migration_choice==='IMPORT'?'import your records':'open your shop'}.</p><div className="ob-pending-summary"><strong>{data.business?.name}</strong><span>{profile.mobile?'+91 '+profile.mobile:''}</span><span>{data.data?.migration_choice==='IMPORT'?'Import existing data':'Start fresh'} selected</span><span>Payment status: pending · No payment confirmed</span></div><button type="button" className="ob-primary" disabled={busy} onClick={()=>void reload()}><RefreshCw size={19}/>Check activation status</button><button type="button" className="ob-back" onClick={()=>setView('MIGRATION_OFFERED')}>Change data choice</button><button type="button" className="ob-back" onClick={()=>setView('PLAN_REQUIRED')}>Review or change plan</button><button type="button" className="ob-back" onClick={()=>setView('BUSINESS_PROFILE_REQUIRED')}>Edit business profile</button><Link className="ob-support" to="/support">Contact Support</Link></>}
+   {pendingStep&&<><div className="ob-intro-icon"><ShieldCheck size={27}/></div><h1>Your demo request is sent</h1><p className="ob-subtitle">Your shop details are saved and your activation request has been sent automatically. Our administrator will choose your trial plan and duration, usually 30 or 60 days. No payment is needed for a free trial.</p>
+    <div className="ob-pending-summary"><strong>{data.business?.name}</strong><span>{profile.mobile?'+91 '+profile.mobile:''}</span><span>Activation: awaiting administrator approval</span><span>Requested plan: {data.data?.requested_plan_code||'SMART'}</span>{data.data?.activation_requested_at&&<span>Request sent: {new Date(data.data.activation_requested_at).toLocaleString()}</span>}</div>
+    <form className="ob-activation-code" onSubmit={e=>{e.preventDefault();setCodeMessage('');void save('activation-code',{code:activationCode.trim()});}}><label htmlFor="ob-activation-code">Have a referral or campaign code?</label><p className="ob-field-note">An eligible campaign code activates your trial instantly. A shop referral code records your invitation while approval is pending.</p><input id="ob-activation-code" value={activationCode} onChange={e=>setActivationCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" spellCheck={false} minLength={3} maxLength={40} required placeholder="Enter your code"/><button type="submit" className="ob-primary" disabled={busy||activationCode.trim().length<3}>{busy?'Checking code…':'Apply code'}</button></form>
+    <p className="ob-field-note">This screen checks approval automatically every 30 seconds while it is open.</p><button type="button" className="ob-primary" disabled={busy} onClick={()=>void reload()}><RefreshCw size={19}/>Check activation status</button><button type="button" className="ob-back" onClick={()=>setView('PLAN_REQUIRED')}>Review or change requested plan</button><button type="button" className="ob-back" onClick={()=>setView('BUSINESS_PROFILE_REQUIRED')}>Edit business profile</button><Link className="ob-support" to="/support">Contact Support</Link></>}
    {data&&!profileStep&&!planStep&&!migrationStep&&!pendingStep&&<div role="alert"><p>We couldn’t find your next setup step. Your records are safe.</p><button type="button" onClick={()=>void reload()}>Reload setup</button><Link to="/support">Contact Support</Link></div>}
   </section>
   <footer className="ob-footer"><p><ShieldCheck size={16}/>Your progress is saved securely</p><button disabled={busy} type="button" onClick={async()=>{try{await api.post('/auth/account/logout');}finally{useAuthStore.getState().logout();}}}>Sign out</button><Link to="/privacy">Privacy</Link><Link to="/support">Help</Link></footer>

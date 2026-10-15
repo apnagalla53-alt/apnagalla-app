@@ -84,7 +84,7 @@ export class AssistantToolRegistry {
       const rows=await this.reports.getTopItemsReport(ctx.company_id,f);return result({matching_items:rows.length},'Ranked by net sale value, as the existing Top Items report; net line quantities/value shown and fully returned items omitted.',{rows:rows.slice(q.offset,q.offset+5).map(r=>({item:r.name,quantity:r.qty,value:r.value})),hasMore:rows.length>q.offset+5,empty:!rows.length,link:'/retail/reports/sales'});
     }
     if(['ITEM_STOCK','LOW_STOCK','OUT_OF_STOCK','STOCK_SUMMARY','LOCATION_STOCK'].includes(q.intent)){
-      const r=await this.operations.stock(ctx.company_id,f,q.offset,5,dateRange('today',ctx.timezone).to,q.intent==='LOW_STOCK'?'LOW':q.intent==='OUT_OF_STOCK'?'OUT':'ALL');
+      const r=await this.operations.stock(ctx.company_id,f,q.offset,5,dateRange('today',ctx.timezone).to,q.intent==='LOW_STOCK'?'LOW':q.intent==='OUT_OF_STOCK'?'OUT':'ALL',true);
       if(q.intent==='ITEM_STOCK'&&!r.items.length)return result({counted_stock:null},'This item has no counted physical stock. Services, kits and uncounted items are excluded; availability is not invented.',{empty:true,link:'/retail/stock'});
       let factor=1,unit=q.intent==='ITEM_STOCK'?r.items[0]?.unit||'':'';
       if(q.intent==='ITEM_STOCK'&&q.unitSearch){const opts=await this.retail.getItemUnits(ctx.company_id,q.entity!.id);const wanted=({packets:'packet',pieces:'piece',bottles:'bottle',pcs:'piece'} as Record<string,string>)[q.unitSearch]||q.unitSearch;

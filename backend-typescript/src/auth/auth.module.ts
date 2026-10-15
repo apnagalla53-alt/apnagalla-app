@@ -19,6 +19,7 @@ import { ReferralService } from './referral.service';
 import { OnboardingService } from './onboarding.service';
 import { AccountSessionGuard } from './account-session.guard';
 import { AccountController } from './account.controller';
+import { ActivationCampaignService } from './activation-campaign.service';
 
 @Global()
 @Module({
@@ -31,7 +32,7 @@ import { AccountController } from './account.controller';
     }),
   ],
   controllers: [AuthController, PlatformPasswordController, AccountController],
-  providers: [AuthService, EntitlementService, AuthEmailService, GoogleIdentityService, GoogleAuthService, PasswordLifecycleService, PlatformPasswordService, PlatformAuthGuard, AccountPolicyService, SmsOtpProvider, MobileOtpService, ReferralService, OnboardingService, AccountSessionGuard],
-  exports: [AuthService, EntitlementService, AccountPolicyService, ReferralService, AuthEmailService],
+  providers: [AuthService, EntitlementService, AuthEmailService, GoogleIdentityService, GoogleAuthService, PasswordLifecycleService, PlatformPasswordService, PlatformAuthGuard, AccountPolicyService, SmsOtpProvider, MobileOtpService, ReferralService, OnboardingService, AccountSessionGuard, ActivationCampaignService],
+  exports: [AuthService, EntitlementService, AccountPolicyService, ReferralService, AuthEmailService, ActivationCampaignService],
 })
 export class AuthModule {}

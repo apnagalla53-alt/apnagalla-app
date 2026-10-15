@@ -43,7 +43,7 @@ describe('Google owner to Super Admin access approval: real isolated HTTP/DB, te
   });
   it('organization activation alone cannot grant a pending subscription access',async()=>{
     await platform('post','tenants/'+owner.org+'/actions').send({action:'status',status:'ACTIVE',reason:'Prove status alone is insufficient'}).expect(201);
-    expect((await account('get','').expect(200)).body.state).toBe('MIGRATION_OFFERED');
+    expect((await account('get','').expect(200)).body.state).toBe('ACCESS_PENDING');
     expect((await account('post','/migration').send({choice:'FRESH'}).expect(201)).body.state).toBe('ACCESS_PENDING');
   });
   it('requires platform authorization and an audit reason for approval',async()=>{

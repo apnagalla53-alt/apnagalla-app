@@ -2,10 +2,11 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import api, { getApiErrorMessage } from '../../shared/api';
 import { useAuthStore } from '../../shared/store/authStore';
+import type { BusinessPreset } from '../experience/useBusinessPreset';
 
 export type ShopFeature={code:string;name:string;group:string;description:string;required_plan:string|null;commercial_state?:string;core:boolean;plan_entitled:boolean;shop_enabled:boolean;enabled:boolean;rollout_enabled:boolean;override:boolean|null};
 export type RetailPlan={id:string;code:string;name:string;monthly_price:number;description:string;limits:Record<string,number>;features:{code:string;name:string;group:string}[]};
-export type SubscriptionAccess={business_type?:string;current:{status:string;plan_name:string;plan_code:string;monthly_price:number;expires_at:string;complimentary:boolean}|null;entitlements:{plan:RetailPlan|null;subscription_status:string;subscription_active:boolean;features:ShopFeature[];limits:Record<string,number>;synced_at:string};plans:RetailPlan[];payments:{id:string;plan_name:string;amount:string;tax:string;discount:string;status:string;method:string;reference:string;paid_at:string;refund_amount:string}[];payment_provider:{status:string;checkout_available:boolean};voice_provider:{status:string;available:boolean};backup_provider:{configured:boolean;provider:string}};
+export type SubscriptionAccess={business_preset?:BusinessPreset;business_type?:string;current:{status:string;plan_name:string;plan_code:string;monthly_price:number;expires_at:string;complimentary:boolean}|null;entitlements:{plan:RetailPlan|null;subscription_status:string;subscription_active:boolean;features:ShopFeature[];limits:Record<string,number>;synced_at:string};plans:RetailPlan[];payments:{id:string;plan_name:string;amount:string;tax:string;discount:string;status:string;method:string;reference:string;paid_at:string;refund_amount:string}[];payment_provider:{status:string;checkout_available:boolean};voice_provider:{status:string;available:boolean};backup_provider:{configured:boolean;provider:string}};
 type State={scope:string;data:SubscriptionAccess|null;loading:boolean;error:string;loadedAt:number};
 const store=create<State>(()=>({scope:'',data:null,loading:false,error:'',loadedAt:0}));
 const inFlight=new Map<string,Promise<void>>();

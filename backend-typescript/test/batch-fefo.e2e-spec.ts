@@ -5,6 +5,7 @@ import { PrismaService } from '../src/database/prisma.service';
 import { PosService } from '../src/pos/pos.service';
 import { PurchaseService } from '../src/purchase/purchase.service';
 import { ReportsService } from '../src/retail/reports/reports.service';
+import { OperationalReportsService } from '../src/retail/reports/operational-reports.service';
 
 describe('Batch FEFO & Expiry Flow (e2e)', () => {
   let app: INestApplication;
@@ -281,7 +282,7 @@ describe('Batch FEFO & Expiry Flow (e2e)', () => {
     expect(Number(projB.quantity)).toBe(5);
   });
 
-  it('8. Verify Reports Exclude Expired Stock from Sellable/Low Stock', async () => {
+  it('8. preserves physical stock while excluding expired units from sellable and low-stock views', async () => {
     const report = await reportsService.getSalesReport(companyId, { date_range: 'today' });
     expect(report.summary).toBeDefined();
     
@@ -292,7 +293,15 @@ describe('Batch FEFO & Expiry Flow (e2e)', () => {
     // Sold: A(4) [Invoice 2] -> Remaining: A(5), B(0), C(4)
     // Returned: A(1) + B(5) -> Remaining: A(6), B(5), C(4)
     // Total sellable = A(6) + B(5) = 11. C(4) is expired.
-    expect(myItem.quantity).toBe(11);
+    // The stock report preserves all physical units, including four expired units.
+    expect(myItem.quantity).toBe(15);
+    const operational = app.get(OperationalReportsService);
+    const sellable = await operational.stock(companyId, { item_id: itemId }, 0, 5, undefined, 'ALL', true);
+    expect(sellable.items[0].quantity).toBe(11);
+    await prisma.item.update({ where: { id: itemId }, data: { low_stock_threshold: 12 } });
+    const low = await operational.stock(companyId, { item_id: itemId }, 0, 5, undefined, 'LOW');
+    expect(low.items[0].quantity).toBe(11);
+    expect(low.summary.low_stock_count).toBe(1);
   });
 
   it('9. Existing Batch Increment', async () => {

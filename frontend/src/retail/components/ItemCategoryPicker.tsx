@@ -11,6 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 import { SelectionSheet, Sheet } from "./MobileControls";
+import { useBusinessPreset } from '../experience/useBusinessPreset';
 const groups = [
   {group: 'Health & Medicines', Icon: Pill, names: ['Pharmacy / Medicines', 'Medical Devices', 'Health Supplements']},
   {
@@ -58,6 +59,7 @@ export default function ItemCategoryPicker({
   onChange: (s: string) => void;
 }) {
   useUiLanguage();
+  const preset=useBusinessPreset();
   const [open, setOpen] = useState(false),
     [adding, setAdding] = useState(false),
     [custom, setCustom] = useState(""),
@@ -102,6 +104,10 @@ export default function ItemCategoryPicker({
       Icon: g.Icon,
     })),
   );
+  for(const category of [...preset.recommendedCategories].reverse()){
+    const existing=options.findIndex(o=>o.value===category.name);if(existing>=0)options.splice(existing,1);
+    options.unshift({value:category.name,label:category.name,group:ui('Suggested for your shop'),Icon:ShoppingBasket});
+  }
   for (const label of savedCategories)
     if (!options.some((o) => o.value === label))
       options.unshift({
@@ -181,7 +187,6 @@ export default function ItemCategoryPicker({
             className="r-input"
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
-            autoFocus
             required
             maxLength={100}
           />

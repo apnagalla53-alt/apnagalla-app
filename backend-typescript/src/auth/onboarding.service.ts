@@ -85,14 +85,37 @@ export class OnboardingService {
       await tx.user.update({where:{id:userId},data:{display_name:owner,phone:mobile,onboarding_data:{...(user.onboarding_data as any),business_type:type[0],custom_business_type:custom,suggested_features:type[3],profile:JSON.parse(JSON.stringify(profile)),...(dto.latitude!=null?{location:{latitude:dto.latitude,longitude:dto.longitude}}:{})}}});
       await tx.auditLog.create({data:{company_id:companyId,user_id:userId,action:user.organization_id?'BUSINESS_ONBOARDING_UPDATED':'BUSINESS_ONBOARDING_CREATED',details:JSON.stringify({business_type:type[0],mobile_verified:!!user.phone_verified_at&&user.phone_e164===mobile})}});
     }));
+    return this.requestActivation(userId);
+  }
+  async requestActivation(userId:string) {
+    await this.db.runSystem(()=>this.db.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM users WHERE id=${userId}::uuid FOR UPDATE`;
+      const user=await tx.user.findUniqueOrThrow({where:{id:userId}});
+      if(!user.is_active||user.is_locked||!user.organization_id)throw new BadRequestException('Complete your shop details first.');
+      await tx.$queryRaw`SELECT id FROM organizations WHERE id=${user.organization_id}::uuid FOR UPDATE`;
+      const org=await tx.organization.findUniqueOrThrow({where:{id:user.organization_id},include:{subscription:true,companies:{select:{id:true}}}});
+      if(!org.is_active||org.archived_at)throw new ForbiddenException('This shop is unavailable.');
+      const owner=await tx.userRole.findFirst({where:{user_id:userId,company_id:{in:org.companies.map(c=>c.id)},role:{name:{in:['OWNER','TENANT_ADMIN','ADMIN']}}}});
+      if(!owner?.company_id)throw new ForbiddenException('Business owner access is required.');
+      if(org.subscription?.status!=='PENDING')return;
+      const data=user.onboarding_data as any;
+      if(data?.activation_requested_at){
+        if(user.onboarding_state==='PLAN_REQUIRED')await tx.user.update({where:{id:userId},data:{onboarding_state:'ACCESS_PENDING'}});
+        return;
+      }
+      const plan=await tx.plan.findFirst({where:{code:data?.requested_plan_code||'SMART',is_active:true}});
+      if(!plan)throw new BadRequestException('A demo plan is unavailable. Contact support.');
+      await tx.organization.update({where:{id:org.id},data:{plan_id:plan.id}});
+      await tx.user.update({where:{id:userId},data:{onboarding_state:'ACCESS_PENDING',onboarding_data:{...data,requested_plan_code:plan.code,activation_requested_at:new Date().toISOString(),activation_source:'MANUAL_REQUEST'}}});
+      await tx.auditLog.create({data:{user_id:userId,company_id:owner.company_id,action:'PLAN_ACTIVATION_REQUESTED',details:JSON.stringify({plan_code:plan.code,automatic:true,payment_recorded:false})}});
+    }));
     return this.state(userId);
   }
   async plan(userId: string, choice: 'TRIAL'|'REQUEST', code?: string) {
+    if(choice==='TRIAL')throw new BadRequestException('Your free trial must be activated by the administrator or an eligible campaign code.');
     const state = await this.state(userId);
     if (!['PLAN_REQUIRED','MIGRATION_OFFERED','ACCESS_PENDING'].includes(state.state) || !state.business) throw new BadRequestException('Resume your current setup step.');
-    const policy = await this.policy.get();
-    const planCode = choice === 'TRIAL' ? policy.trial_plan : code;
-    if (choice === 'TRIAL' && (!policy.trial_enabled || !policy.trial_days)) throw new BadRequestException('A free trial is not currently configured. Request plan activation from support.');
+    const planCode = code;
     const plan = await this.db.plan.findFirst({ where: { code: planCode, is_active: true } });
     if (!plan || !['STARTER','SMART','PRO'].includes(plan.code)) throw new BadRequestException('Choose Starter, Smart or Pro.');
     await this.db.$transaction(async tx => {
@@ -101,10 +124,9 @@ export class OnboardingService {
       if (!['PLAN_REQUIRED','MIGRATION_OFFERED','ACCESS_PENDING'].includes(user.onboarding_state)) throw new BadRequestException('Your plan selection is already completed.');
       const sub = await tx.tenantSubscription.findUniqueOrThrow({ where: { organization_id: state.business!.id } });
       if (['ACTIVE','TRIAL','COMPLIMENTARY'].includes(sub.status) && sub.expires_at > new Date()) throw new BadRequestException('Access was already activated. Refresh to continue.');
-      await tx.organization.update({ where: { id: state.business!.id }, data: { plan_id: plan.id, ...(choice === 'TRIAL' && { status: 'TRIAL' }) } });
-      if (choice === 'TRIAL') await tx.tenantSubscription.update({ where: { organization_id: state.business!.id }, data: { status: 'TRIAL', start_date: new Date(), expires_at: new Date(Date.now() + policy.trial_days! * 86400000) } });
-      await tx.user.update({ where: { id: userId }, data: { onboarding_state: 'MIGRATION_OFFERED', onboarding_data: { ...(user.onboarding_data as any), requested_plan_code: plan.code, activation_requested_at: new Date().toISOString() } } });
-      await tx.auditLog.create({ data: { user_id: userId, company_id: state.business!.company_id, action: choice === 'TRIAL' ? 'TRIAL_STARTED' : 'PLAN_ACTIVATION_REQUESTED', details: JSON.stringify({ plan_code: plan.code, configured_days: choice === 'TRIAL' ? policy.trial_days : null }) } });
+      await tx.organization.update({ where: { id: state.business!.id }, data: { plan_id: plan.id } });
+      await tx.user.update({ where: { id: userId }, data: { onboarding_state: 'ACCESS_PENDING', onboarding_data: { ...(user.onboarding_data as any), requested_plan_code: plan.code, activation_requested_at: (user.onboarding_data as any)?.activation_requested_at||new Date().toISOString() } } });
+      await tx.auditLog.create({ data: { user_id: userId, company_id: state.business!.company_id, action: 'PLAN_ACTIVATION_REQUESTED', details: JSON.stringify({ plan_code: plan.code, configured_days: null }) } });
       await this.referrals.refresh(tx, state.business!.id);
     });
     return this.state(userId);

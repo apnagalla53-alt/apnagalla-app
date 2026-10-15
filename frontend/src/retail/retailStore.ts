@@ -1,15 +1,17 @@
 /**
  * EVOLIX Retail V1 — Retail State Store
- * 
+ *
  * Holds the current cart and the confirmed server sale for the UI.
  * DO NOT implement ERP business logic (like stock posting,
  * ledger updates, or accounting entries) in this file.
  * The backend is the single source of truth.
- * 
+ *
  * Uses Zustand for simple, performant UI state management.
  */
 import { create } from 'zustand';
 import { createUuid } from '../shared/browserCrypto';
+import { useAuthStore } from '../shared/store/authStore';
+import { clearWorkflowDraft,readWorkflowDraft,workflowScope,writeWorkflowDraft } from './experience/workflowDraft';
 
 // ── Types ──────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ export interface RetailItem {
 }
 
 export interface BillLineItem {
+  new_item?: { client_id: string; name: string; unit_code: string; unit_name?: string; selling_mode: string };
   row_id?: string; unit_id?: string; dimensions?: {length:number; width?:number; height?:number}; serial_ids?: string[]; tax_rate?: number;
   item_id: string;
   variant_id?: string;
@@ -97,6 +100,10 @@ export function estimateLine(line: BillLineItem) {
   const dimensions = line.dimensions;
   const measured = line.quantity * (dimensions ? dimensions.length * (dimensions.width || 1) * (dimensions.height || 1) : 1);
   return Math.round(Math.max(0, measured * (line.rate + (line.modifier_unit_delta || 0)) - line.discount_amount) * (1 + (line.tax_rate || 0) / 100) * 100) / 100;
+}
+/** One wire shape for drafts, tax previews and confirmed payment. Draft IDs never leave the client. */
+export function billLinePayload(i: BillLineItem) {
+  return {item_id:i.new_item?undefined:i.item_id,new_item:i.new_item,variant_id:i.variant_id,batch_id:i.batch_id,unit_id:i.unit_id,dimensions:i.dimensions,serial_ids:i.serial_ids,modifier_option_ids:i.modifier_option_ids,quantity:i.quantity,rate:i.rate,discount_amount:i.discount_amount};
 }
 
 interface BillState {
@@ -230,3 +237,16 @@ export const useSaleCompleteStore = create<SaleCompleteState>((set) => ({
   setCompletedSale: (sale) => set({ completedSale: sale }),
   clearCompletedSale: () => set({ completedSale: null }),
 }));
+
+// Recover only the unfinished UI draft, scoped to this user/company/branch/year.
+// Financial posting and retries still pass through the server's idempotency path.
+type SavedDraft=Pick<BillState,'items'|'customer'|'details'|'discount'|'gstWorkflow'>;
+let draftScope='',hydratingDraft=false;
+function syncBillDraft(){const scope=workflowScope();if(scope===draftScope)return;hydratingDraft=true;draftScope=scope;
+ const saved=readWorkflowDraft<SavedDraft>('bill',scope);
+ useBillStore.setState({items:[],customer:null,details:newBillDetails(),discount:0,gstWorkflow:false,attachment:null,savedSale:null,...(saved&&Array.isArray(saved.items)&&saved.items.length<=200?saved:{})});
+ useSaleCompleteStore.getState().clearCompletedSale();hydratingDraft=false;
+}
+useAuthStore.subscribe(syncBillDraft);
+useBillStore.subscribe(state=>{if(hydratingDraft||!draftScope)return;if(state.savedSale||!state.items.length){clearWorkflowDraft('bill',draftScope);return;}writeWorkflowDraft('bill',{items:state.items,customer:state.customer,details:state.details,discount:state.discount,gstWorkflow:state.gstWorkflow},draftScope);});
+syncBillDraft();

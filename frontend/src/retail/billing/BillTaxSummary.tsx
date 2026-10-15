@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import api from '../../shared/api';
-import {useBillStore} from '../retailStore';
+import {useBillStore,billLinePayload} from '../retailStore';
 const money=(value:number)=>'₹'+value.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 export function TaxBreakdown({quote,rates=[]}:{quote:any;rates?:number[]}) {
   if(!quote)return null;
@@ -12,7 +12,7 @@ export function TaxBreakdown({quote,rates=[]}:{quote:any;rates?:number[]}) {
 export default function BillTaxSummary({onQuote}:{onQuote?:(quote:any)=>void}){
   const items=useBillStore(s=>s.items),discount=useBillStore(s=>s.discount),customer=useBillStore(s=>s.customer),date=useBillStore(s=>s.details.date);
   const [quote,setQuote]=useState<any>(null),[failed,setFailed]=useState(false);
-  useEffect(()=>{let active=true;setQuote(null);onQuote?.(null);setFailed(false);if(!items.length)return;const timer=setTimeout(()=>{api.post('/retail/bills/quote',{items:items.map(({item_id,variant_id,batch_id,unit_id,dimensions,serial_ids,modifier_option_ids,quantity,rate,discount_amount})=>({item_id,variant_id,batch_id,unit_id,dimensions,serial_ids,modifier_option_ids,quantity,rate,discount_amount})),customer_id:customer?.id,date,payment_splits:[],bill_discount:discount}).then(r=>{if(active){setQuote(r.data);onQuote?.(r.data);}}).catch(()=>{if(active)setFailed(true);});},200);return()=>{active=false;clearTimeout(timer);};},[items,discount,customer?.id,date,onQuote]);
+  useEffect(()=>{let active=true;setQuote(null);onQuote?.(null);setFailed(false);if(!items.length)return;const timer=setTimeout(()=>{api.post('/retail/bills/quote',{items:items.map(billLinePayload),customer_id:customer?.id,date,payment_splits:[],bill_discount:discount}).then(r=>{if(active){setQuote(r.data);onQuote?.(r.data);}}).catch(()=>{if(active)setFailed(true);});},200);return()=>{active=false;clearTimeout(timer);};},[items,discount,customer?.id,date,onQuote]);
   if(!items.length)return null;
   return quote?<TaxBreakdown quote={quote} rates={items.map(i=>Number(i.tax_rate||0))}/>:<p role="status">{failed?'Totals unavailable. Complete the price check before posting.':'Checking subtotal, GST and payable…'}</p>;
 }

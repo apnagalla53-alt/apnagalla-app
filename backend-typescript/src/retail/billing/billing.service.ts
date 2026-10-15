@@ -1,21 +1,28 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {businessDate} from '../../common/business-date';
 import { PosService } from '../../pos/pos.service';
 import { RetailBillDto, RetailAmountSaleDto } from '../dto/retail-bill.dto';
 import { Prisma } from '@prisma/client';
 import { readReturnHistory } from './return-history';
+import { RetailService } from '../retail.service';
+import { RETAIL_UNITS } from '../retail-units';
+import { EntitlementService } from '../../common/entitlement.service';
+class PreviewRollback extends Error { constructor(readonly quote: any) { super('Read-only bill preview'); } }
 
 @Injectable()
 export class BillingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly posService: PosService,
+    private readonly catalog: RetailService,
+    private readonly entitlements: EntitlementService,
   ) {}
 
 
   private async mapLines(companyId: string, branchId: string, lines: any[]) {
     if (!Array.isArray(lines) || !lines.length) throw new BadRequestException('Select at least one item');
+    if (lines.some(l => !l?.item_id || l.new_item)) throw new BadRequestException('Select a saved item for this operation');
     const godown = await this.prisma.godown.findFirst({ where: { branch_id: branchId, is_active: true, branch: { company_id: companyId } }, orderBy: [{created_at: 'asc'}, {id: 'asc'}] });
     if (!godown) throw new BadRequestException('No stock location found for this branch');
     const items = await this.prisma.item.findMany({ where: { company_id: companyId, id: { in: lines.map(l => l.item_id) } } });
@@ -26,16 +33,61 @@ export class BillingService {
     });
   }
 
+  private async resolveCandidates(companyId:string,branchId:string,userId:string,dto:RetailBillDto,preview=false) {
+    const result:any[]=[],resolved=new Map<string,{fingerprint:string;item:any}>();
+    for(const line of dto.items){
+      if(!!line.item_id===!!line.new_item)throw new BadRequestException('Each line needs one existing item or one new item candidate');
+      if(!line.new_item){result.push(line);continue;}
+      const candidate=line.new_item, preset=RETAIL_UNITS.find(u=>u.code===candidate.unit_code),mode=preset?.selling_mode||candidate.selling_mode;
+      if(!['PIECE','WEIGHT','LENGTH'].includes(mode)||mode!==candidate.selling_mode)throw new BadRequestException('Choose a compatible selling unit');
+      if(!candidate.name.trim()||mode==='PIECE'&&!Number.isInteger(line.quantity))throw new BadRequestException('Enter an item name and valid quantity');
+      if(line.unit_id||line.variant_id||line.batch_id||line.serial_ids?.length||line.modifier_option_ids?.length||line.dimensions)throw new BadRequestException('New bill items cannot contain configured item options');
+      const company=await this.prisma.company.findUniqueOrThrow({where:{id:companyId},select:{organization_id:true}});
+      if(mode!=='PIECE'){
+        const access=await this.entitlements.resolve(company.organization_id,this.prisma,companyId);
+        if(!access.features.some(f=>f.code===mode&&f.enabled))throw new ForbiddenException('Your plan does not enable '+mode.toLowerCase()+' selling');
+      }
+      const fingerprint=JSON.stringify([candidate.name.trim(),candidate.unit_code,mode,line.rate]),previous=resolved.get(candidate.client_id);
+      if(previous&&previous.fingerprint!==fingerprint)throw new BadRequestException('A draft item has conflicting details');
+      let item=previous?.item;
+      if(!item){
+        const sku='QBI-'+candidate.client_id;
+        const saved=await this.prisma.item.findFirst({where:{company_id:companyId,sku},include:{primary_unit:true}});
+        if(saved){
+          if(!preview||saved.name!==candidate.name.trim()||saved.primary_unit.code!==candidate.unit_code||Number(saved.default_sale_rate)!==line.rate||saved.has_variants||saved.track_batch||saved.track_serial||saved.is_bundle)throw new BadRequestException('This draft item was already saved. Search for it or retry the original bill.');
+          item=saved; // A response-lost payment can quote again, then replay its original idempotent bill request.
+        } else item=await this.catalog.createItem(companyId,userId,'',branchId,{name:candidate.name.trim(),sku,selling_price:line.rate,unit_code:candidate.unit_code,unit_name:candidate.unit_name,selling_mode:mode,inventory_tracking:false});
+        resolved.set(candidate.client_id,{fingerprint,item});
+      }
+      const {new_item,...rest}=line;result.push({...rest,item_id:item.id,unit_id:item.primary_unit_id});
+    }
+    return result;
+  }
+
   async createBill(companyId: string, branchId: string, userId: string, dto: RetailBillDto) {
-    const lines = await this.mapLines(companyId, branchId, dto.items);
+    return this.prisma.runAtomic(async()=>{
+    const items=await this.resolveCandidates(companyId,branchId,userId,dto);
+    const lines = await this.mapLines(companyId, branchId, items);
     return this.posService.postPosSale(companyId, userId, {
       branch_id: branchId, document_date: dto.date || businessDate(), party_id: dto.customer_id,
       due_date: dto.due_date, note: dto.note, sales_channel: dto.sales_channel, bill_discount:dto.bill_discount, lines,
       payments: dto.payment_splits.map(p => ({ amount: p.amount, payment_method: p.method as any })),
     });
+    });
   }
 
-  async quoteBill(companyId: string, branchId: string, dto: RetailBillDto) {
+  async quoteBill(companyId: string, branchId: string, dto: RetailBillDto, userId?: string) {
+    if(dto.items.some(l=>l.new_item)){
+      // Use canonical pricing, then roll back temporary catalog rows and audits.
+      // No quote, typing, cancellation or abandoned payment can persist an item.
+      try { await this.prisma.runAtomic(async()=>{
+        const items=await this.resolveCandidates(companyId,branchId,userId!,dto,true);
+        const lines=await this.mapLines(companyId,branchId,items);
+        const quote=await this.posService.quoteSale(companyId,{branch_id:branchId,document_date:dto.date||businessDate(),party_id:dto.customer_id,bill_discount:dto.bill_discount,lines,payments:[]});
+        throw new PreviewRollback({...quote,lines:quote.lines.map((l:any,index:number)=>({...l,draft_client_id:dto.items[index]?.new_item?.client_id}))});
+      }); }catch(e){if(e instanceof PreviewRollback)return e.quote;throw e;}
+    }
+    if(dto.items.some(l=>!l.item_id))throw new BadRequestException('Select an item');
     const lines = await this.mapLines(companyId, branchId, dto.items);
     return this.posService.quoteSale(companyId, { branch_id: branchId, document_date: dto.date || new Date().toISOString(), party_id: dto.customer_id, bill_discount:dto.bill_discount, lines, payments: [] });
   }
@@ -140,6 +192,7 @@ export class BillingService {
   }
 
   async holdBill(companyId: string, branchId: string, userId: string, items: any[], extra?: any) {
+    if(items.some(l=>l.new_item||!l.item_id))throw new BadRequestException('Keep new items in the device draft until bill confirmation');
     const lines = await this.mapLines(companyId, branchId, items);
     if (extra?.customer_id && !await this.prisma.party.findFirst({ where: { id: extra.customer_id, company_id: companyId, party_type: 'CUSTOMER' } })) throw new BadRequestException('Customer not found');
     return this.posService.holdBill(companyId, userId, { branch_id: branchId, lines, ...extra });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mail, Store, ArrowLeft, FileText } from 'lucide-react';
+import { ShieldCheck, Mail, ArrowLeft, FileText } from 'lucide-react';
 import api, { getApiErrorMessage } from '../shared/api';
 import { useAuthStore } from '../shared/store/authStore';
 import './PublicPages.css';
@@ -10,8 +10,8 @@ export default function PublicPage({page}: {page:'privacy'|'terms'|'support'|'de
   const session=useAuthStore(s=>s.session_id),user=useAuthStore(s=>s.user);
   function load(){setError('');api.get('/public/app-information').then(r=>setInfo(r.data)).catch(e=>setError(getApiErrorMessage(e)));}
   useEffect(load,[]);
-  const titles={privacy:'Privacy policy',terms:'Terms of service',support:'Help & support','delete-account':'Delete your account',about:'About EVOLIX'};
-  return <main className="public-page"><header><Link to={session?'/retail/home':'/login'} className="public-back"><ArrowLeft size={18}/>Back to EVOLIX</Link><span className="public-brand"><Store/>EVOLIX Retail</span></header>
+  const titles={privacy:'Privacy policy',terms:'Terms of service',support:'Help & support','delete-account':'Delete your account',about:'About Apna Galla'};
+  return <main className="public-page"><header><Link to={session?'/retail/home':'/login'} className="public-back"><ArrowLeft size={18}/>Back to Apna Galla</Link><span className="public-brand"><img src="/brand/apna-galla-app-192.png" alt="" width="28" height="28"/>Apna Galla</span></header>
     <article><div className="public-heading"><ShieldCheck size={28}/><h1>{titles[page]}</h1></div>
       {error&&<div role="alert">{error} <button onClick={load}>Retry</button></div>}{!info&&!error&&<p role="status">Loading…</p>}
       {info&&<><p className="public-developer">Developed by {info.developer_name} · <a href={info.website} target="_blank" rel="noreferrer">{info.website}</a></p>

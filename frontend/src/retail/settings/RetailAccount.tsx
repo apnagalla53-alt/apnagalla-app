@@ -74,7 +74,7 @@ function RetailAccountDetails({section}:{section:Section}) {
         {section === 'backup' && <><BackupStatus backup={account.backup}/><RetailDataExports/>{access.canManage&&<div className="r-card"><h2>{ui('Complete Business Export')}</h2><p className="r-caption">{ui('Pro includes a complete business records export. Attachment files are downloaded separately. This file is not a database restore archive.')}</p><button className="r-btn r-btn--outline r-btn--full" onClick={()=>void exportData()} disabled={exporting}><Download size={20}/>{ui(exporting?'Preparing data…':access.isFeatureEffective('EXPORT_FULL_BUSINESS')?'Download Business Records':'Available in Pro')}</button></div>}{access.canManage&&<div className="r-card"><h2>{ui('Account exit & data portability')}</h2><p className="r-caption">{ui('Leaving EVOLIX? Request your core business records on any plan. This process does not delete your account. Support receives your request.')}</p><button className="r-btn r-btn--outline r-btn--full" onClick={()=>void exportData(true)} disabled={exporting}>{ui('Request portability copy')}</button><Link className="r-btn r-btn--ghost r-btn--full" to="/delete-account">{ui('Request account deletion')}</Link></div>}</>}
 
       </>}
-      {notice && <p role="status" className="r-state-message">{notice}</p>}
+      {notice && <p role="status" className="r-state-message" data-tone="success">{notice}</p>}
     </main>
   </>;
 }

@@ -65,7 +65,7 @@ export function Sheet({
     if (!open && dialog.open) dialog.close();
     return () => {
       if (dialog.open) dialog.close();
-      if (previous?.isConnected) previous.focus({ preventScroll: true });
+      if (previous?.isConnected && !previous.matches('input,textarea,[contenteditable="true"]')) previous.focus({ preventScroll: true });
     };
   }, [open]);
   useEffect(() => {
@@ -121,6 +121,7 @@ export function Sheet({
           type="button"
           className="r-btn r-btn--icon"
           aria-label={"Close " + title}
+          autoFocus
           onClick={onClose}
         >
           <X size={22} />
@@ -327,7 +328,6 @@ export function SelectionSheet({
           setSearch(s);
           onSearch?.(s);
         }}
-        autoFocus
       />
       {loading ? (
         <LoadingState label="Searching…" />
@@ -658,6 +658,7 @@ export function ActionSheet({
     onAction: () => void;
     Icon?: Choice["Icon"];
     disabled?: boolean;
+    tone?: 'danger' | 'warning' | 'success' | 'info';
   }[];
 }) {
   useUiLanguage();
@@ -668,6 +669,7 @@ export function ActionSheet({
           <button
             type="button"
             className="r-sheet-option"
+            data-tone={a.tone}
             key={a.label}
             disabled={a.disabled}
             onClick={() => {

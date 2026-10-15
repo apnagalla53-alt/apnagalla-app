@@ -11,6 +11,7 @@ import { TenantLifecycleService } from './tenant-lifecycle.service';
 import { TenantCredentialsService } from './tenant-credentials.service';
 import { AttachmentsModule } from '../attachments/attachments.module';
 import { TenantUserLifecycleService } from './tenant-user-lifecycle.service';
+import { ActivationCampaignController } from './activation-campaign.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { TenantUserLifecycleService } from './tenant-user-lifecycle.service';
     ConfigModule,
     AttachmentsModule
   ],
-  controllers: [PlatformAdminController, PublicAppController, PlatformPublishingController, ControlPlaneController, OwnerReferralController],
+  controllers: [PlatformAdminController, PublicAppController, PlatformPublishingController, ControlPlaneController, OwnerReferralController, ActivationCampaignController],
   providers: [PlatformService, BackupProvider, PlatformBackupService, TenantLifecycleService, TenantCredentialsService, TenantUserLifecycleService],
 })
 export class PlatformModule {}

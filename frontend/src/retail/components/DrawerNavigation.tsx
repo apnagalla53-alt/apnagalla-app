@@ -12,9 +12,9 @@ export function DrawerNavItem({ item, active, onNavigate }: { item: NavItem; act
   </Link>;
 }
 
-export function DrawerQuickLinks({ items, activeItem, onNavigate }: { items: readonly NavItem[]; activeItem: string | null; onNavigate: () => void }) {
+export function DrawerQuickLinks({ items, activeItem, onNavigate, onEdit }: { items: readonly NavItem[]; activeItem: string | null; onNavigate: () => void; onEdit?:()=>void }) {
   return <section className="r-drawer-quick" aria-labelledby="drawer-quick-title">
-    <h3 id="drawer-quick-title">{ui('Quick Access')}</h3>
+    <div className="r-quick-access-heading"><h3 id="drawer-quick-title">{ui('Quick Access')}</h3>{onEdit&&<button type="button" className="r-btn" onClick={onEdit}>Edit</button>}</div>
     {items.map(item => <DrawerNavItem key={item.id} item={item} active={item.id === activeItem} onNavigate={onNavigate} />)}
   </section>;
 }

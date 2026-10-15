@@ -155,7 +155,7 @@ const RetailMore = () => {
           >
             <LogOut size={18} />{ui("Log Out")}</button>
           
-          <p className="r-caption r-text-center">EVOLIX Retail · Your shop, in your hands</p>
+          <p className="r-caption r-text-center">Apna Galla · Har dukaan ka apna hisaab</p>
         </div>
       </div>
     </>

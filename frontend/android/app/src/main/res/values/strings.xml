@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">EVOLIX Retail</string>
-    <string name="title_activity_main">EVOLIX Retail</string>
+    <string name="app_name">Apna Galla</string>
+    <string name="title_activity_main">Apna Galla</string>
     <string name="package_name">in.evolixstudio.retail</string>
     <string name="custom_url_scheme">in.evolixstudio.retail</string>
 </resources>

@@ -24,7 +24,7 @@ class CurrentPasswordDto {
   @IsString() @MinLength(1) @MaxLength(255) current_password: string;
 }
 class ChangePasswordDto extends CurrentPasswordDto {
-  @IsString() @MinLength(12) @MaxLength(72) password: string;
+  @IsString() @MinLength(8) @MaxLength(72) password: string;
 }
 class ResetRequestDto {
   @IsString() @MinLength(1) @MaxLength(255) identifier: string;
@@ -33,7 +33,7 @@ class TokenDto {
   @IsString() @MinLength(32) @MaxLength(128) @Matches(/^[A-Za-z0-9_-]+$/) token: string;
 }
 class ResetPasswordDto extends TokenDto {
-  @IsString() @MinLength(12) @MaxLength(72) password: string;
+  @IsString() @MinLength(8) @MaxLength(72) password: string;
 }
 class VerifyEmailRequestDto extends CurrentPasswordDto {
   @IsEmail() @MaxLength(255) email: string;

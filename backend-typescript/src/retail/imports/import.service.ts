@@ -130,12 +130,12 @@ export class RetailImportService {
   async job(user:any,id:string,page=1) {
     importOwner(user);
     const job=await this.db.retailImportJob.findFirst({where:{id,company_id:user.company_id,branch_id:user.branch_id}});
-    if(!job)throw new NotFoundException('Import not found');
+    if(!job||!Object.hasOwn(FIELDS,job.kind))throw new NotFoundException('Import not found');
     const counts=await this.db.retailImportRow.groupBy({by:['status'],where:{job_id:id},_count:{_all:true}});
     const rows=await this.db.retailImportRow.findMany({where:{job_id:id},orderBy:{number:'asc'},skip:(Math.max(1,Math.min(200,Number(page)||1))-1)*50,take:50});
     return {...job,counts:Object.fromEntries(counts.map(c=>[c.status,c._count._all])),rows};
   }
-  async history(user:any){importOwner(user);return this.db.retailImportJob.findMany({where:{company_id:user.company_id,branch_id:user.branch_id},orderBy:{created_at:'desc'},take:30});}
+  async history(user:any){importOwner(user);return this.db.retailImportJob.findMany({where:{company_id:user.company_id,branch_id:user.branch_id,kind:{in:Object.keys(FIELDS)}},orderBy:{created_at:'desc'},take:30});}
   async commit(user:any,id:string,acceptUnmapped:boolean) {
     const job=await this.job(user,id);const config:any=job.configuration;
     if(config.unmapped.length&&!acceptUnmapped)throw new BadRequestException('Review unmapped fields. They are retained in the import audit, not posted to business tables');

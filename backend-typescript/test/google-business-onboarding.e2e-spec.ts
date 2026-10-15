@@ -63,7 +63,7 @@ describe('Google business profile: real restricted DB, trusted test-only Google 
  it('concurrent repeated profile saves reuse one business and initialize internal defaults once',async()=>{
   const responses=await Promise.all([save(profile),save(profile),save(profile)]);expect(responses.every(r=>r.status===201)).toBe(true);
   orgId=responses[0].body.business.id;companyId=responses[0].body.business.company_id;
-  expect(responses.every(r=>r.body.business.id===orgId)).toBe(true);expect(responses.every(r=>r.body.state==='PLAN_REQUIRED')).toBe(true);
+  expect(responses.every(r=>r.body.business.id===orgId)).toBe(true);expect(responses.every(r=>r.body.state==='ACCESS_PENDING')).toBe(true);
   expect(await db.company.count({where:{organization_id:orgId}})).toBe(1);expect(await db.branch.count({where:{company_id:companyId}})).toBe(1);
   expect(await db.godown.count({where:{branch:{company_id:companyId}}})).toBe(1);expect(await db.financialYear.count({where:{company_id:companyId}})).toBe(1);expect(await db.companyConfiguration.count({where:{company_id:companyId}})).toBe(1);
   expect(await db.tenantSubscription.count({where:{organization_id:orgId}})).toBe(1);expect(await db.userRole.count({where:{user_id:owner.id}})).toBe(1);
@@ -88,15 +88,15 @@ describe('Google business profile: real restricted DB, trusted test-only Google 
   const result=(await save(profile).expect(201)).body;expect(result.business.id).toBe(orgId);expect(result.data.custom_business_type).toBe('Horse accessories');expect(result.data.profile.owner_name).toBe('Aamir corrected');expect(result.data.location).toEqual({latitude:22.2,longitude:75.4});
   expect(await db.expenseCategory.count({where:{company_id:companyId}})).toBe(10);expect(await db.branch.count({where:{company_id:companyId}})).toBe(1);
  });
- it('resume and repeated Google signup reuse the same account at Subscription',async()=>{
-  const login=await googleLogin(owner);expect(login.user.onboarding_state).toBe('PLAN_REQUIRED');expect(login.user.id).toBe(owner.id);
-  const repeat=await googleSignup(owner.subject);owner.token=repeat.token;expect(repeat.id).toBe(owner.id);expect(repeat.result.user.display_name).toBe('Aamir corrected');expect(repeat.result.user.onboarding_state).toBe('PLAN_REQUIRED');
+ it('resume and repeated Google signup reuse the same account while activation is pending',async()=>{
+  const login=await googleLogin(owner);expect(login.user.onboarding_state).toBe('ACCESS_PENDING');expect(login.user.id).toBe(owner.id);
+  const repeat=await googleSignup(owner.subject);owner.token=repeat.token;expect(repeat.id).toBe(owner.id);expect(repeat.result.user.display_name).toBe('Aamir corrected');expect(repeat.result.user.onboarding_state).toBe('ACCESS_PENDING');
   expect(await db.user.count({where:{google_subject:owner.subject}})).toBe(1);expect(await db.company.count({where:{organization_id:orgId}})).toBe(1);
  });
  it('prices and keys are server authoritative, Smart request proceeds to migration without paid access',async()=>{
   expect((await state().expect(200)).body.plans.map((p:any)=>[p.code,Number(p.monthly_price)])).toEqual([['STARTER',75],['SMART',120],['PRO',210]]);
   const r=(await endpoint('post','auth/account/onboarding/plan').send({choice:'REQUEST',plan_code:'SMART'}).expect(201)).body;
-  expect(r.state).toBe('MIGRATION_OFFERED');expect(r.access_active).toBe(false);expect(r.subscription.status).toBe('PENDING');
+  expect(r.state).toBe('ACCESS_PENDING');expect(r.access_active).toBe(false);expect(r.subscription.status).toBe('PENDING');
   await endpoint('get','retail/items').set('X-Company-Id',companyId).expect(403);
   expect(await db.subscriptionPayment.count({where:{organization_id:orgId}})).toBe(0);
  });
@@ -111,12 +111,14 @@ describe('Google business profile: real restricted DB, trusted test-only Google 
   expect(result.data.suggested_features).toContain('BATCH_TRACKING');expect(await db.tenantEntitlement.count({where:{organization_id:orgId}})).toBe(0);
   expect(await db.tenantSubscription.count({where:{organization_id:orgId}})).toBe(1);expect(await db.expenseCategory.count({where:{company_id:companyId}})).toBe(10);
  });
- it('configured Smart trial and Start Fresh reach a usable shop once, returning Google skips setup',async()=>{
+ it('a configured public-trial policy cannot bypass approval; activated trial and Start Fresh reach a usable shop',async()=>{
   const fresh=await googleSignup('fresh-'+suffix);
   const configured={trial_enabled:true,trial_days:7,trial_plan:'SMART',permanent_delete_enabled:false,retention_days:null,delete_requires_backup:true};
   await db.platformSetting.upsert({where:{key:'ACCOUNT_POLICY'},create:{key:'ACCOUNT_POLICY',value:configured},update:{value:configured}});
   const result=(await save({...profile,mobile:phone(),business_type:'GROCERY',name:'Fresh trial shop'},fresh).expect(201)).body;
-  await endpoint('post','auth/account/onboarding/plan',fresh).send({choice:'TRIAL'}).expect(201);
+  await endpoint('post','auth/account/onboarding/plan',fresh).send({choice:'TRIAL'}).expect(400);
+  expect(result.state).toBe('ACCESS_PENDING');expect(result.access_active).toBe(false);
+  await db.tenantSubscription.update({where:{organization_id:result.business.id},data:{status:'COMPLIMENTARY',complimentary:true,start_date:new Date(),expires_at:new Date(Date.now()+30*86400000)}});
   const entered=(await endpoint('post','auth/account/onboarding/migration',fresh).send({choice:'FRESH'}).expect(201)).body;expect(entered.next).toBe('/retail/home');expect(entered.user.onboarding_state).toBe('READY');
   await request(app.getHttpServer()).get('/api/v1/retail/items').set('Authorization','Bearer '+entered.access_token).set('X-Company-Id',result.business.company_id).expect(200);
   const returning=await googleLogin(fresh);expect(returning.user.onboarding_state).toBe('READY');expect(returning.tenant_context.company_id).toBe(result.business.company_id);

@@ -10,7 +10,7 @@ export const hash = (value: string | Buffer) => createHash('sha256').update(valu
 export const key = (s: string) => s.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 const forbidden = new Set(['__proto__', 'constructor', 'prototype']);
 export type SourceRow = Record<string, string>;
-export function parseExport(buffer: Buffer, filename: string, kind: string, options: { sheet?: string; headerRow?: number } = {}) {
+export function parseExport(buffer: Buffer, filename: string, kind: string, options: { sheet?: string; headerRow?: number; rejectFormulas?: boolean } = {}) {
   if (!buffer.length || buffer.length > 5 * 1024 * 1024) throw new BadRequestException('Choose a non-empty file up to 5 MB');
   const ext = filename.split('.').pop()?.toLowerCase();
   let rows: any[] = [], sheets: string[] = [];
@@ -28,6 +28,7 @@ export function parseExport(buffer: Buffer, filename: string, kind: string, opti
       sheets = book.SheetNames;
       const name = options.sheet || sheets[0];
       if (!book.Sheets[name]) throw new Error('Choose a sheet listed in this workbook');
+      if (options.rejectFormulas && Object.values(book.Sheets[name]).some((cell:any) => cell && typeof cell === 'object' && cell.f)) throw new Error('Replace spreadsheet formulas with plain values before uploading');
       rows = table(XLSX.utils.sheet_to_json<any[]>(book.Sheets[name], {header:1, raw:false, defval:''}), options.headerRow || 1);
     } else {
       const text = buffer[0] === 0xff && buffer[1] === 0xfe ? buffer.subarray(2).toString('utf16le') : new TextDecoder('utf-8', {fatal:true}).decode(buffer).replace(/^\uFEFF/, '');

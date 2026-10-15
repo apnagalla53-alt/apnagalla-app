@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { EntitlementService } from '../common/entitlement.service';
-import { validatePassword } from '../auth/password-policy';
+import { validateStaffPassword, staffPhone } from '../auth/staff-policy';
 import { isTenantAdministrator } from './tenant-administration.guard';
 import { AdminPasswordDto, BranchUpdateDto, CompanyUpdateDto, CreateBranchDto, CreateCompanyDto, CreateFinancialYearDto, CreateLocationDto, CreateStaffDto, DirectoryQuery, LocationUpdateDto, OrganizationUpdateDto, RoleDto, StaffUpdateDto } from './tenant-administration.dto';
 
@@ -46,7 +46,7 @@ export class TenantAdministrationService {
     if (staff.roles.some((membership: any) => protectedRole(membership.role))) throw new ConflictException('Owner accounts require Platform administration');
   }
   private assertPassword(password: string) {
-    validatePassword(password);
+    validateStaffPassword(password);
   }
   private roleScope(user: any) {
     return { OR: [{ organization_id: user.organization_id }, { organization_id: null, user_roles: { some: { company_id: user.company_id, user: { organization_id: user.organization_id } } } }] };
@@ -93,6 +93,7 @@ export class TenantAdministrationService {
   async getStaff(user: any, id: string) { return this.safeStaff(await this.staff(user, id), user.company_id); }
   async createStaff(user: any, dto: CreateStaffDto) {
     this.assertPassword(dto.password);
+    const phone = staffPhone(dto.phone || dto.username || '');
     const passwordHash = await bcrypt.hash(dto.password, 12);
     return this.atomic(async tx => {
       await this.lock(tx, 'staff:' + user.organization_id);
@@ -121,8 +122,8 @@ export class TenantAdministrationService {
         }
         roles.push(role);
       }
-      const staff = await tx.user.create({ data: { organization_id: user.organization_id, username: dto.username.trim(), display_name: dto.display_name.trim(),
-        email: dto.email || null, phone: dto.phone || null, password_hash: passwordHash, must_change_password: true,
+      const staff = await tx.user.create({ data: { organization_id: user.organization_id, username: phone, display_name: dto.display_name.trim(),
+        email: dto.email || null, phone, password_hash: passwordHash, must_change_password: true,
         temporary_password_expires_at: new Date(Date.now() + 24 * 3600_000), password_changed_at: new Date(),
         roles: { create: roles.map(role => ({ role_id: role.id, company_id: user.company_id, branch_id: user.branch_id || null })) } }, include: staffInclude });
       await this.audit(tx, user, 'STAFF_CREATE', staff.id);
@@ -134,7 +135,9 @@ export class TenantAdministrationService {
       const staff = await this.staff(user, id, tx);
       this.assertMutableStaff(user, staff);
       const emailChanged = dto.email !== undefined && dto.email !== staff.email;
-      const updated = await tx.user.update({ where: { id }, data: { ...dto, ...(emailChanged ? { email_verified_at: null } : {}) }, include: staffInclude });
+      const phone = dto.phone === undefined ? undefined : staffPhone(dto.phone);
+      const updated = await tx.user.update({ where: { id }, data: { ...dto, ...(phone ? {phone, username:phone} : {}), ...(emailChanged ? { email_verified_at: null } : {}) }, include: staffInclude });
+      if (phone && phone !== staff.phone) await tx.session.updateMany({where:{user_id:id,revoked_at:null},data:{revoked_at:new Date()}});
       if (emailChanged) await tx.authToken.updateMany({ where: { user_id: id, used_at: null }, data: { used_at: new Date() } });
       await this.audit(tx, user, 'STAFF_UPDATE', id);
       return this.safeStaff(updated, user.company_id);

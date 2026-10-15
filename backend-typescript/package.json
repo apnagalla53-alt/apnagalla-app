@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "intake:worker": "node dist/retail/intake/intake-worker.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",
@@ -41,6 +42,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.35.5",
+    "tesseract.js": "^6.0.1",
     "uuid": "^14.0.2",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },

@@ -74,6 +74,7 @@ export default function MasterRecordActions({
         </button>
         <button
           type="button"
+          data-tone={active ? 'danger' : 'success'}
           onClick={() => {
             setError("");
             setConfirm(true);
@@ -106,6 +107,7 @@ export default function MasterRecordActions({
         {error && <p role="alert">{error}</p>}
         <button
           className="r-btn r-btn--primary r-w-full"
+          data-tone={active ? 'danger' : 'success'}
           disabled={busy}
           onClick={() => void change()}
         >

@@ -3,7 +3,7 @@ import { ui, useUiLanguage } from "../../i18n";
 import { MobileSelect, Sheet } from "../components/MobileControls";
 import { useRetailEntitlements } from '../subscription/useRetailEntitlements';
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Send,
   RotateCcw,
@@ -107,21 +107,21 @@ function InsightCard({ insight, summary, onFollowUp, disabled }: { insight:any;s
   const metric=String(summary.metric||'business').replaceAll('_',' ');
   const format=(v:any)=>v==null?'Not available':typeof v==='number'?(metric==='gross margin'?`${Math.abs(v).toFixed(2)}%`:'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2})):String(v);
   const deltaLabel=metric==='gross margin'?`${Math.abs(Number(change||0)).toFixed(2)} points`:format(change);
-  return <section className="r-insight-card" aria-label="Business comparison">
-    <div className="r-insight-heading"><div><small>{insight.confidence==='LIMITED'?'PARTIAL COST COVERAGE':insight.confidence==='INSUFFICIENT'?'NEEDS MORE DATA':'EVOLIX DATA'}</small><h3>{metric}</h3></div>
+  return <section className="r-insight-card" data-direction={Number(change)<0?'negative':'positive'} aria-label="Business comparison">
+    <div className="r-insight-heading"><div><small>{insight.confidence==='LIMITED'?'PARTIAL COST COVERAGE':insight.confidence==='INSUFFICIENT'?'NEEDS MORE DATA':'SHOP RECORDS'}</small><h3>{metric}</h3></div>
       <strong className={Number(change)<0?'is-down':Number(change)>0?'is-up':''}>{Number(change)<0?'↓':Number(change)>0?'↑':'•'} {deltaLabel}{percent==null?'':` (${Number(percent).toFixed(1)}%)`}</strong></div>
     <div className="r-insight-periods"><div><small>Selected period</small><strong>{format(current)}</strong><span>{insight.current_period?.from} – {insight.current_period?.to}</span></div><div><small>Previous equal period</small><strong>{format(previous)}</strong><span>{insight.comparison_period?.from} – {insight.comparison_period?.to}</span></div></div>
-    {!!insight.drivers?.length&&<div className="r-insight-drivers"><h4>Main signals</h4>{insight.drivers.slice(0,6).map((d:any,i:number)=><article key={`${d.type}-${i}`} className="r-insight-driver"><div><strong>{ui(d.title)}</strong><span className={`r-evidence r-evidence--${String(d.evidence_type).toLowerCase()}`}>{d.evidence_type==='DIRECT'?'Direct':d.evidence_type==='CORRELATED'?'Related signal':'Estimate'}</span></div><p>{d.description}</p></article>)}</div>}
+    {!!insight.drivers?.length&&<div className="r-insight-drivers"><h4>Main signals</h4>{insight.drivers.slice(0,6).map((d:any,i:number)=><article key={`${d.type}-${i}`} className="r-insight-driver"><span className="xp-reason-rank" aria-label={ui('Reason')+' '+(i+1)}>{i+1}</span><div><strong>{ui(d.title)}</strong><span className={`r-evidence r-evidence--${String(d.evidence_type).toLowerCase()}`}>{d.evidence_type==='DIRECT'?'Direct':d.evidence_type==='CORRELATED'?'Related signal':'Estimate'}</span></div><p>{d.description}</p></article>)}</div>}
     {insight.confidence==='LIMITED'&&<p className="r-insight-warning">{String(summary.profit_warning||'Some historical costs are unknown. Profit is a known-cost subtotal.')}</p>}
     {!!insight.follow_ups?.length&&<div className="r-assistant-chips r-insight-followups" aria-label="Suggested follow-up questions">{insight.follow_ups.slice(0,5).map((q:string)=><button key={q} className="r-btn r-btn--outline" disabled={disabled} onClick={()=>onFollowUp(q)}>{q}</button>)}</div>}
   </section>;
 }
-export default function RetailAssistant() {
+export default function RetailAssistant({ embedded = false }: { embedded?: boolean }) {
   useUiLanguage();
-  const access=useRetailEntitlements();
+  const access=useRetailEntitlements(),[params]=useSearchParams();
   const [voiceInfo,setVoiceInfo]=useState(false);
   const [messages, setMessages] = useState<Message[]>([]),
-    [draft, setDraft] = useState(""),
+    [draft, setDraft] = useState(()=>String(params.get('q')||'').slice(0,1000)),
     [language, setLanguage] = useState("hinglish"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -191,12 +191,14 @@ export default function RetailAssistant() {
     void ask(draft.trim());
   }
   const latest = messages.filter((m) => m.role === "assistant").at(-1)?.id;
+  const Header = embedded ? 'header' : StitchHeader;
+  const Page = embedded ? 'section' : 'main';
   return (
-    <main className="r-assistant-page">
-      <StitchHeader className="r-page-header r-assistant-header">
+    <Page className="r-assistant-page">
+      <Header className="r-page-header r-assistant-header">
         <div>
-          <h1>{ui("Ask EVOLIX")}</h1>
-          <p>Apne business ke baare mein poochhiye</p>
+          <h1>{ui("Ask Apna Galla")}</h1>
+          <p>Apke dukaan ke data se seedhe jawab.</p>
         </div>
         <button
           className="r-btn r-btn--icon"
@@ -212,7 +214,7 @@ export default function RetailAssistant() {
         >
           <RotateCcw size={21} />
         </button>
-      </StitchHeader>
+      </Header>
       <p className="r-assistant-trust">
         <ShieldCheck size={16} aria-hidden="true" />
         Your shop records · Read-only · No external AI calls
@@ -235,7 +237,7 @@ export default function RetailAssistant() {
         <section className="r-assistant-welcome">
           <h2>Your shop, explained simply</h2>
           <p>
-            Ask about sales, counter cash, stock, dues or expenses. EVOLIX reads
+            Ask about sales, counter cash, stock, dues or expenses. Apna Galla reads
             your recorded business data.
           </p>
           <div className="r-assistant-chips">
@@ -262,10 +264,10 @@ export default function RetailAssistant() {
           <article
             key={m.id}
             className={"r-assistant-message r-assistant-message--" + m.role}
-            aria-label={m.role === "user" ? "Your question" : "EVOLIX answer"}
+            aria-label={m.role === "user" ? "Your question" : "Apna Galla answer"}
           >
             <span className="r-assistant-speaker">
-              {m.role === "user" ? "You" : "EVOLIX"}
+              {m.role === "user" ? "You" : "Apna Galla"}
             </span>
             <p>{m.text}</p>
             {m.reply?.period && (
@@ -397,6 +399,6 @@ export default function RetailAssistant() {
       <Sheet open={voiceInfo} onClose={()=>setVoiceInfo(false)} title={ui('Voice assistant — Coming Soon')}>
         <p>{ui('Voice is not included in the current plans. Text Ask Apna Galla remains available.')}</p>
       </Sheet>
-    </main>
+    </Page>
   );
 }

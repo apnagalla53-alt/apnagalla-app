@@ -1,3 +1,6 @@
+import { AttachmentsModule } from '../attachments/attachments.module';
+import { RetailIntakeController } from './intake/intake.controller';
+import { RetailIntakeService } from './intake/intake.service';
 import { Module } from '@nestjs/common';
 import { RetailImportController } from './imports/import.controller';
 import { RetailImportService } from './imports/import.service';
@@ -10,6 +13,7 @@ import { CounterController } from './counter/counter.controller';
 import { CounterService } from './counter/counter.service';
 import { RetailController } from './retail.controller';
 import { RetailService } from './retail.service';
+import { RetailCatalogModule } from './retail-catalog.module';
 import { ItemRemovalService } from './item-removal.service';
 import { AccountingModule } from '../accounting/accounting.module';
 import { InventoryModule } from '../inventory/inventory.module';
@@ -20,11 +24,15 @@ import { ReportsModule } from './reports/reports.module';
 import { PurchaseModule } from '../purchase/purchase.module';
 import { RetailGstController } from './gst/gst.controller';
 import { RetailGstService } from './gst/gst.service';
+import { RetailNotificationsController } from './account/notifications.controller';
+import { ItemCompositionModule } from '../item-composition/item-composition.module';
+import { RetailExperienceController } from './experience/retail-experience.controller';
+import { RetailExperienceService } from './experience/retail-experience.service';
 
 @Module({
-  imports: [AccountingModule, InventoryModule, PurchaseModule, ExpensesModule, BillingModule, ReportsModule],
-  controllers: [RetailController, CounterController, RetailAccountController, RetailExportController, RetailCalendarController, RetailImportController, RetailGstController],
-  providers: [RetailService, ItemRemovalService, PrismaService, CounterService, EntitlementService, RetailImportService, OpeningStockService, RetailGstService],
-  exports:[RetailService,CounterService],
+  imports: [RetailCatalogModule,AttachmentsModule,AccountingModule, InventoryModule, PurchaseModule, ExpensesModule, BillingModule, ReportsModule,ItemCompositionModule],
+  controllers: [RetailIntakeController,RetailController, CounterController, RetailAccountController, RetailExportController, RetailCalendarController, RetailImportController, RetailGstController, RetailNotificationsController, RetailExperienceController],
+  providers: [RetailIntakeService, ItemRemovalService, PrismaService, CounterService, EntitlementService, RetailImportService, OpeningStockService, RetailGstService, RetailExperienceService],
+  exports:[RetailCatalogModule,CounterService],
 })
 export class RetailModule {}

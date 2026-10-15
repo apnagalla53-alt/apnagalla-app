@@ -6,6 +6,7 @@ import { throttleLogin } from './login-throttle';
 import { EntitlementService } from '../common/entitlement.service';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
+import { isStaffAccount, staffPhone } from './staff-policy';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -134,9 +135,18 @@ export class AuthService implements OnModuleInit {
 
   async login(username: string, pass: string, context: { ip?: string; userAgent?: string; deviceId?: string } = {}) {
     await throttleLogin(`tenant:${context.ip || 'local'}`);
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-    });
+    let user = await this.prisma.user.findUnique({where:{username:username.trim()}});
+    // Existing staff can use their saved phone without a destructive bulk rename.
+    // Ambiguous phone numbers never select an account implicitly.
+    if (!user) {
+      let phone = '';
+      try { phone = staffPhone(username); } catch { /* ordinary owner username */ }
+      if (phone) {
+        const candidates = await this.prisma.user.findMany({where:{is_active:true,OR:[{username:phone},{phone:{in:[phone,'+91'+phone,'91'+phone]}}]},include:{roles:{include:{role:true}}},take:3});
+        const staff = candidates.filter(isStaffAccount);
+        if (candidates.length < 3 && staff.length === 1) user = staff[0];
+      }
+    }
 
     if (!user || !user.is_active || user.is_locked || user.password_login_enabled === false) {
       await bcrypt.compare(pass, await this.invalidPasswordHash);
@@ -170,7 +180,7 @@ export class AuthService implements OnModuleInit {
       const branch=membership?.branch_id?await this.prisma.branch.findUnique({where:{id:membership.branch_id}}):null;
       if(company&&(!company.organization.is_active||['SUSPENDED','CANCELLED','ARCHIVED'].includes(company.organization.status)))throw new UnauthorizedException('This shop is inactive. Contact the owner.');
       const now=new Date(),year=company?await this.prisma.financialYear.findFirst({where:{company_id:company.id,is_closed:false,start_date:{lte:now},end_date:{gte:now}},orderBy:{is_active:'desc'}}):null;
-      return {user:{id:user.id,username:user.username,display_name:user.display_name,email:user.email,phone:user.phone,organization_id:user.organization_id,role:role?.name||'USER',permissions:role?.role_permissions.map(p=>p.permission.code)||[],must_change_password:user.must_change_password,onboarding_state:user.onboarding_state,is_platform:false},tenant_context:company&&branch?{organization_id:company.organization_id,organization_name:company.organization.name,company_id:company.id,company_name:company.trade_name||company.legal_name,branch_id:branch.id,branch_name:branch.name,financial_year_id:year?.id,financial_year_label:year?.label}:null};
+      return {user:{id:user.id,username:user.username,display_name:user.display_name,email:user.email,phone:user.phone,organization_id:user.organization_id,role:role?.name||'USER',permissions:role?.role_permissions.map(p=>p.permission.code)||[],password_min_length:isStaffAccount(user)?8:12,must_change_password:user.must_change_password,onboarding_state:user.onboarding_state,is_platform:false},tenant_context:company&&branch?{organization_id:company.organization_id,organization_name:company.organization.name,company_id:company.id,company_name:company.trade_name||company.legal_name,branch_id:branch.id,branch_name:branch.name,financial_year_id:year?.id,financial_year_label:year?.label}:null};
     });
   }
   private async issueVerifiedUserSession(userId: string, context: { ip?: string; userAgent?: string; deviceId?: string } = {},verifiedPasswordHash?:string) {
@@ -202,6 +212,7 @@ export class AuthService implements OnModuleInit {
     if (company && (!company.organization.is_active || ['SUSPENDED', 'CANCELLED'].includes(company.organization.status))) {
       throw new UnauthorizedException('This shop is suspended or inactive. Contact the owner.');
     }
+    const sessionDays = isStaffAccount(user) && !user.must_change_password ? 30 : 1;
     const session = await this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id=${user.id}::uuid FOR UPDATE`;
       const current=await tx.user.findUniqueOrThrow({where:{id:user.id}});
@@ -215,13 +226,13 @@ export class AuthService implements OnModuleInit {
         if(limit>0&&devices>=limit)throw new ForbiddenException('This shop has reached its device limit. Ask the owner to revoke an old device or upgrade.');
       }
       await tx.user.update({ where: { id: user.id }, data: { last_login_at: now, last_active_at: now, failed_login_count: 0 } });
-      return tx.session.create({ data: { user_id: user.id, expires_at: new Date(now.getTime() + 86400_000),
+      return tx.session.create({ data: { user_id: user.id, expires_at: new Date(now.getTime() + sessionDays * 86400_000),
         device_id:context.deviceId,
         ip_address: context.ip?.slice(0, 45), user_agent: context.userAgent?.slice(0, 512) } });
     },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable});
     const payload = { sub: user.id, username: user.username, sid: session.id, is_platform: false };
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: await this.jwtService.signAsync(payload, {expiresIn:sessionDays * 86400}),
       tenant_context: company && branch ? {
         organization_id: company.organization_id, organization_name: company.organization.name,
         company_id: company.id, company_name: company.trade_name || company.legal_name,
@@ -236,6 +247,7 @@ export class AuthService implements OnModuleInit {
         role: activeRole?.name || 'USER',
         permissions: permissions,
         must_change_password: user.must_change_password,
+        password_min_length: isStaffAccount(user) ? 8 : 12,
         onboarding_state: user.onboarding_state,
         organization_id: user.organization_id,
         email:user.email,

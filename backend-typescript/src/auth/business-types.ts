@@ -1,3 +1,4 @@
+import { businessPreset } from './business-presets';
 /** Preserve existing keys; suggestions never grant plan capabilities. */
 export const BUSINESS_TYPES = [
   ['GROCERY','Kirana / Grocery','ShoppingBasket',['MULTI_UNIT'],'Food & daily needs',['kirana','grocery','ration']],
@@ -60,4 +61,5 @@ export const BUSINESS_TYPES = [
   ['LAUNDRY','Laundry / Dry Cleaning','Shirt',['SERVICES'],'Services',['laundry','dry cleaning']],
   ['OTHER','Other','Shapes',[],'Other',['other']],
 ] as const;
-export const businessTypeCatalog=()=>BUSINESS_TYPES.map(([code,name,icon,suggested_features,group,keywords])=>({code,name,icon,suggested_features,group,keywords}));
+export const businessTypeCatalog=()=>BUSINESS_TYPES.map(([code,name,icon,suggested_features,group,keywords])=>({code,name,icon,suggested_features,group,keywords,preset:businessPreset(code,name,suggested_features)}));
+export const presetForBusiness=(code?:string|null)=>{const type=BUSINESS_TYPES.find(t=>t[0]===code);return businessPreset(code,type?.[1],type?.[3]);};

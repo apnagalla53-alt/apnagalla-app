@@ -15,11 +15,12 @@ export default function PlatformAccessGrant({ org, plans, reason, busy, grant }:
     <form className="platform-form" onSubmit={e => { e.preventDefault(); void grant({ action: 'approve_access', plan_id: planId, free_days: days, complimentary, ...(!complimentary && { payment_id: paymentId }) }); }}>
       <Field label="Access plan"><select required value={planId} onChange={e => { setPlanId(e.target.value); setPaymentId(''); }}><option value="">Choose plan</option>{plans.filter(p => p.is_active && ['STARTER','SMART','PRO'].includes(p.code)).map(p => <option key={p.id} value={p.id}>{p.name} · {money(p.monthly_price)} / month</option>)}</select></Field>
       <Field label="Access type"><select value={complimentary ? 'FREE' : 'PAID'} onChange={e => { setComplimentary(e.target.value === 'FREE'); setPaymentId(''); }}><option value="FREE">Complimentary / temporary access</option><option value="PAID">Verified manual payment</option></select></Field>
+      {complimentary&&<div className="platform-actions"><button type="button" onClick={()=>setDays(30)}>1 month · 30 days</button><button type="button" onClick={()=>setDays(60)}>2 months · 60 days</button></div>}
       <Field label="Access days"><input required type="number" min="1" max="3650" value={days} onChange={e => setDays(Number(e.target.value))}/></Field>
       {!complimentary && <Field label="Verified payment"><select required value={paymentId} onChange={e => setPaymentId(e.target.value)}><option value="">Choose recorded paid receipt</option>{payments.map((p: any) => <option key={p.id} value={p.id}>{p.reference} · {money(Number(p.amount) + Number(p.tax) - Number(p.discount))}</option>)}</select></Field>}
       <button className="primary" disabled={busy || reason.trim().length < 3 || !planId || !Number.isInteger(days) || days < 1 || days > 3650 || (!complimentary && !paymentId)}>{busy ? 'Granting access…' : 'Grant access'}</button>
     </form>
     <p className="platform-muted">{reason.trim().length < 3 ? 'Enter a reason above to enable approval. ' : ''}{complimentary ? 'This grants access without recording revenue or claiming payment.' : 'Record the actual receipt in Billing first. Select that receipt here after checking payment.'}</p>
-    <p className="platform-muted">After approval, the owner can choose “Check activation status” and continue into the shop. Online payment confirmation is not configured.</p>
+    <p className="platform-muted">The waiting screen checks approval automatically every 30 seconds. The owner can also choose “Check activation status”. Online payment confirmation is not configured.</p>
   </section>;
 }

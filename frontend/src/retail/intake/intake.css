@@ -1,0 +1,89 @@
+/* Intake inherits the approved Retail tokens, controls and cards. */
+.xp-intake {
+  max-width: 960px;
+  margin: auto;
+}
+.xp-document-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 440px;
+  object-fit: contain;
+  border: 1px solid var(--ag-border);
+  border-radius: 16px;
+  margin: 16px auto;
+}
+.xp-intake-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.xp-intake-counts > span {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--ag-soft);
+  font-size: 0.8125rem;
+  color: var(--ag-text);
+}
+.xp-quick-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--ag-border);
+  border-radius: 16px;
+  background: var(--ag-card);
+  color: var(--ag-text);
+  padding: 16px;
+  font: inherit;
+}
+.xp-quick-row > span:not(.xp-icon) {
+  flex: 1;
+  min-width: 0;
+}
+.xp-quick-row strong,
+.xp-quick-row small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.xp-quick-row small {
+  font-size: 0.8125rem;
+  color: var(--ag-muted);
+  margin-top: 4px;
+}
+.xp-quick-row svg {
+  flex-shrink: 0;
+}
+.xp-quick-row .xp-row-error {
+  color: var(--ag-warning);
+}
+.xp-list-heading {
+  font-size: 1rem;
+  margin: 0 0 12px;
+}
+.xp-intake label:not(.r-toggle-row) {
+  display: block;
+  margin: 12px 0 8px;
+  font-weight: 600;
+}
+.xp-intake summary {
+  min-height: 48px;
+  cursor: pointer;
+}
+.xp-intake .r-toggle-row {
+  align-items: flex-start;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.xp-intake .r-toggle-row input {
+  flex-shrink: 0;
+}
+.xp-intake .xp-suggestion-actions {
+  flex-wrap: wrap;
+}
+.xp-intake .xp-suggestion-actions .r-btn {
+  white-space: normal;
+  flex: 1;
+}

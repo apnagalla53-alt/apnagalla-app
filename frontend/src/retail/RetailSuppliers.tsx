@@ -26,7 +26,7 @@ export default function RetailSuppliers({embedded=false}:{embedded?:boolean}) {
     if (showAdd) {
       const previous = document.activeElement as HTMLElement | null;
       const timer = setTimeout(
-        () => document.getElementById("supplier-name")?.focus(),
+        () => document.querySelector<HTMLElement>('[aria-label="Close Add Supplier"]')?.focus(),
         0,
       );
       return () => {

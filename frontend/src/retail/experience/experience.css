@@ -1,0 +1,212 @@
+/* Presentation only: documents, posting, entitlements and stored units stay authoritative. */
+@import "../../shared/apna-theme.css";
+.retail-app.retail-stitch.workflow-surface[data-workflow] {
+  --surface-page: var(--ag-page);
+  --surface-card: var(--ag-card);
+  --surface-elevated: var(--ag-soft);
+  --text-primary: var(--ag-text);
+  --text-secondary: var(--ag-muted);
+  --border-subtle: var(--ag-border);
+  --brand-primary: var(--ag-brand-strong);
+  --brand-container: var(--ag-brand-soft);
+  --accent-info: var(--ag-info);
+  --accent-info-container: var(--ag-info-soft);
+  --accent-warning: var(--ag-warning);
+  --accent-warning-container: var(--ag-warning-soft);
+  --accent-danger: var(--ag-danger);
+  --accent-danger-container: var(--ag-danger-soft);
+  --accent-special: var(--ag-violet);
+  --accent-special-container: var(--ag-violet-soft);
+  --r-bg: var(--surface-page);
+  --r-background: var(--surface-page);
+  --r-surface: var(--surface-card);
+  --r-bg-secondary: var(--surface-elevated);
+  --r-text: var(--text-primary);
+  --r-text-secondary: var(--text-secondary);
+  --r-text-muted: var(--text-secondary);
+  --r-text-hint: var(--text-secondary);
+  --r-border: var(--border-subtle);
+  --r-border-light: var(--border-subtle);
+  --r-primary: var(--brand-primary);
+  --r-primary-text: var(--brand-primary);
+  --r-primary-light: var(--brand-container);
+  --r-primary-lighter: var(--brand-container);
+  --r-primary-surface: var(--surface-page);
+  --action-positive: var(--brand-primary);
+  --action-positive-text: var(--brand-primary);
+  --action-positive-soft: var(--brand-container);
+  --r-info: var(--accent-info);
+  --r-info-light: var(--accent-info-container);
+  --r-warning-text: var(--accent-warning);
+  --r-warning-light: var(--accent-warning-container);
+  --r-danger: var(--accent-danger);
+  --r-danger-light: var(--accent-danger-container);
+  --r-radius-lg: 20px;
+  --r-mobile-card-radius: 20px;
+  --r-shadow: var(--ag-shadow);
+}
+.retail-app.retail-stitch.workflow-surface .r-bottom-nav .r-nav-item {
+  background: transparent;
+  color: var(--ag-muted);
+  border-radius: 12px;
+  box-shadow: none;
+  transform: none;
+}
+.retail-app.retail-stitch.workflow-surface .r-bottom-nav .r-nav-item.active {
+  color: var(--ag-brand-strong);
+  background: var(--ag-brand-soft);
+}
+.retail-app.retail-stitch.workflow-surface .r-btn--primary,
+.retail-app.retail-stitch.workflow-surface .r-btn--primary-lg {
+  color: var(--ag-on-brand);
+  background: var(--ag-brand-strong);
+}
+.retail-app.retail-stitch.workflow-surface .r-btn--primary,
+.retail-app.retail-stitch.workflow-surface .r-btn--primary-lg {
+  min-height: 48px;
+}
+.xp-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 20px;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.xp-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.xp-card-heading > div {
+  min-width: 0;
+}
+.xp-card h2 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin: 0;
+}
+.xp-card p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.xp-icon {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: var(--brand-primary);
+  background: var(--brand-container);
+}
+[data-accent="info"] > .xp-card-heading .xp-icon {
+  color: var(--accent-info);
+  background: var(--accent-info-container);
+}
+[data-accent="warning"] > .xp-card-heading .xp-icon {
+  color: var(--accent-warning);
+  background: var(--accent-warning-container);
+}
+[data-accent="danger"] > .xp-card-heading .xp-icon {
+  color: var(--accent-danger);
+  background: var(--accent-danger-container);
+}
+[data-accent="special"] > .xp-card-heading .xp-icon {
+  color: var(--accent-special);
+  background: var(--accent-special-container);
+}
+.xp-card-action {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 48px;
+}
+.xp-context-note {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.xp-stack {
+  display: grid;
+  gap: 16px;
+}
+.xp-muted {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.xp-primary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.xp-primary-grid > *:first-child {
+  grid-column: 1/-1;
+}
+.xp-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 12px;
+}
+.xp-section-title h2 {
+  font-size: 1.125rem;
+  margin: 0;
+}
+.xp-unit-hint {
+  margin: 6px 0 12px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+.xp-more-units {
+  margin: 8px 0;
+  min-height: 48px;
+}
+.xp-form-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.xp-form-grid > * {
+  min-width: 0;
+}
+.xp-form-grid label {
+  display: block;
+  margin-bottom: 6px;
+}
+.xp-why {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  min-height: 48px;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 0.8125rem;
+}
+@media (min-width: 800px) {
+  .xp-stack {
+    max-width: 960px;
+    margin-inline: auto;
+  }
+  .xp-primary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .xp-primary-grid > *:first-child {
+    grid-column: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .retail-app * {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media print {
+  .xp-no-print {
+    display: none !important;
+  }
+}

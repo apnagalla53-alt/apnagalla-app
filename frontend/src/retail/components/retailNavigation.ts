@@ -42,15 +42,17 @@ const khata = ['RETAIL_POS', 'KHATA'] as const;
 // continues to enforce the authenticated membership and effective entitlements.
 export const drawerQuickLinks: readonly DrawerNavItem[] = [
   { id: 'home', label: 'Home', route: '/retail/home', icon: House },
+  { id: 'quick-sale', label: 'Quick Bill', route: '/retail/quick-sale', icon: Zap, permissions: ['sales.write'], features: retail },
   { id: 'bill', label: 'Make Bill', route: '/retail/bill', icon: ReceiptText, permissions: ['sales.write'], features: inventory },
   { id: 'gst', label: 'GST Invoices', route: '/retail/gst', icon: FileBadge, permissions: ['sales.read'], features: ['RETAIL_POS','GST_INVOICES'] },
   { id: 'inventory', label: 'Inventory', route: '/retail/stock', icon: Package, permissions: ['inventory.read'], features: inventory },
   { id: 'khata', label: 'Khata', route: '/retail/khata', icon: BookOpen, permissions: ['accounting.read'], features: khata },
+  { id: 'suppliers', label: 'Suppliers', route: '/retail/suppliers', icon: Truck, permissions: ['purchase.read'], features: purchasing },
 ];
 
 export const drawerGroups: readonly DrawerNavGroup[] = [
   { id: 'sell', label: 'Sell & Billing', icon: Receipt, children: [
-    { id: 'quick-sale', label: 'Quick Sale', route: '/retail/quick-sale', icon: Zap, permissions: ['sales.write'], features: retail },
+    { id: 'quick-sale', label: 'Quick Bill', route: '/retail/quick-sale', icon: Zap, permissions: ['sales.write'], features: retail },
     { id: 'udhar', label: 'Udhar Sale', route: '/retail/udhar', icon: Wallet, permissions: ['sales.write', 'accounting.read'], features: khata, elementId: 'qa-udhar' },
     { id: 'bills', label: 'Bill History', route: '/retail/bills', icon: History, permissions: ['sales.read'], features: retail },
     { id: 'held', label: 'Held Bills', route: '/retail/bills/held', icon: Bookmark, permissions: ['sales.read'], features: retail, elementId: 'qa-held-bills' },
@@ -74,7 +76,7 @@ export const drawerGroups: readonly DrawerNavGroup[] = [
   { id: 'reports', label: 'Reports & Insights', icon: ChartLine, children: [
     { id: 'reports', label: 'Reports', route: '/retail/reports', icon: ChartNoAxesCombined, permissions: ['reports.read'], features: ['RETAIL_POS', 'REPORTS'] },
     { id: 'calendar', label: 'Calendar', route: '/retail/calendar', icon: CalendarDays, permissions: ['accounting.read'], features: retail },
-    { id: 'assistant', label: 'Ask EVOLIX', route: '/retail/assistant', icon: MessageCircle, features: ['RETAIL_POS','ASSISTANT_TEXT'] },
+    { id: 'assistant', label: 'Ask Apna Galla', route: '/retail/assistant', icon: MessageCircle, features: ['RETAIL_POS','ASSISTANT_TEXT'] },
   ] },
   { id: 'business', label: 'Business & Staff', icon: Building2, children: [
     { id: 'business', label: 'My Business', route: '/retail/more/business', icon: Store },

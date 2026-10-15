@@ -1,32 +1,45 @@
+import { Check } from 'lucide-react';
 import { ui, useUiLanguage } from "../../i18n";
 import { useEffect, useState } from 'react';
 import api, { getApiErrorMessage } from '../../shared/api';
 import { MobileSelect, Sheet } from './MobileControls';
+import { useBusinessPreset } from '../experience/useBusinessPreset';
+import { useAuthStore } from '../../shared/store/authStore';
 
 export type RetailUnitChoice = { id?: string; code: string; name: string; selling_mode?: string };
 export const unitLabel = (unit: { code: string; name?: string }) => unit.name && unit.name !== unit.code ? `${unit.name} (${unit.code})` : unit.code;
 export const sellingModeLabel = (mode: string, unit: string) => mode === 'WEIGHT' && ['LTR', 'ML'].includes(unit) ? 'Liquid quantity (litres / ml)' : mode === 'VOLUME' ? 'Volume (measurements)' : mode === 'AREA' ? 'Area (measurements)' : mode[0] + mode.slice(1).toLowerCase();
+let cacheKey='',cached:RetailUnitChoice[]|null=null,loadedAt=0,pending:Promise<RetailUnitChoice[]>|null=null;
+async function unitChoices(){const state=useAuthStore.getState(),key=state.user?.id+':'+state.tenantContext?.company_id;if(cacheKey!==key){cacheKey=key;cached=null;pending=null;loadedAt=0;}if(cached&&Date.now()-loadedAt<60000)return cached;
+ if(!pending){const request=api.get<RetailUnitChoice[]>('/retail/units').then(r=>{if(cacheKey===key){cached=r.data;loadedAt=Date.now();}return r.data;}).finally(()=>{if(cacheKey===key)pending=null;});pending=request;}return pending;
+}
 
-export default function UnitPicker({ id, value, onChange, disabled = false, title = 'Unit', allowedModes }: {
-  id: string; value: string; onChange: (unit: RetailUnitChoice) => void; disabled?: boolean; title?: string; allowedModes?: string[];
+export default function UnitPicker({ id, value, onChange, disabled = false, title = 'Unit', allowedModes, category, recommendedUnits }: {
+  id: string; value: string; onChange: (unit: RetailUnitChoice) => void; disabled?: boolean; title?: string; allowedModes?: string[];category?:string;recommendedUnits?:string[];
 }) {
   useUiLanguage();
+  const preset=useBusinessPreset(category),recommended=recommendedUnits||preset.recommendedUnits;
+  const [showAll,setShowAll]=useState(false);
   const [units, setUnits] = useState<RetailUnitChoice[]>([]), [loading, setLoading] = useState(true), [error, setError] = useState('');
   const [custom, setCustom] = useState(false), [code, setCode] = useState(''), [name, setName] = useState('');
   const load = async () => {
     setLoading(true); setError('');
-    try { setUnits((await api.get('/retail/units')).data); } catch (e) { setError(getApiErrorMessage(e)); } finally { setLoading(false); }
+    try { setUnits(await unitChoices()); } catch (e) { setError(getApiErrorMessage(e)); } finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
   const choices = units.some(unit => unit.code === value) ? units : [{ code: value, name: value }, ...units];
   const available = (unit: RetailUnitChoice) => !allowedModes || !unit.selling_mode || allowedModes.includes(unit.selling_mode);
   const customMatch = units.find(unit => unit.code === code);
+  const shown=choices.filter(u=>showAll||recommended.includes(u.code)||u.code===value).sort((a,b)=>{const rank=(code:string)=>{const i=recommended.indexOf(code);return i<0?1000:i;};return rank(a.code)-rank(b.code);});
+  const chips=shown.filter(u=>available(u)).slice(0,6);
   return <>
-    <MobileSelect id={id} title={ui(title)} value={value} disabled={disabled} loading={loading} error={error} onRetry={load}
+    {!!chips.length&&<div className="xp-unit-chips" role="group" aria-label={ui(title)}>{chips.map(choice=><button key={choice.code} type="button" disabled={disabled} className="xp-unit-chip" aria-pressed={value===choice.code} onClick={()=>onChange(choice)}>{ui(choice.name)}{value===choice.code&&<Check size={17} aria-hidden="true"/>}</button>)}</div>}
+    {(showAll||loading||!!error||!chips.length)&&<MobileSelect id={id} title={ui(title)} value={value} disabled={disabled} loading={loading} error={error} onRetry={load}
       onAdd={() => { setCode(''); setName(''); setCustom(true); }} addLabel={ui("Add custom unit")}
       onChange={event => { const found = choices.find(unit => unit.code === event.target.value); if (found && available(found)) onChange(found); }}>
-      {choices.map(unit => <option key={unit.code} value={unit.code} disabled={!available(unit)}>{unitLabel(unit)}{!available(unit) ? ' · enable ' + unit.selling_mode?.toLowerCase() + ' in shop features' : ''}</option>)}
-    </MobileSelect>
+      {shown.map(unit => <option key={unit.code} value={unit.code} disabled={!available(unit)}>{unitLabel(unit)}{!available(unit) ? ' · enable ' + unit.selling_mode?.toLowerCase() + ' in shop features' : ''}</option>)}
+    </MobileSelect>}
+    <button type="button" className="r-btn r-btn--outline xp-more-units" disabled={disabled} aria-expanded={showAll} onClick={()=>setShowAll(v=>!v)}>{ui(showAll?'Suggested units':'More units')}</button>
     <Sheet open={custom} onClose={() => setCustom(false)} title={ui("Add custom unit")}>
       <p className="r-caption">Use a familiar unit for your shop. This selects a base unit; pack conversions are configured in Item Details.</p>
       <label htmlFor={id + '-custom-name'}>{ui("Unit name")}</label>

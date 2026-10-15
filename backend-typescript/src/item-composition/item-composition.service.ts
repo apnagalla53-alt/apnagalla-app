@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { BatchExpiryService } from '../inventory/batch-expiry.service';
 import { EntitlementService } from '../common/entitlement.service';
-import { BundleRecipeDto, ModifierGroupsDto, AddVariantDto, AddConversionDto } from './item-composition.dto';
+import { BundleRecipeDto, ModifierGroupsDto, AddVariantDto, AddConversionDto, SetupVariantsDto, UnitPricesDto } from './item-composition.dto';
 
 const compositionInclude = { bundle_components: { include: { component_item: true } }, modifier_groups: { include: { options: true } } };
 
@@ -54,6 +54,27 @@ export class ItemCompositionService {
       await this.audit(tx,user,id,'ITEM_VARIANT_ADD');return result;
     });
   }
+  async setupVariants(user:any,id:string,dto:SetupVariantsDto) {
+    return this.db.runAtomic(async()=>{
+      await this.feature(this.db,user.company_id,'VARIANTS');
+      await this.db.$queryRaw`SELECT id FROM companies WHERE id=${user.company_id}::uuid FOR UPDATE`;
+      await this.db.$queryRaw`SELECT id FROM items WHERE id=${id}::uuid AND company_id=${user.company_id}::uuid FOR UPDATE`;
+      const item=await this.ownedItem(this.db,user.company_id,id);
+      if(item.item_type==='SERVICE'||item.is_bundle)throw new BadRequestException('Sizes and colours need an individual product');
+      if(!item.has_variants&&await this.db.stockMovement.count({where:{company_id:user.company_id,item_id:id}}))throw new BadRequestException('This item has stock history. Use a new item for size-specific stock.');
+      const canonical=(a:any)=>JSON.stringify(Object.entries(a).map(([k,v])=>[k.trim(),String(v).trim()]).sort(([a],[b])=>a.localeCompare(b)));
+      const fingerprints=dto.variants.map(v=>canonical(v.attributes));
+      if(new Set(fingerprints).size!==fingerprints.length)throw new BadRequestException('Use distinct size and colour combinations');
+      await this.db.item.update({where:{id},data:{has_variants:true,inventory_tracking:true}});
+      const current=await this.db.itemVariant.findMany({where:{item_id:id}}),rows=[];
+      for(const variant of dto.variants){
+        const found=current.find(v=>canonical(v.attributes)===canonical(variant.attributes));
+        rows.push(found ? variant.default_sale_rate===undefined ? found : await this.db.itemVariant.update({where:{id:found.id},data:{default_sale_rate:variant.default_sale_rate}}) : await this.addVariant(user,id,variant));
+      }
+      await this.audit(this.db,user,id,'ITEM_VARIANTS_SETUP');
+      return {variants:rows,created:rows.filter(v=>!current.some(c=>c.id===v.id)).length};
+    });
+  }
   async addConversion(user:any,id:string,dto:AddConversionDto) {
     return this.db.$transaction(async tx=>{
       await this.feature(tx,user.company_id,'MULTI_UNIT');
@@ -64,8 +85,22 @@ export class ItemCompositionService {
       const unit=await tx.unit.findFirst({where:{company_id:user.company_id,code:dto.unit_code}}) || await tx.unit.create({data:{company_id:user.company_id,code:dto.unit_code,name:dto.unit_code,decimal_places:item.selling_mode==='PIECE'?0:6}});
       if(unit.id===item.primary_unit_id)throw new BadRequestException('The base unit does not need a conversion');
       if(await tx.itemUnitConversion.findFirst({where:{item_id:id,from_unit_id:unit.id,to_unit_id:item.primary_unit_id}}))throw new BadRequestException('This conversion already exists. Existing factors are preserved for stock and financial safety');
-      const result=await tx.itemUnitConversion.create({data:{item_id:id,from_unit_id:unit.id,to_unit_id:item.primary_unit_id,conversion_factor:factor}});
+      const result=await tx.itemUnitConversion.create({data:{item_id:id,from_unit_id:unit.id,to_unit_id:item.primary_unit_id,conversion_factor:factor,selling_price:dto.selling_price}});
       await this.audit(tx,user,id,'ITEM_UNIT_CONVERSION_ADD');return result;
+    });
+  }
+  async saveUnitPrices(user:any,id:string,dto:UnitPricesDto) {
+    return this.db.$transaction(async tx=>{
+      await this.feature(tx,user.company_id,'MULTI_UNIT');
+      await tx.$queryRaw`SELECT id FROM items WHERE id=${id}::uuid AND company_id=${user.company_id}::uuid FOR UPDATE`;
+      const item=await this.ownedItem(tx,user.company_id,id);
+      if(new Set(dto.prices.map(p=>p.unit_id)).size!==dto.prices.length)throw new BadRequestException('Use each selling unit once');
+      for(const price of dto.prices){
+        if(new Prisma.Decimal(price.selling_price).decimalPlaces()>6)throw new BadRequestException('Selling prices support up to six decimals');
+        if(price.unit_id===item.primary_unit_id)await tx.item.update({where:{id},data:{default_sale_rate:price.selling_price}});
+        else {const conversion=await tx.itemUnitConversion.findFirst({where:{item_id:id,from_unit_id:price.unit_id,to_unit_id:item.primary_unit_id}});if(!conversion)throw new BadRequestException('Configure this selling unit first');await tx.itemUnitConversion.update({where:{id:conversion.id},data:{selling_price:price.selling_price}});}
+      }
+      await this.audit(tx,user,id,'ITEM_UNIT_PRICES_UPDATE');return {saved:true};
     });
   }
   async replaceBundle(user: any, id: string, dto: BundleRecipeDto) {

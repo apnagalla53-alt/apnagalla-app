@@ -44,7 +44,7 @@ export class BillingController {
 
   @Post('quote')
   quoteBill(@Req() req: any, @Body() dto: RetailBillDto) {
-    return this.billingService.quoteBill(req.user.company_id, req.user.branch_id, dto);
+    return this.billingService.quoteBill(req.user.company_id, req.user.branch_id, dto, req.user.id);
   }
 
   @Post('hold')
@@ -65,4 +65,3 @@ export class BillingController {
     return this.billingService.postReturn(company_id, branch_id, userId, dto);
   }
 }
-

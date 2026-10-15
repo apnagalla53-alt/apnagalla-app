@@ -11,6 +11,7 @@ export const RETAIL_UNITS = [
   ['BUNDLE', 'Bundle', 'PIECE'], ['TUBE', 'Tube', 'PIECE'], ['TRAY', 'Tray', 'PIECE'],
   ['BORA', 'Bora / sack', 'PIECE'], ['PETI', 'Peti / crate', 'PIECE'], ['TIN', 'Tin', 'PIECE'],
   ['SACK', 'Sack', 'PIECE'], ['SET', 'Set', 'PIECE'], ['PAIR', 'Pair', 'PIECE'],
+  ['TABLET','Tablets','PIECE'], ['STRIP','Strip','PIECE'], ['SHEET','Sheet','PIECE'], ['PLATE','Plate','PIECE'], ['CUP','Cup','PIECE'], ['GLASS','Glass','PIECE'], ['REAM','Ream','PIECE'],
   ['ROLL', 'Roll', 'PIECE'], ['HOUR', 'Hour', 'PIECE'], ['DAY', 'Day', 'PIECE'], ['JOB', 'Job', 'PIECE'],
 ].map(([code, name, selling_mode]) => ({ code, name, selling_mode, decimal_places: selling_mode === 'PIECE' ? 0 : 6 }));
 

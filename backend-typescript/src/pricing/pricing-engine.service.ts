@@ -65,6 +65,13 @@ export class PricingEngineService {
       throw new NotFoundException(`Item ${itemId} not found or belongs to another company`);
     }
 
+    const selectedUnitId=context?.unitId||item.primary_unit_id;
+    const conversion=selectedUnitId===item.primary_unit_id?null:await db.itemUnitConversion.findFirst({where:{item_id:itemId,from_unit_id:selectedUnitId,to_unit_id:item.primary_unit_id}});
+    if(selectedUnitId!==item.primary_unit_id&&!conversion)throw new BadRequestException('Unit conversion is not configured');
+    const factor=new Prisma.Decimal(conversion?.conversion_factor||1);
+    const matchesSlab=(row:any)=>{const q=row.unit_id?qty:qty.mul(factor);return (!row.unit_id||row.unit_id===selectedUnitId)&&q.gte(row.min_qty)&&(!row.max_qty||q.lte(row.max_qty));};
+    const byUnit=(a:any,b:any)=>Number(!!b.unit_id)-Number(!!a.unit_id)||new Prisma.Decimal(b.min_qty).comparedTo(a.min_qty);
+
     let party: any = null;
     if (partyId) {
       party = await db.party.findUnique({
@@ -95,14 +102,10 @@ export class PricingEngineService {
       });
 
       // Find matching slab: min_qty <= qty && (max_qty == null || max_qty >= qty)
-      const matchingSlab = customerRates.find((cr) => {
-        const minQ = new Prisma.Decimal(cr.min_qty);
-        const maxQ = cr.max_qty ? new Prisma.Decimal(cr.max_qty) : null;
-        return qty.gte(minQ) && (maxQ === null || qty.lte(maxQ));
-      });
+      const matchingSlab = customerRates.sort(byUnit).find(matchesSlab);
 
       if (matchingSlab) {
-        const rate = this.roundRate(new Prisma.Decimal(matchingSlab.rate));
+        const rate = this.roundRate(new Prisma.Decimal(matchingSlab.rate).mul(matchingSlab.unit_id?1:factor));
         ruleDetails.push({
           step: '1. CUSTOMER_SPECIFIC_RATE',
           ruleType: 'CUSTOMER_RATE',
@@ -170,14 +173,10 @@ export class PricingEngineService {
         orderBy: { min_qty: 'desc' },
       });
 
-      const matchingItemSlab = priceListItems.find((pli) => {
-        const minQ = new Prisma.Decimal(pli.min_qty);
-        const maxQ = pli.max_qty ? new Prisma.Decimal(pli.max_qty) : null;
-        return qty.gte(minQ) && (maxQ === null || qty.lte(maxQ));
-      });
+      const matchingItemSlab = priceListItems.sort(byUnit).find(matchesSlab);
 
       if (matchingItemSlab) {
-        const rate = this.roundRate(new Prisma.Decimal(matchingItemSlab.rate));
+        const rate = this.roundRate(new Prisma.Decimal(matchingItemSlab.rate).mul(matchingItemSlab.unit_id?1:factor));
         ruleDetails.push({
           step: '2. PRICE_LIST_RATE',
           ruleType: 'PRICE_LIST',
@@ -209,7 +208,9 @@ export class PricingEngineService {
         defaultRate = new Prisma.Decimal(variant.default_sale_rate);
       }
     }
-    const fallbackRate = defaultRate.gt(0) ? defaultRate : new Prisma.Decimal(item.mrp);
+    const explicitUnitPrice=conversion?.selling_price!=null;
+    defaultRate=explicitUnitPrice?new Prisma.Decimal(conversion.selling_price!):defaultRate.mul(factor);
+    const fallbackRate = explicitUnitPrice||defaultRate.gt(0) ? defaultRate : new Prisma.Decimal(item.mrp).mul(factor);
     const finalFallback = this.roundRate(fallbackRate);
 
     ruleDetails.push({
@@ -249,7 +250,7 @@ export class PricingEngineService {
     const docDate = context?.documentDate ? new Date(context.documentDate) : new Date();
 
     // 1. Resolve base price
-    const resolvedPrice = await this.resolveItemPrice(companyId, partyId, lineInput.itemId, lineInput.variantId, qty, context, db);
+    const resolvedPrice = await this.resolveItemPrice(companyId, partyId, lineInput.itemId, lineInput.variantId, qty, {...context,unitId:lineInput.unitId}, db);
     let currentRate = resolvedPrice.resolvedRate;
     const ruleDetails: AppliedRuleDetail[] = [...resolvedPrice.ruleDetails];
     const appliedSequence: string[] = [resolvedPrice.precedenceReason];

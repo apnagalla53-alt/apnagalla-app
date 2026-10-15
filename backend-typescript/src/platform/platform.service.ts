@@ -125,7 +125,8 @@ export class PlatformService implements OnModuleInit {
           const expiry = new Date(now.getTime() + dto.free_days * 86400_000);
           await tx.organization.update({ where: { id }, data: { plan_id: plan.id, status: 'ACTIVE', is_active: true } });
           result = await tx.tenantSubscription.update({ where: { organization_id: id }, data: { start_date: now, expires_at: expiry, status: dto.complimentary ? 'COMPLIMENTARY' : 'ACTIVE', complimentary: dto.complimentary } });
-          await tx.user.updateMany({ where: { organization_id: id, onboarding_state: 'PLAN_REQUIRED' }, data: { onboarding_state: 'MIGRATION_OFFERED' } });
+          // Onboarding state resolves the active subscription on the next read.
+          // Avoid locking user rows after the organization: code redemption locks users first.
           break;
         }
         case 'status':

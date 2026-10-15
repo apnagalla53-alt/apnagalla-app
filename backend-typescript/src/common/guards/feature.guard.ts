@@ -60,7 +60,7 @@ export class FeatureGuard implements CanActivate {
         const locations=await this.prisma.godown.findMany({where:{id:{in:locationIds},branch:{company_id:user.company_id}},select:{id:true,branch_id:true}});
         for(const location of locations){const primary=await this.prisma.godown.findFirst({where:{branch_id:location.branch_id},orderBy:[{created_at:'asc'},{id:'asc'}],select:{id:true}});if(location.id!==primary?.id)requiredFeatures.push('MULTIPLE_STOCK_LOCATIONS');}
       }
-      if(resource==='items')records.push(body);
+      if(resource==='items')records.push(body,...(Array.isArray(body.items)?body.items:[]));
       if(body.modifiers?.length||body.modifier_option_ids?.length||lines.some((l:any)=>l.modifiers?.length||l.modifier_option_ids?.length))requiredFeatures.push('MODIFIERS');
       if(body.compatibility?.length||body.compatibility_metadata||body.compatibility_tags)requiredFeatures.push('COMPATIBILITY');
       if(body.adjustment_type==='OUT')requiredFeatures.push('WASTAGE');

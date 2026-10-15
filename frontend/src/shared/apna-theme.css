@@ -1,0 +1,49 @@
+/* Shared appearance contract. Components and ledger data do not branch by theme. */
+:root,
+[data-theme="light"] {
+  --ag-page: #f8fbf7;
+  --ag-card: #fff;
+  --ag-soft: #f4f7f4;
+  --ag-brand: #0a9b55;
+  --ag-brand-strong: #087744;
+  --ag-brand-soft: #e8f8ee;
+  --ag-on-brand: #fff;
+  --ag-text: #142019;
+  --ag-muted: #58675e;
+  --ag-border: #e2e9e4;
+  --ag-info: #1754a0;
+  --ag-info-soft: #eaf4ff;
+  --ag-warning: #805000;
+  --ag-warning-soft: #fff7df;
+  --ag-danger: #a82438;
+  --ag-danger-soft: #fff0f1;
+  --ag-violet: #6b3aa1;
+  --ag-violet-soft: #f4eeff;
+  --ag-focus: #087744;
+  --ag-shadow: 0 4px 20px #14201906;
+  --ag-radius-control: 12px;
+  --ag-radius-card: 20px;
+  --ag-radius-sheet: 24px;
+}
+[data-theme="dark"] {
+  --ag-page: #101614;
+  --ag-card: #1b2521;
+  --ag-soft: #26332d;
+  --ag-brand: #79e5b3;
+  --ag-brand-strong: #79e5b3;
+  --ag-brand-soft: #203f30;
+  --ag-on-brand: #10261b;
+  --ag-text: #f0f7f3;
+  --ag-muted: #b5c6bd;
+  --ag-border: #3b4e43;
+  --ag-info: #abcaff;
+  --ag-info-soft: #243650;
+  --ag-warning: #ffcd88;
+  --ag-warning-soft: #43321c;
+  --ag-danger: #ffb9c0;
+  --ag-danger-soft: #442830;
+  --ag-violet: #d5b9ff;
+  --ag-violet-soft: #352845;
+  --ag-focus: #79e5b3;
+  --ag-shadow: none;
+}

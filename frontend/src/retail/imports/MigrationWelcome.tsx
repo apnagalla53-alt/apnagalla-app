@@ -34,13 +34,13 @@ export default function MigrationWelcome() {
       active = false;
     };
   }, [user?.id, tenant?.company_id]);
-  async function choose(choice: string) {
+  async function choose(choice: string,path='/retail/bill') {
     setBusy(true);
     setError("");
     try {
       await api.post("/retail/account/migration", { choice });
       setOpen(false);
-      if (choice === "IMPORT") navigate("/retail/more/import");
+      navigate(choice === "IMPORT" ? "/retail/more/import" : path);
     } catch (e) {
       setError(getApiErrorMessage(e));
     } finally {
@@ -53,28 +53,13 @@ export default function MigrationWelcome() {
       onClose={() => {
         if (!busy) setOpen(false);
       }}
-      title="Welcome to your EVOLIX shop"
+      title="Welcome to Apna Galla"
     >
-      <p>
-        Already using another billing app? Bring your items, customers,
-        suppliers, stock and opening dues with you.
-      </p>
-      <p>
-        Export a spreadsheet from Vyapar, Tally, BUSY or another app. We will
-        guide you through mapping and review before saving.
-      </p>
+      <p>{ui('Make your first bill now. Add items as you sell, or bring an existing list.')}</p>
       {error && <p role="alert">{error}</p>}
-      <button
-        autoFocus
-        className="r-btn r-btn--primary r-btn--full"
-        disabled={busy}
-        onClick={() => choose("IMPORT")}
-      >{ui("Import your data")}</button>
-      <button
-        className="r-btn r-btn--outline r-btn--full"
-        disabled={busy}
-        onClick={() => choose("FRESH")}
-      >{ui("Start fresh")}</button>
+      <button autoFocus className="r-btn r-btn--primary r-btn--full" disabled={busy} onClick={()=>choose('FRESH')}>{ui('Make First Bill')}</button>
+      <button className="r-btn r-btn--outline r-btn--full" disabled={busy} onClick={()=>choose('IMPORT')}>{ui('Import existing data')}</button>
+      <button className="r-btn r-btn--outline r-btn--full" disabled={busy} onClick={()=>choose('FRESH','/retail/items/bulk')}>{ui('Set up my items')}</button>
       <p className="r-caption">
         Start fresh continues into your shop; it does not delete any records.
         Import stays available in More.

@@ -1,0 +1,59 @@
+/* Workflow accents identify context. Action colours retain one meaning everywhere. */
+.workflow-surface { --workflow-accent:var(--workflow-accent-light);--workflow-soft:var(--workflow-soft-light);--workflow-canvas:var(--workflow-canvas-light);--action-positive:#166534;--action-positive-hover:#14532d;--action-positive-soft:#e7f5eb;--action-positive-text:#166534;--action-danger:#b91c1c;--action-danger-hover:#991b1b;--action-danger-soft:#fff0f0;--action-danger-text:#991b1b;--action-warning:#92400e;--action-warning-soft:#fff3d6;--action-info:#1e40af;--action-info-soft:#eaf0ff; }
+.workflow-surface[data-theme='dark'] { --workflow-accent:var(--workflow-accent-dark);--workflow-soft:var(--workflow-soft-dark);--workflow-canvas:var(--workflow-canvas-dark);--action-positive:#9ce2b0;--action-positive-hover:#b4edc4;--action-positive-soft:#213d2b;--action-positive-text:#b4edc4;--action-danger:#ffb4b4;--action-danger-hover:#ffcbcb;--action-danger-soft:#46262a;--action-danger-text:#ffc2c2;--action-warning:#ffcf8c;--action-warning-soft:#43321a;--action-info:#b7ceff;--action-info-soft:#253450; }
+.retail-app.retail-stitch.workflow-surface[data-workflow] { --r-primary:var(--workflow-accent);--r-primary-text:var(--workflow-accent);--r-primary-hover:var(--workflow-accent);--r-primary-light:var(--workflow-soft);--r-primary-lighter:var(--workflow-soft);--r-primary-surface:var(--workflow-canvas);--r-bg:var(--workflow-canvas);--r-background:var(--workflow-canvas);--r-success:var(--action-positive-text);--r-success-badge:var(--action-positive-text);--r-success-light:var(--action-positive-soft);--r-danger:var(--action-danger-text);--r-danger-light:var(--action-danger-soft);--r-warning-text:var(--action-warning);--r-warning-light:var(--action-warning-soft);--r-info:var(--action-info);--r-info-light:var(--action-info-soft); }
+.workflow-banner { position:sticky;top:0;z-index:75;display:flex;align-items:center;gap:10px;min-height:64px;padding:10px 20px;background:var(--workflow-soft);color:var(--workflow-accent);border-bottom:1px solid color-mix(in srgb,var(--workflow-accent) 22%,transparent);border-left:5px solid var(--workflow-accent); }
+.workflow-banner-icon { display:grid;place-items:center;flex:0 0 36px; }
+.workflow-banner>div { min-width:0; }
+.workflow-family { display:block;font-size:11px;font-weight:700;line-height:16px;text-transform:uppercase;letter-spacing:.065em; }
+.workflow-banner strong { display:block;font-size:17px;line-height:23px;font-weight:750; }
+.workflow-hint { margin-left:auto;min-width:0;flex:0 1 42%;max-width:42%;overflow-wrap:anywhere;font-size:12px;line-height:18px;text-align:right; }
+.retail-app.retail-stitch.workflow-surface { overflow:clip; }
+.retail-app.retail-stitch.workflow-surface .r-page { padding-top:0;overflow:visible; }
+.retail-app.retail-stitch.workflow-surface .r-retail-toolbar { position:relative;top:auto; }
+.retail-app.retail-stitch.workflow-surface :is(.r-page-header,.r-header,.retail-header) { position:relative;top:auto; }
+.retail-app.retail-stitch.workflow-surface :is(.r-btn--primary,.r-btn--primary-lg,[data-tone='success'].r-btn) { background:var(--action-positive);border-color:var(--action-positive);color:#fff;box-shadow:none; }
+.retail-app.retail-stitch.workflow-surface :is(.r-btn--primary,.r-btn--primary-lg):hover { background:var(--action-positive-hover); }
+.retail-app.retail-stitch.workflow-surface[data-theme='dark'] :is(.r-btn--primary,.r-btn--primary-lg) { color:#102317; }
+.retail-app.retail-stitch.workflow-surface[data-theme='dark'] .r-search-filter>.r-btn { color:#102317; }
+.workflow-surface :is(button,a)[data-tone='danger'],.retail-app.retail-stitch.workflow-surface :is(.r-btn--danger,.r-btn--danger-ghost) { background:var(--action-danger-soft);color:var(--action-danger-text);border:1px solid var(--action-danger);box-shadow:none; }
+.workflow-surface :is(button,a)[data-tone='danger']:hover { background:var(--action-danger);color:#fff; }
+.workflow-surface[data-theme='dark'] :is(button,a)[data-tone='danger']:hover { color:#2b1010; }
+.workflow-surface :is(button,a)[data-tone='warning'] { color:var(--action-warning);background:var(--action-warning-soft);border:1px solid var(--action-warning); }
+.retail-app.retail-stitch.workflow-surface .r-btn[data-tone='danger'] { background:var(--action-danger-soft);border-color:var(--action-danger);color:var(--action-danger-text); }
+.retail-app.retail-stitch.workflow-surface .r-btn[data-tone='warning'] { background:var(--action-warning-soft);border-color:var(--action-warning);color:var(--action-warning); }
+.workflow-surface :is(button,a)[data-tone='success'] { color:var(--action-positive-text);background:var(--action-positive-soft);border:1px solid var(--action-positive); }
+.retail-app.retail-stitch.workflow-surface .r-btn--primary[data-tone='success'] { color:#fff;background:var(--action-positive); }
+.retail-app.retail-stitch.workflow-surface[data-theme='dark'] .r-btn--primary[data-tone='success'] { color:#102317; }
+.workflow-surface :is([role='alert'],.form-error,.r-api-error):not([data-tone='warning']) { color:var(--action-danger-text);background:var(--action-danger-soft);border-left:3px solid var(--action-danger);border-radius:8px;padding:12px; }
+.workflow-surface [data-tone='warning']:not(button):not(a) { color:var(--action-warning);background:var(--action-warning-soft);border-left:3px solid var(--action-warning);border-radius:8px;padding:12px; }
+.workflow-surface [data-tone='success']:not(button):not(a) { color:var(--action-positive-text);background:var(--action-positive-soft);border-left:3px solid var(--action-positive);border-radius:8px;padding:12px; }
+.workflow-surface [data-tone='info']:not(button):not(a) { color:var(--action-info);background:var(--action-info-soft);border-left:3px solid var(--action-info);border-radius:8px;padding:12px; }
+.workflow-surface .r-shop-update-toast { color:var(--action-info);border-color:var(--action-info);background:var(--action-info-soft); }
+.workflow-surface .r-shop-update-toast[data-tone='success'] { border-color:var(--action-positive);color:var(--action-positive-text);background:var(--action-positive-soft); }
+.workflow-surface .r-shop-update-toast[data-tone='danger'] { color:var(--action-danger-text);border-color:var(--action-danger);background:var(--action-danger-soft); }
+.workflow-surface .r-shop-update-toast[data-tone='warning'] { border-color:var(--action-warning);color:var(--action-warning);background:var(--action-warning-soft); }
+.workflow-surface .r-shop-update-toast>button { color:inherit;background:transparent; }
+.workflow-surface .r-notification-row[data-tone='danger'] { color:var(--action-danger-text); }
+.workflow-surface .r-notification-row[data-tone='warning'] { color:var(--action-warning); }
+.workflow-surface .r-notification-row[data-tone='success'] { border-left-color:var(--action-positive); }
+.workflow-surface .r-notification-row[data-tone] { background:var(--r-surface);padding:14px 10px;border-radius:0; }
+.workflow-surface .r-notification-row strong svg { vertical-align:middle; }
+.workflow-surface .r-bottom-nav .r-nav-item--bill { background:var(--workflow-accent);box-shadow:none; }
+.workflow-surface .r-bottom-nav .r-nav-item--bill>span::before { content:none; }
+.workflow-surface[data-theme='dark'] .r-bottom-nav .r-nav-item--bill { color:#17213b; }
+.workflow-surface .r-btn:focus-visible,.workflow-surface a:focus-visible { outline:3px solid var(--workflow-accent);outline-offset:3px; }
+.retail-app.retail-stitch.workflow-surface .r-payment-method.is-selected { color:#fff;background:var(--workflow-accent); }
+.retail-app.retail-stitch.workflow-surface .r-payment-method.is-selected span { color:inherit; }
+.retail-app.retail-stitch.workflow-surface[data-theme='dark'] .r-payment-method.is-selected { color:#152236; }
+.workflow-surface :is(.r-input,.r-select,.r-selection-field):focus { border-color:var(--workflow-accent); }
+.app-container.workflow-surface .main-content { background:var(--workflow-canvas); }
+.app-container.workflow-surface .workflow-banner { position:relative;z-index:2; }
+.app-container.workflow-surface .btn-primary { background:var(--action-positive);border-color:var(--action-positive);color:#fff; }
+.app-container.workflow-surface .btn-danger { background:var(--action-danger-soft);border-color:var(--action-danger);color:var(--action-danger-text); }
+.app-container.workflow-surface .platform-page button.primary { color:#fff;background:var(--action-positive);border-color:var(--action-positive); }
+.app-container.workflow-surface .platform-page button.danger,.app-container.workflow-surface .platform-page button[data-tone='danger'] { color:var(--action-danger-text);background:var(--action-danger-soft);border-color:var(--action-danger); }
+.app-container.workflow-surface .platform-page button[data-tone='warning'] { color:var(--action-warning);background:var(--action-warning-soft);border-color:var(--action-warning); }
+.app-container.workflow-surface .platform-page button[data-tone='success'] { color:var(--action-positive-text);background:var(--action-positive-soft);border-color:var(--action-positive); }
+@media(max-width:600px) { .workflow-banner { padding:8px 12px;gap:6px; }.workflow-banner strong { font-size:15px;line-height:20px; }.workflow-hint { max-width:36%;font-size:11px;line-height:15px; }.workflow-family { font-size:10px; } }
+@media print { .workflow-banner { display:none; }.workflow-surface { --r-bg:#fff;--workflow-canvas:#fff; } }

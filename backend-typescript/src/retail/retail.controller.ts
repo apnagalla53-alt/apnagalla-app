@@ -1,5 +1,6 @@
 import {
   Controller,
+  BadRequestException,
   Get,
   Post,
   Body,
@@ -18,6 +19,8 @@ import { ItemRemovalDto } from './dto/item-removal.dto';
 import {
   CreateRetailItemDto,
   UpdateRetailItemDto,
+  InlineRetailItemDto,
+  BulkRetailItemsDto,
 } from './dto/retail-item.dto';
 import {
   CreateRetailCustomerDto,
@@ -35,13 +38,15 @@ import { AuthGuard, RequirePermissions } from '../common/guards/auth.guard';
 import { SubscriptionGuard } from '../common/guards/subscription.guard';
 import { FeatureGuard, RequireFeature } from '../common/guards/feature.guard';
 import { FinancialCostVisibilityInterceptor } from '../common/financial-cost-visibility.interceptor';
+import { PrismaService } from '../database/prisma.service';
+import { ItemCompositionService } from '../item-composition/item-composition.service';
 
 @Controller('api/v1/retail')
 @UseGuards(AuthGuard, SubscriptionGuard, FeatureGuard)
 @RequireFeature('RETAIL_POS')
 @UseInterceptors(FinancialCostVisibilityInterceptor)
 export class RetailController {
-  constructor(private readonly retailService: RetailService, private readonly itemRemoval: ItemRemovalService) {}
+  constructor(private readonly retailService: RetailService, private readonly itemRemoval: ItemRemovalService,private readonly db:PrismaService,private readonly composition:ItemCompositionService) {}
 
   // ── ITEMS ──────────────────────────────────────────────────────────
 
@@ -72,6 +77,35 @@ export class RetailController {
       branch_id,
       dto,
     );
+  }
+
+  @Post('items/bulk')
+  @RequirePermissions('inventory.write')
+  async bulkItems(@Req() req:any,@Body() dto:BulkRetailItemsDto){
+    return this.db.runAtomic(async()=>{
+      const rows:any[]=[];
+      for(let index=0;index<dto.items.length;index++){
+        try{rows.push(await this.retailService.createItem(req.user.company_id,req.user.id,req.user.financial_year_id,req.user.branch_id,dto.items[index]));}
+        catch(error){if(error instanceof BadRequestException)throw new BadRequestException({message:'Row '+(index+1)+': '+error.message,row_index:index});throw error;}
+      }
+      return {items:rows,count:rows.length};
+    });
+  }
+
+  @Post('items/inline')
+  @RequirePermissions('inventory.write')
+  async inlineItem(@Req() req:any,@Body() dto:InlineRetailItemDto){
+    const {purchase_unit_code,purchase_unit_factor,purchase_unit_selling_price,...itemData}=dto;
+    return this.db.runAtomic(async()=>{
+      const item=await this.retailService.createItem(req.user.company_id,req.user.id,req.user.financial_year_id,req.user.branch_id,itemData);
+      let purchase_unit_id=item.primary_unit_id;
+      if(purchase_unit_code&&purchase_unit_code!==item.unit){
+        if(!(purchase_unit_factor!>0))throw new BadRequestException('Enter the number of sale units in one purchase unit');
+        const conversion=await this.composition.addConversion(req.user,item.id,{unit_code:purchase_unit_code,conversion_factor:purchase_unit_factor!,selling_price:purchase_unit_selling_price});
+        purchase_unit_id=conversion.from_unit_id;
+      }
+      return {...item,purchase_unit_id};
+    });
   }
 
   @Get('item-categories')

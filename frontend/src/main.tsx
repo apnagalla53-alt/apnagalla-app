@@ -9,3 +9,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+// Register the existing worker for installed-device share handling; no API/offline cache.
+if('serviceWorker' in navigator&&window.isSecureContext)void navigator.serviceWorker.register('/shop-notifications-sw.js').catch(()=>{});

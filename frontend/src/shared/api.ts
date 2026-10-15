@@ -18,7 +18,9 @@ api.interceptors.request.use(async (config) => {
   if (config.data instanceof FormData) config.headers.delete('Content-Type');
   const state = useAuthStore.getState();
   const financial=config.method==='post'&&/\/retail\/(bills(?:\/amount-sale|\/return)?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(config.url||'');
-  if(financial&&!config.headers['Idempotency-Key']) {
+  const entityCreate=config.method==='post'&&/\/retail\/(?:items(?:\/inline|\/bulk)?|customers|suppliers)$/.test(config.url||'');
+  const intakeConfirm=config.method==='post'&&/\/retail\/account\/intake\/[0-9a-f-]+\/confirm$/.test(config.url||'');
+  if((financial||entityCreate||intakeConfirm)&&!config.headers['Idempotency-Key']) {
     const fingerprint=JSON.stringify([state.user?.id,state.tenantContext?.company_id,state.tenantContext?.branch_id,state.tenantContext?.financial_year_id,config.url,config.data]);
     const identity=await sha256Hex(fingerprint);
     const pending:Record<string,string>=JSON.parse(localStorage.getItem('evolix-pending-writes')||'{}');
@@ -44,8 +46,9 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (response) => { clearPending(response.config);if(['post','patch','put','delete'].includes(response.config.method||'')&&!/\/(?:quote|query)$/.test(response.config.url||''))window.dispatchEvent(new Event('evolix-data-changed'));window.dispatchEvent(new CustomEvent('evolix-api-recovered',{detail:response.config.url}));return response; },
+  (response) => { if((response.config as any).experienceEvent)return response;clearPending(response.config);if(['post','patch','put','delete'].includes(response.config.method||'')&&!/\/(?:quote|query)$/.test(response.config.url||''))window.dispatchEvent(new Event('evolix-data-changed'));window.dispatchEvent(new CustomEvent('evolix-api-recovered',{detail:response.config.url}));return response; },
   (error) => {
+    if(error.config?.experienceEvent)return Promise.reject(error);
     if(error.response?.status>=400&&error.response?.status<500&&error.response?.status!==408)clearPending(error.config);
     if (import.meta.env.DEV) console.error('API request failed', error.config?.method, error.config?.url, error.response?.status || 'NETWORK');
     window.dispatchEvent(new CustomEvent('evolix-api-error', { detail: {message:getApiErrorMessage(error),url:error.config?.url} }));

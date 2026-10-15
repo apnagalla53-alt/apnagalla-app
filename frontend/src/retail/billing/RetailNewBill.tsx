@@ -1,9 +1,10 @@
+import { trackExperience } from '../experience/experienceEvents';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
+import QuickBillCandidate from './QuickBillCandidate';
 import {
   MobileSelect,
   Sheet,
-  SearchField,
   LoadingState,
 } from "../components/MobileControls";
 /**
@@ -19,7 +20,7 @@ import { useBillingPreferences } from '../settings/useBillingPreferences';
 import RetailLineConfigurator from "./RetailLineConfigurator";
 import BillTaxSummary from './BillTaxSummary';
 import {stockWarning} from './stockWarning';
-import UnitPicker, { sellingModeLabel, type RetailUnitChoice } from '../components/UnitPicker';
+import QuickCreateItemSheet from '../experience/QuickCreateItemSheet';
 import api from '../../shared/api';
 import { AttachmentPicker } from "../../shared/components/AttachmentPicker";
 import {
@@ -40,7 +41,7 @@ import {
   Receipt,
 } from "lucide-react";
 
-const RetailNewBill = () => {
+const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
   useUiLanguage();
   const navigate = useNavigate();
   const billingPrefs = useBillingPreferences();
@@ -51,6 +52,7 @@ const RetailNewBill = () => {
   const requestedCustomer = searchParams.get('customer');
   const gstRequested = searchParams.get('gst') === '1';
   useEffect(()=>{if(gstRequested)useBillStore.getState().setGstWorkflow(true);},[gstRequested]);
+  useEffect(()=>{trackExperience('first_bill_started',{workflow:'BILL'});if(useBillStore.getState().items.length)trackExperience('bill_resumed',{workflow:'BILL'});},[]);
   const [customerPrefillLoading, setCustomerPrefillLoading] = useState(false);
   const [customerPrefillError, setCustomerPrefillError] = useState('');
   const [customerPrefillRetry, setCustomerPrefillRetry] = useState(0);
@@ -64,7 +66,7 @@ const RetailNewBill = () => {
       if (!active) return;
       const party = response.data.data.customer;
       if (party.id !== requestedCustomer || party.active === false) throw new Error('Customer unavailable');
-      useBillStore.getState().setCustomer({ ...party, balance: Number(party.outstanding_amount) });
+      useBillStore.getState().setCustomer({ ...party, balance: Number(response.data.data.balance) });
     }).catch(() => { if (active) setCustomerPrefillError('Could not load this customer. Retry or open Khata to choose a customer.'); })
       .finally(() => { if (active) setCustomerPrefillLoading(false); });
     return () => { active = false; };
@@ -108,28 +110,17 @@ const RetailNewBill = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [searchRetry, setSearchRetry] = useState(0);
-  const [quickItem, setQuickItem] = useState(false),
-    [quickPrice, setQuickPrice] = useState(""),
-    [quickSaving, setQuickSaving] = useState(false),
-    [quickError, setQuickError] = useState("");
-  const [quickUnit, setQuickUnit] = useState<RetailUnitChoice>({ code: 'PCS', name: 'Pieces', selling_mode: 'PIECE' });
-  const [quickMode, setQuickMode] = useState('PIECE'), [quickFeatures, setQuickFeatures] = useState<string[]>([]);
+  const [editingCandidate,setEditingCandidate]=useState<import('../retailStore').BillLineItem|null>(null);
+  const [quickItem,setQuickItem]=useState(false),[unknownBarcode,setUnknownBarcode]=useState<string|undefined>();
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [configure, setConfigure] = useState<{
     itemId: string;
     rowId?: string;
+    initialQuantity?:number;
   } | null>(null);
   const [stockDetails,setStockDetails]=useState<Record<string,any>>({}),[draftQuote,setDraftQuote]=useState<any>(null);
-  const stockIds=[...new Set(billItems.map(i=>i.item_id))].sort().join(',');
+  const stockIds=[...new Set(billItems.filter(i=>!i.new_item).map(i=>i.item_id))].sort().join(',');
   useEffect(()=>{let active=true;const ids=stockIds.split(',').filter(Boolean);if(ids.length)void Promise.all(ids.map(async id=>{try{return [id,(await api.get('/retail/items/'+id+'/options')).data] as const;}catch{return [id,null] as const;}})).then(entries=>{if(active)setStockDetails(Object.fromEntries(entries));});return()=>{active=false;};},[stockIds]);
-
-  useEffect(() => {
-    if (!quickItem) return;
-    let active = true;
-    api.get('/retail/account').then(response => { if (active) setQuickFeatures(response.data.features.filter((feature: any) => feature.enabled).map((feature: any) => feature.key)); })
-      .catch(() => { if (active) setQuickError('Could not load shop features. Retry before choosing a measured unit.'); });
-    return () => { active = false; };
-  }, [quickItem]);
 
   // Remove autofocus on mount to prevent keyboard from popping up on mobile
   useEffect(() => {
@@ -148,6 +139,7 @@ const RetailNewBill = () => {
       }
       try {
         const res = await itemApi.getItems(searchQuery, itemOffset);
+        if(searchQuery.trim()&&itemOffset===0){trackExperience('item_search_used',{workflow:'BILL'});if(!res.data.data.length)trackExperience('item_search_no_result',{workflow:'BILL'});}
         if (active) {
           setSearchResults((p) =>
             itemOffset ? [...p, ...res.data.data] : res.data.data,
@@ -205,7 +197,7 @@ const RetailNewBill = () => {
     return undefined;
   }, [customerSearch, showCustomerSheet, customerOffset, customerRetry]);
 
-  const handleAddItem = (item: RetailItem) => {
+  const handleAddItem = (item: RetailItem,quantity=1) => {
     if (
       item.inventory_tracking !== false &&
       item.current_stock <= 0 &&
@@ -220,11 +212,13 @@ const RetailNewBill = () => {
       item.is_bundle ||
       item.has_modifiers ||
       item.has_variants ||
+      item.has_unit_conversions ||
+      item.track_batch ||
       item.track_serial ||
       ["AREA", "VOLUME", "WEIGHT", "LENGTH"].includes(item.selling_mode || "")
     )
-      setConfigure({ itemId: item.id });
-    else addItem(item);
+      setConfigure({ itemId: item.id,initialQuantity:quantity });
+    else addItem(item,quantity);
     setSearchQuery("");
     setShowSearchResults(false);
   };
@@ -246,7 +240,7 @@ const RetailNewBill = () => {
       const exact = billingPrefs.enabled ? matches.filter(item => item.barcode === query) : [];
       if (exact.length === 1) handleAddItem(exact[0]);
       else if (matches.length === 1) handleAddItem(matches[0]);
-      else { setSearchResults(matches); setItemOffset(0); setShowSearchResults(true); }
+      else { setUnknownBarcode(billingPrefs.enabled&&matches.length===0&&/^[0-9]{8,14}$/.test(query)?query:undefined);setSearchResults(matches); setItemOffset(0); setShowSearchResults(true); }
     } catch { setSearchError('Could not load items. Try searching again.'); setShowSearchResults(true); }
     finally { enterLock.current = false; }
   };
@@ -286,13 +280,14 @@ const RetailNewBill = () => {
     <div className="r-stitch-bill-layout" style={{paddingBottom:140}}>
       {/* Header */}
       <StitchHeader className="r-page-header">
-        <h1>{ui(gstRequested ? 'New GST Bill' : 'New Bill')}</h1>
+        <h1>{ui(gstRequested ? 'New GST Bill' : quick ? 'Quick Bill' : 'New Bill')}</h1>
         <div className="r-page-header-action">
           {billItems.length > 0 && (
             <button
               className="r-btn r-btn--ghost r-btn--sm"
               onClick={async () => {
                 try {
+                  if(billItems.some(i=>i.new_item)){navigate("/retail/home");return;}
                   await posApi.holdBill("default-branch", billItems, {
                     customer_id: customer?.id,
                     bill_discount: billDiscount,
@@ -307,7 +302,7 @@ const RetailNewBill = () => {
               }}
               id="hold-bill-btn"
             >
-              <Pause size={16} />{ui("Hold")}</button>
+              <Pause size={16} />{ui(billItems.some(i=>i.new_item)?'Save device draft':'Hold')}</button>
           )}
         </div>
       </StitchHeader>
@@ -366,7 +361,7 @@ const RetailNewBill = () => {
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void enterSearch(); } }}
           value={searchQuery}
           onChange={(e) => {
-            setSearchQuery(e.target.value);
+            setUnknownBarcode(undefined);setSearchQuery(e.target.value);
             setItemOffset(0);
             setShowSearchResults(true);
           }}
@@ -382,22 +377,8 @@ const RetailNewBill = () => {
           Browse
         </button>
       </div>
-      <Sheet
-        open={showSearchResults}
-        onClose={() => setShowSearchResults(false)}
-        title="Choose Item"
-      >
-        <SearchField
-          label="Search bill catalog"
-          placeholder={billingPrefs.enabled ? "Item name, SKU or barcode" : "Item name or SKU"}
-          onEnter={() => void enterSearch()}
-          value={searchQuery}
-          onChange={(s) => {
-            setSearchQuery(s);
-            setItemOffset(0);
-          }}
-          autoFocus
-        />
+      {showSearchResults && <section className={'r-card r-inline-item-picker'+(!searchLoading&&!searchError&&!searchResults.length&&searchQuery.trim()&&!unknownBarcode?' r-inline-item-picker--new':'')} aria-label="Choose Item">
+        <div className="r-section-heading"><h2>Choose Item</h2><button type="button" className="r-btn" onClick={()=>setShowSearchResults(false)}>Close</button></div>
         {searchLoading ? (
           <LoadingState label="Searching items…" />
         ) : searchError ? (
@@ -443,24 +424,10 @@ const RetailNewBill = () => {
           </div>
         )}
         {!searchLoading && !searchError && !searchResults.length && (
-          <div className="r-empty">
-            <h3>No items found</h3>
-            <p>
-              Save this item with just its price or add it to your Need List.
-            </p>
-            {searchQuery.trim() && (
-              <button
-                className="r-btn r-btn--primary"
-                onClick={() => {
-                  setShowSearchResults(false);
-                  setQuickItem(true);
-                  setQuickPrice("");
-                  setQuickError("");
-                  setQuickUnit({ code: 'PCS', name: 'Pieces', selling_mode: 'PIECE' });
-                  setQuickMode('PIECE');
-                }}
-              >{ui("+ Add Item & Bill")}</button>
-            )}
+          <div className={searchQuery.trim()&&!unknownBarcode?'r-new-bill-item':'r-empty'}>
+            {(!searchQuery.trim()||unknownBarcode)&&<><h3>No items found</h3><p>Enter quantity, unit and price below. Stock setup can wait.</p></>}
+            {searchQuery.trim() && !unknownBarcode && <QuickBillCandidate key={searchQuery.trim()} name={searchQuery.trim()} onAdded={()=>{setSearchQuery('');setShowSearchResults(false);}}/>}
+            {searchQuery.trim() && unknownBarcode && <button className="r-btn r-btn--primary" onClick={()=>{setShowSearchResults(false);setQuickItem(true);}}>+ Add & Sell</button>}
             <button
               className="r-btn"
               onClick={() =>
@@ -481,90 +448,10 @@ const RetailNewBill = () => {
             Load More Items
           </button>
         )}
-      </Sheet>
-      {quickItem && (
-        <Sheet
-          open
-          onClose={() => {
-            if (!quickSaving) setQuickItem(false);
-          }}
-          title={"Add " + searchQuery.trim()}
-        >
-          <p>
-            Save this item and add it to the bill. You can count stock later
-            through Buy Stock.
-          </p>
-          <form
-            onSubmit={async (event) => {
-              event.preventDefault();
-              if (quickSaving) return;
-              setQuickSaving(true);
-              setQuickError("");
-              try {
-                const response = await itemApi.createItem({
-                  name: searchQuery.trim(),
-                  selling_price: Number(quickPrice),
-                  inventory_tracking: false,
-                  unit_code: quickUnit.code, unit_name: quickUnit.name, selling_mode: quickMode,
-                });
-                handleAddItem(response.data.data);
-                setQuickItem(false);
-              } catch {
-                setQuickError(
-                  "Could not save this item. Check your connection and try again.",
-                );
-              } finally {
-                setQuickSaving(false);
-              }
-            }}
-          >
-            <label htmlFor="quick-item-price">{ui("Selling price (₹)")}</label>
-            <input
-              autoFocus
-              id="quick-item-price"
-              className="r-input"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              value={quickPrice}
-              onChange={(e) => setQuickPrice(e.target.value)}
-            />
-            <p className="r-caption">
-              Stock: not counted. No stock quantity is invented by this bill.
-            </p>
-            <details className="r-card">
-              <summary>Unit &amp; quantity</summary>
-              <p className="r-caption">Default: pieces. Choose kilograms, metres, square feet, packs or your own unit before billing.</p>
-              <label htmlFor="quick-item-unit">{ui("Unit")}</label>
-              <UnitPicker id="quick-item-unit" value={quickUnit.code} disabled={quickSaving} allowedModes={['PIECE', ...quickFeatures]} onChange={choice => {
-                setQuickUnit(choice); setQuickMode(choice.selling_mode && quickFeatures.includes(choice.selling_mode) ? choice.selling_mode : 'PIECE');
-              }} />
-              <label htmlFor="quick-item-mode">{ui("Sold by")}</label>
-              <MobileSelect id="quick-item-mode" value={quickMode} disabled={quickSaving} onChange={event => setQuickMode(event.target.value)}>
-                <option value="PIECE">{ui("Whole pieces / packs")}</option>
-                {['WEIGHT', 'LENGTH', 'AREA', 'VOLUME'].filter(mode => quickFeatures.includes(mode)).map(mode => <option key={mode} value={mode}>{sellingModeLabel(mode, quickUnit.code)}</option>)}
-              </MobileSelect>
-              <p className="r-caption">Weight and length accept decimal quantities. Area and volume use measurements. Advanced modes follow your shop features.</p>
-            </details>
-            {quickError && <p role="alert">{quickError}</p>}
-            <div className="r-form-grid">
-              <button
-                className="r-btn r-btn--outline"
-                type="button"
-                disabled={quickSaving}
-                onClick={() => setQuickItem(false)}
-              >{ui("Cancel")}</button>
-              <button
-                className="r-btn r-btn--primary"
-                disabled={quickSaving || !searchQuery.trim()}
-              >
-                {quickSaving ? ui("Saving…") : ui("Save & Add to Bill")}
-              </button>
-            </div>
-          </form>
-        </Sheet>
-      )}{" "}
+      </section>}
+      {quickItem&&<QuickCreateItemSheet name={unknownBarcode?'':searchQuery.trim()} barcode={unknownBarcode} onClose={()=>setQuickItem(false)} onCreated={({item,quantity})=>{handleAddItem(item,quantity);setQuickItem(false);setUnknownBarcode(undefined);}}/>}
+      {editingCandidate&&<Sheet open onClose={()=>setEditingCandidate(null)} title="Edit bill item"><QuickBillCandidate name={editingCandidate.name} existing={editingCandidate} onAdded={()=>setEditingCandidate(null)}/></Sheet>}
+      {quick&&<button type="button" className="r-btn r-btn--outline" onClick={()=>navigate("/retail/amount-sale")}>Amount-only sale</button>}
       {/* Bill Items */}
 
       <div className="r-section">
@@ -595,7 +482,7 @@ const RetailNewBill = () => {
                 <button
                   className="r-btn r-btn--sm"
                   onClick={() =>
-                    setConfigure({ itemId: item.item_id, rowId: item.row_id })
+                    item.new_item ? setEditingCandidate(item) : setConfigure({ itemId: item.item_id, rowId: item.row_id })
                   }
                 >{ui("Edit line")}</button>
                 <div className="r-bill-item-price">
@@ -607,7 +494,7 @@ const RetailNewBill = () => {
                   )}
                 </div>
                 {Number(item.tax_rate)>0&&<p className="r-caption">Tax Exclusive · GST {item.tax_rate}% added</p>}
-                {stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))&&<p className="r-text-danger" role="alert">{stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))}</p>}
+                {stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))&&<p className="r-text-danger" role="alert" data-tone="warning">{stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))}</p>}
               </div>
               <div className="r-bill-item-right">
                 <div className="r-bill-item-total">
@@ -723,6 +610,7 @@ const RetailNewBill = () => {
         <RetailLineConfigurator
           itemId={configure.itemId}
           existing={billItems.find((i) => i.row_id === configure.rowId)}
+          initialQuantity={configure.initialQuantity}
           close={() => setConfigure(null)}
         />
       )}
@@ -749,7 +637,6 @@ const RetailNewBill = () => {
                   setCustomerOffset(0);
                 }}
                 id="customer-search-input"
-                autoFocus
               />
 
               {/* Walk-in option */}
@@ -854,7 +741,6 @@ const RetailNewBill = () => {
                   placeholder="Enter customer name"
                   value={newCustomerName}
                   onChange={(e) => setNewCustomerName(e.target.value)}
-                  autoFocus
                   id="new-customer-name"
                 />
               </div>

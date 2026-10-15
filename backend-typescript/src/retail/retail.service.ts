@@ -33,7 +33,7 @@ export class RetailService {
     const paging = page(query);
     const stockStatus = query.stock_status;
     if (stockStatus && !['all', 'low', 'out'].includes(stockStatus)) throw new BadRequestException('Unknown stock status');
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -71,7 +71,7 @@ export class RetailService {
         primary_unit: true,
         tax_class: true,
         barcodes: { where: { is_primary: true, is_active: true } },
-        _count: { select: { modifier_groups: true } },
+        _count: { select: { modifier_groups: true, unit_conversions: true } },
         stock_balance_projection: {
           where: { company_id: companyId }
         }
@@ -118,6 +118,7 @@ export class RetailService {
         track_serial: item.track_serial,
         is_bundle: item.is_bundle,
         has_modifiers: item._count.modifier_groups > 0,
+        has_unit_conversions: item._count.unit_conversions > 0,
         warranty_days: item.warranty_days,
         item_type: item.item_type, inventory_tracking: item.inventory_tracking,
         primary_unit_id: item.primary_unit_id,
@@ -233,10 +234,11 @@ export class RetailService {
           document_number: 'OS-RETAIL-' + uuidv4(), document_date: date, narration: 'Retail opening stock',
           lines: [{ item_id: item.id, godown_id: godown.id, unit_id: unit.id, quantity: dto.opening_stock!, cost_rate: dto.skip_opening_cost ? null : dto.opening_cost ?? dto.purchase_price ?? null }] }, userId, tx);
       }
+      await tx.auditLog.create({data:{company_id:companyId,branch_id:branchId,user_id:userId,action:'RETAIL_ITEM_CREATED',source_document_type:'Item',source_document_id:item.id}});
       return item.id;
     };
     const itemId = suppliedTx ? await create(suppliedTx) : await this.prisma.$transaction(create, { timeout: 15000 });
-    return this.itemSummary(await (suppliedTx || this.prisma).item.findFirstOrThrow({where:{id:itemId,company_id:companyId},include:{primary_unit:true,tax_class:true,barcodes:{where:{is_primary:true,is_active:true}},_count:{select:{modifier_groups:true}},stock_balance_projection:{where:{company_id:companyId}}}}));
+    return this.itemSummary(await (suppliedTx || this.prisma).item.findFirstOrThrow({where:{id:itemId,company_id:companyId},include:{primary_unit:true,tax_class:true,barcodes:{where:{is_primary:true,is_active:true}},_count:{select:{modifier_groups:true,unit_conversions:true}},stock_balance_projection:{where:{company_id:companyId}}}}));
   }
 
   async updateItem(companyId: string, itemId: string, dto: Partial<UpdateRetailItemDto>, userId?:string) {
@@ -372,6 +374,7 @@ export class RetailService {
         await tx.billAllocation.create({ data: { company_id: companyId, party_id: party.id, voucher_line_id: voucher.lines.find(l => l.party_id === party.id)!.id,
           reference_document_type: 'OPENING_BALANCE', reference_document_id: voucher.id, allocation_type: 'NEW_REFERENCE', amount: dto.opening_balance! } });
       }
+      if(context)await tx.auditLog.create({data:{company_id:companyId,branch_id:context.branchId,user_id:context.userId,action:'RETAIL_'+type+'_CREATED',source_document_type:'Party',source_document_id:party.id}});
       return { ...party, mobile: party.phone, active: party.is_active, outstanding_amount: dto.opening_balance || 0 };
     };
     return suppliedTx ? create(suppliedTx) : this.prisma.$transaction(create);
@@ -484,7 +487,7 @@ export class RetailService {
       include: { customer: { select: { name: true } }, preferred_supplier: { select: { name: true } } },
       orderBy: { created_at: 'desc' }
     });
-    
+
     const attachments = await this.prisma.attachment.findMany({
       where: { company_id: companyId, entity_type: 'NEED',entity_id:{in:needs.map(n=>n.id)} },
       select: { entity_id: true, id: true, mime_type: true }

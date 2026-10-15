@@ -26,7 +26,18 @@ export class AddVariantDto {
   @IsOptional() @IsString() @MinLength(1) @MaxLength(100) sku?: string;
   @IsOptional() @IsNumber() @Min(0) @Max(10000000) default_sale_rate?: number;
 }
+export class SetupVariantsDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(100) @ValidateNested({each:true}) @Type(()=>AddVariantDto) variants: AddVariantDto[];
+}
 export class AddConversionDto {
   @IsString() @Matches(/^[A-Z][A-Z0-9_]{0,19}$/) unit_code: string;
   @IsNumber() @Min(0.000001) @Max(1000000) conversion_factor: number;
+  @IsOptional() @IsNumber() @Min(0) @Max(10000000) selling_price?: number;
+}
+class UnitPriceDto {
+  @IsUUID() unit_id: string;
+  @IsNumber() @Min(0) @Max(10000000) selling_price: number;
+}
+export class UnitPricesDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(50) @ValidateNested({each:true}) @Type(()=>UnitPriceDto) prices:UnitPriceDto[];
 }

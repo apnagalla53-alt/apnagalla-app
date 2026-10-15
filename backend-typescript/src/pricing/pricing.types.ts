@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 
 export interface PricingContext {
+  unitId?: string;
   branchId?: string;
   documentDate?: Date | string;
   customerType?: string;

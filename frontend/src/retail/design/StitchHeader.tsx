@@ -5,13 +5,13 @@ import { ui, useUiLanguage } from '../../i18n';
 import DrawerMenuButton from '../components/DrawerMenuButton';
 
 /** Shared back/title composition; the shop menu keeps every module reachable. */
-export default function StitchHeader({children, className='r-page-header', hasBack=false, trailing, ...props}: {
-  children: ReactNode; className?: string; hasBack?: boolean; id?: string;trailing?:ReactNode;
+export default function StitchHeader({children, className='r-page-header', hasBack=false, trailing, onBack, ...props}: {
+  children: ReactNode; className?: string; hasBack?: boolean; id?: string;trailing?:ReactNode;onBack?:()=>void;
 }) {
   useUiLanguage();
   const navigate=useNavigate();
   return <header {...props} className={className+' r-stitch-header'}>
-    {!hasBack&&<button type="button" className="r-btn r-btn--icon r-back-btn" aria-label={ui('Back')} onClick={()=>navigate('/retail/home')}><ArrowLeft size={24}/></button>}
+    {!hasBack&&<button type="button" className="r-btn r-btn--icon r-back-btn" aria-label={ui('Back')} onClick={()=>onBack?onBack():navigate('/retail/home')}><ArrowLeft size={24}/></button>}
     {children}
     {trailing??<DrawerMenuButton className="r-stitch-account" size={18} />}
   </header>;

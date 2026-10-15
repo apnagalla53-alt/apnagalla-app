@@ -1,3 +1,4 @@
+const RetailIntake = lazy(() => import('./retail/intake/RetailIntake'));
 import { lazy, Suspense } from 'react';
 import RetailErrorBoundary from './retail/RetailErrorBoundary';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -58,6 +59,7 @@ const BarcodeLabels = lazy(() => import('./pages/Inventory/BarcodeLabels'));
 const PlatformDashboard = lazy(() => import('./admin/platform/PlatformDashboard'));
 const PlatformAccountPolicy = lazy(() => import('./admin/platform/PlatformAccountPolicy'));
 const PlatformReferrals = lazy(() => import('./admin/platform/PlatformReferrals'));
+const PlatformActivationCampaigns = lazy(() => import('./admin/platform/PlatformActivationCampaigns'));
 const PlatformDeletionJobs = lazy(() => import('./admin/platform/PlatformDeletionJobs'));
 const RetailReferrals = lazy(() => import('./retail/settings/RetailReferrals'));
 const PlatformTenants = lazy(() => import('./admin/platform/PlatformTenants'));
@@ -89,6 +91,7 @@ const RetailHeldBills = lazy(() => import('./retail/billing/RetailHeldBills'));
 const RetailPayment = lazy(() => import('./retail/billing/RetailPayment'));
 const RetailSaleComplete = lazy(() => import('./retail/billing/RetailSaleComplete'));
 const RetailItems = lazy(() => import('./retail/RetailItems'));
+const BulkItemEditor = lazy(() => import('./retail/experience/BulkItemEditor'));
 const RetailAddItem = lazy(() => import('./retail/RetailAddItem'));
 const RetailItemDetail = lazy(() => import('./retail/RetailItemDetail'));
 const RetailAddCustomer = lazy(() => import('./retail/RetailAddCustomer'));
@@ -161,7 +164,7 @@ function App() {
   return (
     <Router>
       <BrowserSessionBootstrap>
-      <RetailErrorBoundary><Suspense fallback={<main className="r-section" role="status">Loading EVOLIX…</main>}>
+      <RetailErrorBoundary><Suspense fallback={<main className="r-section" role="status">Loading Apna Galla…</main>}>
       <Routes>
         {/* ── Public ──────────────────────────────────── */}
         <Route path="/login" element={<AccountAccess />} />
@@ -197,6 +200,7 @@ function App() {
           <Route path="subscriptions" element={<PlatformPayments />} />
           <Route path="account-policy" element={<PlatformAccountPolicy />} />
           <Route path="referrals" element={<PlatformReferrals />} />
+          <Route path="activation-campaigns" element={<PlatformActivationCampaigns />} />
           <Route path="deletion-jobs" element={<PlatformDeletionJobs />} />
           <Route path="revenue" element={<PlatformPayments />} />
           <Route path="expenses" element={<PlatformExpenses />} />
@@ -258,16 +262,19 @@ function App() {
           <Route path="sale-complete" element={<RetailSaleComplete />} />
           <Route path="items" element={<RetailItems />} />
           <Route path="items/add" element={<RetailAddItem />} />
+          <Route path="items/add-faster" element={<RetailIntake />} />
+          <Route path="items/bulk" element={<BulkItemEditor />} />
           <Route path="items/:id" element={<RetailItemDetail />} />
           <Route path="customers/add" element={<RetailAddCustomer />} />
           <Route path="khata" element={<RetailKhata />} />
           <Route path="khata/:id" element={<RetailKhataDetail />} />
           <Route path="receive-payment" element={<RetailReceivePayment />} />
           <Route path="pay-supplier" element={<RetailPaySupplier />} />
-          <Route path="quick-sale" element={<RetailAmountSale />} />
+          <Route path="quick-sale" element={<RetailNewBill quick />} />
+          <Route path="amount-sale" element={<RetailAmountSale />} />
           <Route path="udhar" element={<RetailAmountSale udhar />} />
           <Route path="more" element={<RetailMore />} />
-          
+
           {/* Phase 2 Routes */}
           <Route path="needs" element={<RetailNeeds />} />
           <Route path="suppliers" element={<RetailSuppliers />} />
@@ -275,11 +282,11 @@ function App() {
           <Route path="suppliers/:id/pay" element={<RetailPaySupplier />} />
           <Route path="purchases" element={<RetailPurchases />} />
           <Route path="purchases/new" element={<RetailAddPurchase />} />
-          
+
           {/* Phase 3 Routes */}
           <Route path="expenses" element={<RetailExpenses />} />
           <Route path="expenses/add" element={<RetailAddExpense />} />
-          
+
           {/* Phase 5 Routes */}
           <Route path="reports" element={<RetailReports />} />
           <Route path="reports/sales" element={<RetailSalesReport />} />
@@ -315,7 +322,7 @@ function App() {
           }
         >
           <Route index element={<Navigate to="/retail/home" replace />} />
-          
+
           {/* Masters */}
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />

@@ -24,6 +24,6 @@ import { EntitlementService } from '../common/entitlement.service';
         process.env.STORAGE_PROVIDER==='cloudinary'?cloudinary:process.env.STORAGE_PROVIDER==='s3'?s3:local,
     }
   ],
-  exports: [AttachmentsService, LocalStorageService],
+  exports: [AttachmentsService, LocalStorageService,'StorageService'],
 })
 export class AttachmentsModule {}

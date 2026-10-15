@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { AuthEmailService } from './auth-email.service';
-import { validatePassword } from './password-policy';
+import { validateAccountPassword } from './staff-policy';
 import { throttleSensitiveAuth } from './sensitive-auth-throttle';
 import { auditIdentityChange } from './auth-audit';
 
@@ -40,14 +40,14 @@ export class PasswordLifecycleService {
 
   async resetPassword(token: string, password: string, ip = 'local') {
     await throttleSensitiveAuth('reset-consume:' + ip, 20);
-    validatePassword(password);
     return this.prisma.$transaction(async tx => {
       const now = new Date();
       const record = await tx.authToken.findUnique({ where: { token_hash: authTokenHash(token) } });
       if (!record?.user_id || record.purpose !== 'PASSWORD_RESET' || record.used_at || record.expires_at <= now) throw new BadRequestException('This reset link expired or has already been used. Request a new link.');
       await tx.$queryRaw`SELECT id FROM users WHERE id=${record.user_id}::uuid FOR UPDATE`;
-      const user = await tx.user.findUnique({ where: { id: record.user_id } });
+      const user = await tx.user.findUnique({ where: { id: record.user_id }, include:{roles:{include:{role:true}}} });
       if (!user?.is_active) throw new BadRequestException('This reset link is invalid.');
+      validateAccountPassword(user, password);
       const consumed = await tx.authToken.updateMany({ where: { id: record.id, used_at: null, expires_at: { gt: now } }, data: { used_at: now } });
       if (consumed.count !== 1) throw new BadRequestException('This reset link expired or has already been used. Request a new link.');
       await this.ensureUnusedPassword(tx, user.id, user.password_hash, password);
@@ -59,11 +59,11 @@ export class PasswordLifecycleService {
 
   async changePassword(userId: string, currentPassword: string, password: string) {
     await throttleSensitiveAuth('change-password:' + userId, 10);
-    validatePassword(password);
     return this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id=${userId}::uuid FOR UPDATE`;
-      const user = await tx.user.findUnique({ where: { id: userId } });
+      const user = await tx.user.findUnique({ where: { id: userId }, include:{roles:{include:{role:true}}} });
       if (!user?.is_active || !await bcrypt.compare(currentPassword, user.password_hash)) throw new BadRequestException('Current password is incorrect.');
+      validateAccountPassword(user, password);
       await this.ensureUnusedPassword(tx, user.id, user.password_hash, password);
       await this.replacePassword(tx, user.id, user.password_hash, password, new Date());
       await auditIdentityChange(tx, user.id, 'PASSWORD_CHANGE');

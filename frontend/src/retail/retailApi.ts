@@ -19,6 +19,7 @@ const envelope = async <T>(request: Promise<{ data: T }>) => {
 
 // ── TYPES ─────────────────────────────────────────────────────────
 export interface RetailItem {
+  has_unit_conversions?: boolean;
   image?: { id: string } | null;
   inventory_tracking?: boolean;
   primary_unit_id?: string;
@@ -99,7 +100,7 @@ export const posApi = {
   },
 
   postSale: async (payload: {
-    items: Array<{ item_id: string; variant_id?: string; batch_id?: string; unit_id?: string; dimensions?: any; serial_ids?: string[]; modifier_option_ids?: string[]; quantity: number; rate: number; discount_amount: number }>;
+    items: Array<{ item_id?: string; new_item?: import('./retailStore').BillLineItem['new_item']; variant_id?: string; batch_id?: string; unit_id?: string; dimensions?: any; serial_ids?: string[]; modifier_option_ids?: string[]; quantity: number; rate: number; discount_amount: number }>;
     customer_id?: string;
     payment_splits: Array<{ method: string; amount: number }>;
     total_amount: number;

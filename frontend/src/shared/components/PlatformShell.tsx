@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Navigate } from 'react-router-dom';
+import { Outlet, NavLink, Navigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, LogOut, Server, Users, CreditCard, Shield,
   Settings, FileText, HeartPulse, ChevronLeft, Menu,MessageCircle
@@ -6,8 +6,12 @@ import {
 import { useAuthStore } from '../store/authStore';
 import api from '../api';
 import { useState } from 'react';
+import { workflowFor, workflowStyle } from '../workflowTheme';
+import WorkflowBanner from './WorkflowBanner';
+import '../workflow-theme.css';
 
 const PlatformShell = () => {
+  const workflow=workflowFor(useLocation().pathname);
   const { user, logout } = useAuthStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -32,6 +36,7 @@ const PlatformShell = () => {
     { to: '/platform/plans', icon: CreditCard, label: 'Plans' },
     { to: '/platform/account-policy', icon: Settings, label: 'Accounts & trial policy' },
     { to: '/platform/referrals', icon: Users, label: 'Referral program' },
+    { to: '/platform/activation-campaigns', icon: CreditCard, label: 'Demo activation codes' },
     { to: '/platform/deletion-jobs', icon: Shield, label: 'Tenant erasure jobs' },
     { to: '/platform/features', icon: Shield, label: 'Features & rollout' },
     { to: '/platform/payments', icon: CreditCard, label: 'Subscriptions & revenue' },
@@ -48,7 +53,7 @@ const PlatformShell = () => {
   ];
 
   return (
-    <div className="app-container">
+    <div className="app-container workflow-surface" data-workflow={workflow.key} style={workflowStyle(workflow)}>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />
@@ -60,7 +65,7 @@ const PlatformShell = () => {
             <Shield size={22} className="brand-icon-svg" />
             {!sidebarCollapsed && (
               <div className="brand-text">
-                <span className="brand-name-text">EVOLIX</span>
+                <span className="brand-name-text">Apna Galla</span>
                 <span className="brand-sub">Platform</span>
               </div>
             )}
@@ -131,7 +136,7 @@ const PlatformShell = () => {
         </header>
 
         <div className="page-content">
-          <Outlet />
+          <WorkflowBanner workflow={workflow}/><Outlet />
         </div>
       </main>
     </div>

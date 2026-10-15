@@ -104,7 +104,7 @@ describe('Tenant administration: real CRUD, devices, RBAC and cross-tenant attac
   });
 
   it('creates staff with a temporary password, company membership and no verified-email claim', async () => {
-    staff = (await call('post', 'users').send({ username: 'staff-' + suffix, password: staffPassword, display_name: 'Counter Staff', email: 'unverified-' + suffix + '@test.invalid', roles: [customRole.id] }).expect(201)).body;
+    staff = (await call('post', 'users').send({ username: 'staff-' + suffix, phone:'9'+String(suffix).slice(-9), password: staffPassword, display_name: 'Counter Staff', email: 'unverified-' + suffix + '@test.invalid', roles: [customRole.id] }).expect(201)).body;
     expect(staff.password_hash).toBeUndefined(); expect(staff.roles[0].id).toBe(customRole.id);
     const record = await db.user.findUnique({ where: { id: staff.id } });
     expect(record?.must_change_password).toBe(true); expect(record?.temporary_password_expires_at).toBeInstanceOf(Date); expect(record?.email_verified_at).toBeNull();

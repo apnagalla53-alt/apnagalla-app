@@ -46,11 +46,23 @@ export class RetailCalendarController {
     if(!/^\d{4}-\d{2}$/.test(month||''))throw new BadRequestException('Use YYYY-MM');
     const from=dateOf(month+'-01'),to=new Date(from);to.setUTCMonth(to.getUTCMonth()+1);
     const scope={company_id:req.user.company_id,branch_id:req.user.branch_id};
-    const [suppliers,receivables,payables,tasks]=await Promise.all([
+    const [suppliers,receivables,payables,tasks,sales]=await Promise.all([
       this.db.party.findMany({where:{company_id:scope.company_id,party_type:'SUPPLIER',is_active:true,visit_date:{not:null,lte:new Date(to.getTime()-1)}},select:{id:true,name:true,visit_date:true,visit_cycle:true},take:1001,orderBy:{id:'asc'}}),
       this.db.salesInvoice.findMany({where:{...scope,status:'POSTED',outstanding_amount:{gt:0},due_date:{gte:from,lt:to}},select:{id:true,document_number:true,due_date:true,outstanding_amount:true,party:{select:{name:true}}},take:1001,orderBy:{due_date:'asc'}}),
       this.db.purchaseInvoice.findMany({where:{...scope,status:'POSTED',outstanding_amount:{gt:0},due_date:{gte:from,lt:to}},select:{id:true,document_number:true,due_date:true,outstanding_amount:true,party:{select:{name:true}}},take:1001,orderBy:{due_date:'asc'}}),
       this.db.retailCalendarTask.findMany({where:{...scope,date:{gte:from,lt:to}},orderBy:{date:'asc'},take:1001}),
+      // Filter original credit before applying the safety limit, so cash bills
+      // cannot push a later Udhar bill out of the calendar.
+      this.db.$queryRaw<any[]>`SELECT si.id,si.document_number,si.document_date,si.due_date,
+        si.grand_total,si.outstanding_amount,si.payment_snapshot,jsonb_build_object('name',p.name) AS party
+        FROM sales_invoices si JOIN parties p ON p.id=si.party_id AND p.company_id=si.company_id
+        WHERE si.company_id=${scope.company_id}::uuid AND si.branch_id=${scope.branch_id}::uuid
+          AND si.status='POSTED' AND si.document_date>=${from} AND si.document_date<${to}
+          AND (CASE WHEN jsonb_typeof(si.payment_snapshot)='array'
+            THEN si.grand_total-COALESCE((SELECT SUM((payment->>'amount')::numeric)
+              FROM jsonb_array_elements(si.payment_snapshot) payment),0)
+            ELSE si.outstanding_amount END)>0
+        ORDER BY si.document_date,si.id LIMIT 1001`,
     ]);
     const visits:any[]=[];
     for(const s of suppliers.slice(0,1000)){
@@ -62,10 +74,15 @@ export class RetailCalendarController {
         if(occurs)visits.push({id:s.id+'-'+d.toISOString().slice(0,10),party_id:s.id,title:s.name,date:d.toISOString().slice(0,10),cycle:s.visit_cycle});
       }
     }
-    return {month,visits,receivables:receivables.slice(0,1000),payables:payables.slice(0,1000),tasks:tasks.slice(0,1000),
+    const credit_sales=sales.slice(0,1000).map(sale=>{
+      const paid=Array.isArray(sale.payment_snapshot)?sale.payment_snapshot.reduce((sum:number,p:any)=>sum+Number(p.amount||0),0):null;
+      const credit=paid===null?Number(sale.outstanding_amount):Math.max(0,Number(sale.grand_total)-paid);
+      return {...sale,payment_snapshot:undefined,date:sale.document_date,credit_amount:Math.round(credit*100)/100};
+    }).filter(sale=>sale.credit_amount>0);
+    return {month,visits,credit_sales,receivables:receivables.slice(0,1000),payables:payables.slice(0,1000),tasks:tasks.slice(0,1000),
       holidays:HOLIDAYS_2026.filter(([date])=>date.startsWith(month)).map(([date,title])=>({date,title})),
       holiday_notice:month.startsWith('2026-')?'Selected national holidays for 2026. State/local dates and lunar observances may differ.':'Holiday dates have not been published in EVOLIX for this year. Your business reminders still work.',
-      holiday_source:'https://www.indiapost.gov.in/holidays-list',truncated:[suppliers,receivables,payables,tasks].some(rows=>rows.length>1000)};
+      holiday_source:'https://www.indiapost.gov.in/holidays-list',truncated:[suppliers,receivables,payables,tasks,sales].some(rows=>rows.length>1000)};
   }
   @Post('calendar/tasks') @RequirePermissions('sales.write')
   createTask(@Req() req:any,@Body() dto:TaskDto){

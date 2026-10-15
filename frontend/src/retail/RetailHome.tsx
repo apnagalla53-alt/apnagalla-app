@@ -1,66 +1,77 @@
-import { readReport } from './reports/reportReads';
-import { ui, useUiLanguage } from '../i18n';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Wallet, EyeOff, ChevronRight, ArrowRight, Receipt, Banknote, Mic, ClipboardList, AlertTriangle, Package } from 'lucide-react';
-import { getApiErrorMessage } from '../shared/api';
+import { ArrowRight, BookOpen, Eye, EyeOff, PackagePlus, Receipt, ShoppingCart, Sparkles, UserPlus, Users, Wallet } from 'lucide-react';
+import { ui, useUiLanguage } from '../i18n';
 import { useAuthStore } from '../shared/store/authStore';
+import { getApiErrorMessage } from '../shared/api';
 import { reportsApi } from './retailApi';
-import RetailHomeTools from './components/RetailHomeTools';
+import { readReport } from './reports/reportReads';
+import { useRetailEntitlements } from './subscription/useRetailEntitlements';
+import { QuickAccessEditor, useQuickAccess } from './components/QuickAccess';
 import { LoadingState } from './components/MobileControls';
-import { LedgerMetric } from './design/StitchComponents';
-import './assistant/assistant.css';
-import './design/stitch-home.css';
-import {useRetailEntitlements} from './subscription/useRetailEntitlements';
+import RetailHomeTools from './components/RetailHomeTools';
+import { GettingStartedCard, MetricCard, PrimaryActionCard, RecommendationCard } from './experience/ExperienceComponents';
+import { useHomeExperience } from './experience/useHomeExperience';
+import SuggestionCard from './experience/SuggestionCard';
+import './experience/experience-layout.css';
 
-const periods = [['TODAY','Today'],['YESTERDAY','Yesterday'],['WEEK','This Week'],['MONTH','This Month']];
+const shopDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 export default function RetailHome() {
-  useUiLanguage();
-  const access=useRetailEntitlements();
-  const profitEnabled=access.isFeatureEffective('PROFIT_REPORTING');
-  const user=useAuthStore(s=>s.user), tenant=useAuthStore(s=>s.tenantContext), navigate=useNavigate();
-  const [dashboard,setDashboard]=useState<any>(null),[profit,setProfit]=useState<any>(null),[galla,setGalla]=useState<any>(null);
-  const [loading,setLoading]=useState(true),[range,setRange]=useState('TODAY'),[error,setError]=useState(''),[profitError,setProfitError]=useState(''),[gallaError,setGallaError]=useState('');
-  const [retry,setRetry]=useState(0),[privateTotals,setPrivateTotals]=useState(false);
-  const money=(value:number)=>privateTotals?'••••':'₹'+Number(value).toLocaleString('en-IN');
-  useEffect(()=>{
-    let active=true;
-    const from=new Date(),to=new Date();
-    if(range==='YESTERDAY'){from.setDate(from.getDate()-1);to.setDate(to.getDate()-1);}
-    if(range==='WEEK')from.setDate(from.getDate()-((from.getDay()+6)%7));
-    if(range==='MONTH')from.setDate(1);
-    const filters={from:from.toLocaleDateString('en-CA'),to:to.toLocaleDateString('en-CA')};
-    setLoading(true);setError('');setDashboard(null);setProfit(null);setProfitError('');
-    reportsApi.getDashboard(filters).then(r=>{if(active)setDashboard(r.data);}).catch(e=>{if(active)setError(getApiErrorMessage(e));}).finally(()=>{if(active)setLoading(false);});
-    const permitted=['OWNER','ADMIN','TENANT_ADMIN'].includes(user?.role||'')||user?.permissions?.includes('reports.read');
-    if(permitted&&profitEnabled)readReport('/retail/reports/financial/summary',filters).then(r=>{if(active)setProfit(r.data);}).catch(e=>{if(active&&e.response?.status!==403)setProfitError('Profit summary could not load. Open Reports to retry.');});
-    return()=>{active=false;};
-  },[range,retry,tenant?.company_id,user?.id,profitEnabled]);
-  useEffect(()=>{
-    let active=true;setGalla(null);setGallaError('');
-    readReport('/retail/galla',{date:new Date().toLocaleDateString('en-CA')}).then(r=>{if(active)setGalla(r.data);}).catch(e=>{if(active)setGallaError(getApiErrorMessage(e));});
-    return()=>{active=false;};
-  },[tenant?.company_id,retry]);
-  const actions=[
-    {id:'qa-customer-payment',title:'Customer Paid Me',desc:'Collect an old due',path:'/retail/receive-payment',Icon:Banknote},
-    {id:'qa-add-purchase',title:'Buy Stock',desc:'Buy stock',path:'/retail/purchases/new',Icon:ShoppingCart},
-    {id:'qa-add-expense',title:'Add Expense',desc:'Record money out',path:'/retail/expenses/add',Icon:Wallet},
-    {id:'qa-needs',title:'Mangwana Hai',desc:'Add to Need List',path:'/retail/needs',Icon:ClipboardList},
-  ];
-  return <div className="r-stitch-home r-home-refresh">
-    <nav className="r-home-periods" aria-label={ui('Summary period')}>{periods.map(([key,label])=><button key={key} aria-pressed={range===key} className={range===key?'active':''} onClick={()=>setRange(key)}>{ui(label)}</button>)}</nav>
-    <div className="r-home-bill-tray"><button id="qa-new-bill" onClick={()=>navigate('/retail/bill')}><span className="r-home-bill-icon"><Receipt size={26} aria-hidden="true"/></span><span><strong>{ui('Make Bill')}</strong><small>{ui('Sell items')}</small></span></button><button id="qa-quick-sale" aria-label={ui('Quick Sale')} onClick={()=>navigate('/retail/quick-sale')}>{ui('Quick')}<ArrowRight size={20} aria-hidden="true"/></button></div>
-    {error&&<div className="r-state-message" role="alert"><p>{error}</p><button className="r-btn r-btn--outline" onClick={()=>setRetry(n=>n+1)}>{ui('Try Again')}</button></div>}
+ useUiLanguage();
+ const navigate=useNavigate(),user=useAuthStore(s=>s.user),tenant=useAuthStore(s=>s.tenantContext),access=useRetailEntitlements(),quick=useQuickAccess();
+ const [retry,setRetry]=useState(0),[editing,setEditing]=useState(false),[hidden,setHidden]=useState(false),[question,setQuestion]=useState('');
+ const experience=useHomeExperience(retry),data=experience.data,isNew=data?.maturity==='NEW';
+ const [dashboard,setDashboard]=useState<any>(null),[galla,setGalla]=useState<any>(null),[error,setError]=useState(''),[loading,setLoading]=useState(false);
+ const owner=['OWNER','ADMIN','TENANT_ADMIN'].includes(user?.role||''),can=(p:string)=>owner||!!user?.permissions?.includes(p);
+ const canMoney=can('accounting.read'),canSummary=can('reports.read');
+ useEffect(()=>{let alive=true;setDashboard(null);setGalla(null);setError('');setLoading(false);
+  if(!data||data.maturity==='NEW')return()=>{alive=false;};
+  const date=shopDate();setLoading(true);
+  const requests:Promise<unknown>[]=[];
+  if(canSummary)requests.push(reportsApi.getDashboard({from:date,to:date}).then(r=>{if(alive)setDashboard(r.data);}));
+  if(canMoney&&access.isFeatureEffective('DAILY_GALLA'))requests.push(readReport('/retail/galla',{date}).then(r=>{if(alive)setGalla(r.data);}));
+  Promise.all(requests).catch(e=>{if(alive)setError(getApiErrorMessage(e));}).finally(()=>{if(alive)setLoading(false);});return()=>{alive=false;};
+ },[data?.maturity,retry,tenant?.company_id,tenant?.branch_id,canMoney,canSummary,access.isFeatureEffective('DAILY_GALLA')]);
+ const money=(value:unknown)=>hidden?'••••':'₹'+Number(value).toLocaleString('en-IN',{maximumFractionDigits:2});
+ const name=(user as any)?.name||(user as any)?.display_name||ui('Shopkeeper'),hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',hourCycle:'h23'}).format(new Date())),greeting=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+ const ask=(q:string)=>navigate('/retail/assistant'+(q?'?q='+encodeURIComponent(q):''));
+ const canAsk=access.isFeatureEffective('ASSISTANT_TEXT');
+ const assistantFeature=access.data?.entitlements.features.find(f=>/ASSISTANT/.test(f.code)&&f.enabled);
+ const makeBill=()=>navigate('/retail/bill');
+ const actions=<>
+   <section aria-label={ui('Shop actions')} className="xp-action-grid">
+    {data?.can.sell&&<PrimaryActionCard id="qa-new-bill" title={isNew?'Make First Bill':'Make Bill'} description={isNew?'Start billing in seconds. No setup needed.':'Choose items, then collect payment.'} Icon={Receipt} onClick={makeBill}/>}
+    {data?.can.buy&&<PrimaryActionCard id="qa-add-purchase" title="Buy Stock" description="Add a purchase and manage stock." Icon={ShoppingCart} tone="warning" onClick={()=>navigate('/retail/purchases/new')}/>}
+    {isNew&&data?.can.manageItems&&<PrimaryActionCard title="Add Many Items" description="Add items together or import a list." Icon={PackagePlus} tone="info" onClick={()=>navigate('/retail/items/bulk')}/>}
+    {isNew&&data?.can.receive&&<PrimaryActionCard title={data?.activity.customers?'Add Customer':'Add First Customer'} description="Save details for faster billing." Icon={UserPlus} tone="special" onClick={()=>navigate('/retail/customers/add')}/>}
+
+   </section>
+   {data?.can.sell&&<button id="qa-quick-sale" className="r-btn r-btn--outline" onClick={()=>navigate('/retail/quick-sale')}>{ui('Quick Bill')} · {ui('Add items as you sell')}<ArrowRight size={18}/></button>}
+ </>;
+ return <div className="xp-home">
+  <section className="xp-greeting"><p>{ui(greeting)},</p><h2>{name}</h2><small>{tenant?.company_name||ui('Your shop')}</small></section>
+  {experience.error&&<div className="r-state-message" role="alert"><p>{experience.error}</p><button className="r-btn r-btn--outline" onClick={()=>setRetry(v=>v+1)}>{ui('Try Again')}</button></div>}
+  {!data&&!experience.error&&<LoadingState label="Loading your shop…"/>}
+  {data&&<>
+   {isNew&&<GettingStartedCard billed={data.activity.sales>0} items={!!data.activity.items} customer={!!data.activity.customers} onBill={makeBill}/>}
+   {isNew&&actions}
+   {isNew&&<RecommendationCard description="You can start billing without adding full inventory."><small>{ui('Just add items as you sell. You can add more details later.')}</small></RecommendationCard>}
+   {!isNew&&(canSummary||canMoney)&&<section aria-label={ui("Today's Summary")}><div className="xp-section-title"><h2>{ui("Today's Summary")}</h2><button aria-label={ui(hidden?'Show amounts':'Hide amounts')} onClick={()=>setHidden(v=>!v)}>{hidden?<Eye size={20}/>:<EyeOff size={20}/>}</button></div>
     {loading&&<LoadingState label="Loading shop summary…"/>}
-    {dashboard&&<>
-      <section className="r-home-sale r-ledger-metric"><div className="r-ledger-metric-label"><span>{ui(range==='TODAY'?"Today's Sale":'Net Sales for Selected Period')}</span><button className="r-home-private" aria-label={ui(privateTotals?'Show amounts':'Hide amounts')} onClick={()=>setPrivateTotals(v=>!v)}>{privateTotals?<EyeOff size={16}/>:<span>{dashboard.bills_count||0} {ui('Bills')}</span>}</button></div><strong className="r-ledger-amount">{money(dashboard.net_sales)}</strong><div className="r-home-payment-metrics"><div><span>{ui('Cash')}</span><strong>{money(dashboard.cash_received)}</strong></div><div><span>{ui('UPI')}</span><strong>{money(dashboard.upi_received)}</strong></div><div><span>{ui('Udhar')}</span><strong>{money(dashboard.udhar_sales)}</strong></div></div></section>
-      <section className="r-home-dues" aria-label={ui('Khata Balance')}><div className="r-home-due-card"><span><i/>{ui('Customer Due')}</span><small>{ui('Money to receive')}</small><strong>{money(dashboard.customer_due)}</strong><button aria-label={ui('View Khata')} onClick={()=>navigate('/retail/khata')}>{ui('View')}</button></div><div className="r-home-due-card r-home-due-card--supplier"><span><i/>{ui('Supplier Due')}</span><small>{ui('Money to pay')}</small><strong>{money(dashboard.supplier_due)}</strong><button aria-label={ui('Pay Supplier')} onClick={()=>navigate('/retail/pay-supplier')}>{ui('View')}</button></div></section>
-    </>}
-    <section className="r-home-galla r-card"><span className="r-ledger-icon"><Wallet size={28} aria-hidden="true"/></span><div><span>{ui('Cash in Counter (Galla)')}</span><strong>{galla?money(galla.expected_cash):ui(gallaError?'Open Daily Galla to retry':'Loading…')}</strong></div><button onClick={()=>navigate('/retail/galla')}>{ui('Check Galla')}</button></section>
-    {dashboard&&<section className="r-home-attention"><h2>{ui('Needs Attention')}</h2><button onClick={()=>navigate('/retail/stock?view=low')}><span className="r-ledger-icon"><AlertTriangle size={23}/></span><span><strong>{dashboard.low_stock_count||0} {ui('Low Stock')}</strong><small>{ui('Review items to reorder')}</small></span><ChevronRight size={18}/></button><button onClick={()=>navigate('/retail/needs')}><span className="r-ledger-icon"><Package size={23}/></span><span><strong>{dashboard.needs_pending||0} {ui('Pending Needs')}</strong><small>{ui('Open your buying list')}</small></span><ChevronRight size={18}/></button></section>}
-    <section className="r-home-operations" aria-labelledby="home-actions"><div className="r-home-section-title"><h2 id="home-actions">{ui('Quick Tools')}</h2><button onClick={()=>navigate('/retail/more')}>{ui('All Tools')}<ChevronRight size={18}/></button></div><div className="r-home-operation-grid" id="quick-actions">{actions.map(({id,title,desc,path,Icon})=><button id={id} key={id} onClick={()=>navigate(path)} aria-label={ui(title)}><span className="r-ledger-icon"><Icon size={23} aria-hidden="true"/></span><span><strong>{ui(title)}</strong><small>{ui(desc)}</small></span></button>)}</div></section>
-    <button className="r-assistant-home-entry" onClick={()=>navigate('/retail/assistant')}><span className="r-home-ask-icon"><Mic size={24} aria-hidden="true"/></span><span><strong>{ui('Ask EVOLIX')}</strong><small>{ui('Aaj ki sale kitni hai?')}</small></span><span className="r-home-ask-action">{ui('Ask')}</span></button>
-    <RetailHomeTools/>
-    <details className="r-home-financial" role="region" aria-label="Authoritative profit summary"><summary>{ui('Business Summary')}<ChevronRight size={18}/></summary>{dashboard&&<LedgerMetric title={range==='TODAY'?"Today's Expenses":'Expenses in Period'} value={money(dashboard.business_expenses)} Icon={Wallet}/>}{profit&&<div className="r-card"><h2>{ui('Business profit')}</h2><div className="r-summary-pair"><p>{ui('Gross profit · known costs')}<strong>{money(profit.gross_profit)}</strong></p><p>{ui('Net business profit · known costs')}<strong>{money(profit.net_business_profit)}</strong></p></div><p className="r-caption">{ui('Product cost coverage')} {profit.cost_coverage}%. {profit.warning||ui('All posted profit lines have known costs.')}</p><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/reports/financial/profit')}>{ui('Open Profit & Loss')}</button></div>}{profitError&&<p role="alert">{ui(profitError)}</p>}</details>
-  </div>;
+    {error&&<p role="alert">{error} <button className="r-btn r-btn--outline" onClick={()=>setRetry(v=>v+1)}>{ui('Try Again')}</button></p>}
+    <div className="xp-metric-grid">
+     {dashboard&&<MetricCard label="Today's Sales" value={money(dashboard.net_sales)} context={dashboard.bills_count+' '+ui('Bills')} Icon={Receipt} tone="brand" onClick={()=>navigate('/retail/bills')}/>}
+     {galla&&<MetricCard label="Expected Cash" value={money(galla.expected_cash)} context="From recorded cash movements" Icon={Wallet} tone="warning" onClick={()=>navigate('/retail/galla')}/>}
+     {dashboard&&canMoney&&<MetricCard label="Customer Due" value={money(dashboard.customer_due)} context="Money to receive" Icon={Users} tone="danger" onClick={()=>navigate('/retail/khata')}/>}
+     {dashboard&&can('purchase.read')&&<MetricCard label="Supplier Due" value={money(dashboard.supplier_due)} context="Money to pay" Icon={BookOpen} tone="info" onClick={()=>navigate('/retail/suppliers')}/>}
+    </div>
+   </section>}
+   {!isNew&&actions}
+   {!!data.suggestions.length&&<section><div className="xp-section-title"><h2>{ui("Today's Suggestions")}</h2></div><div className="xp-stack">{data.suggestions.map(r=><SuggestionCard key={r.id} suggestion={r} onSnooze={experience.snooze}/>)}</div></section>}
+   {!isNew&&<section><div className="xp-section-title"><h2>{ui('Quick Access')}</h2>{quick.canEdit&&<button onClick={()=>setEditing(true)}>{ui('Edit Quick Access')}</button>}</div><div className="xp-quick-grid" id="quick-actions">{quick.home.map(a=><button id={'qa-'+a.id} key={a.id} onClick={()=>navigate(a.route)}><a.icon size={22} aria-hidden="true"/>{ui(a.label)}</button>)}</div></section>}
+   {(canAsk||assistantFeature)&&<section className="xp-ask"><h2><Sparkles size={20} aria-hidden="true"/>{ui('Ask Apna Galla')}</h2><form onSubmit={e=>{e.preventDefault();ask(question.trim());}}><label className="r-sr-only" htmlFor="home-question">{ui('Your question')}</label><input id="home-question" className="r-input" placeholder={ui('e.g. How do I make a bill?')} value={question} maxLength={1000} onChange={e=>setQuestion(e.target.value)}/><button aria-label={ui('Ask Apna Galla')}><ArrowRight size={23}/></button></form><div className="xp-ask-chips">{['Aaj ki sale?','Low stock?','Supplier total due?'].map(q=><button key={q} onClick={()=>ask(q)}>{ui(q)}</button>)}</div></section>}
+   {!isNew&&<RetailHomeTools/>}
+  </>}
+  <QuickAccessEditor open={editing} onClose={()=>setEditing(false)}/>
+ </div>;
 }

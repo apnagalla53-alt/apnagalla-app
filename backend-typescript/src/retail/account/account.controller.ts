@@ -6,6 +6,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { EntitlementService } from '../../common/entitlement.service';
 import { throttleOperation } from '../../common/operation-throttle';
 import { featureMetadata, PLAN_ORDER } from '../../common/retail-plan-catalog';
+import { presetForBusiness } from '../../auth/business-types';
 
 class PrivacyRequestDto {
   @IsIn(['DELETE_ACCOUNT','DATA_PORTABILITY']) type: string;
@@ -73,7 +74,7 @@ export class RetailAccountController {
       this.db.subscriptionPayment.findMany({where:{organization_id:req.user.organization_id},orderBy:{paid_at:'desc'},take:50,select:{id:true,plan_name:true,amount:true,tax:true,discount:true,status:true,method:true,reference:true,paid_at:true,refund_amount:true}}),
       this.db.organization.findFirst({where:{id:req.user.organization_id},select:{business_type:true}}),
     ]);
-    return {current:this.entitlements.subscriptionSummary(effective),entitlements:effective,business_type:organization?.business_type,
+    return {current:this.entitlements.subscriptionSummary(effective),entitlements:effective,business_type:organization?.business_type,business_preset:presetForBusiness(organization?.business_type),
       plans:plans.sort((a,b)=>PLAN_ORDER.indexOf(a.code as any)-PLAN_ORDER.indexOf(b.code as any)).map(p=>({id:p.id,code:p.code,name:p.name,monthly_price:Number(p.monthly_price),description:p.description,limits:p.limits,features:p.plan_features.map(f=>({code:f.feature.code,name:f.feature.name,...featureMetadata(f.feature.code)}))})),
       payments:['OWNER','ADMIN','TENANT_ADMIN'].includes(req.user.role)?payments:[],payment_provider:{status:'NOT_CONFIGURED',checkout_available:false},voice_provider:{status:'NOT_CONFIGURED',available:false},
       backup_provider:this.backupConfiguration()};

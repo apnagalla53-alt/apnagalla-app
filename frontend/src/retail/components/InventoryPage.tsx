@@ -105,6 +105,7 @@ export default function InventoryPage({
       {!stockPage&&<StitchHeader><h1>{ui('Items')}</h1></StitchHeader>}
       {stockPage&&<h1 className="r-visually-hidden">{ui('Stock')}</h1>}
       <main className="r-section">
+        {!stockPage&&<button className="xp-card xp-tinted xp-intake-entry" data-accent="brand" onClick={()=>navigate('/retail/items/add-faster')}><strong>{ui('Add Items Faster')}</strong><span>{ui('Use a bill, Excel, voice or WhatsApp to add items quickly.')}</span><Plus size={20}/></button>}
         <div className="r-search-filter">
           <SearchField id="item-search" label={prefs.enabled?'Search items by name, SKU or barcode':'Search items by name or SKU'} value={search} onChange={s=>{setSearch(s);setOffset(0);setSelected([]);}} placeholder={prefs.enabled?'Search item name, SKU or barcode':'Search item name or SKU'}/>
           <button className="r-btn r-btn--icon" aria-label="Filter inventory" onClick={()=>{setDraft(filter);setFilterOpen(true);}}><SlidersHorizontal size={24}/></button>
@@ -123,7 +124,7 @@ export default function InventoryPage({
         {loading && offset === 0 ? (
           <LoadingState label="Loading inventory…" />
         ) : !error && !visible.length ? (
-          <EmptyState
+          <><EmptyState
             title={
               search
                 ? "No matching items"
@@ -134,7 +135,7 @@ export default function InventoryPage({
             description={
               filter === "low"
                 ? "Your counted items are above their minimum stock levels."
-                : "Add your first product or import your existing inventory."
+                : "Add your first item — or start billing and add items as you sell."
             }
             action={filter === "all" ? "Add Item" : "View Inventory"}
             onAction={() =>
@@ -143,6 +144,7 @@ export default function InventoryPage({
                 : setFilter("all")
             }
           />
+          {filter==='all'&&<div className="xp-primary-grid"><button className="r-btn r-btn--primary" onClick={()=>navigate('/retail/bill')}>{ui('Make Bill')}</button><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/items/bulk')}>{ui('Add Many Items')}</button><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/more/import')}>{ui('Import Existing Data')}</button></div>}</>
         ) : (
           <div className="r-inventory-list">
             {visible.map((i) => (
@@ -168,8 +170,8 @@ export default function InventoryPage({
           </button>
         )}
 
-        <details className="r-inventory-tools"><summary>{ui('Inventory tools')}</summary><div className="r-secondary-workflows"><button onClick={()=>navigate('/retail/more/import')}><Download size={20}/>{ui('Bulk Upload')}</button><button disabled={exporting||(selecting&&!selected.length)} onClick={exportItems}><Download size={20}/>{ui(exporting?'Exporting…':selecting?'Export Selected':'Export Items')}</button><button aria-pressed={selecting} onClick={()=>{setSelecting(!selecting);setSelected([]);}}><CheckSquare size={22}/>{ui(selecting?'Finish selecting items':'Select items')}</button></div></details>
-        {selecting&&<StickyActionBar><button className="r-btn r-btn--outline" onClick={()=>setSelected(visible.map(i=>i.id).slice(0,100))}>{ui('Select All Loaded')} ({Math.min(100,visible.length)})</button><p>{selected.length} {ui('items selected')}</p>{canManage&&selected.length>0&&<button className="r-btn r-btn--outline" onClick={()=>setBulkReview(true)}>Review Archive / Delete</button>}</StickyActionBar>}
+        <details className="r-inventory-tools"><summary>{ui('Inventory tools')}</summary><div className="r-secondary-workflows"><button onClick={()=>navigate('/retail/items/bulk')}>{ui('Add Many Items')}</button><button onClick={()=>navigate('/retail/more/import')}><Download size={20}/>{ui('Bulk Upload')}</button><button disabled={exporting||(selecting&&!selected.length)} onClick={exportItems}><Download size={20}/>{ui(exporting?'Exporting…':selecting?'Export Selected':'Export Items')}</button><button aria-pressed={selecting} onClick={()=>{setSelecting(!selecting);setSelected([]);}}><CheckSquare size={22}/>{ui(selecting?'Finish selecting items':'Select items')}</button></div></details>
+        {selecting&&<StickyActionBar><button className="r-btn r-btn--outline" onClick={()=>setSelected(visible.map(i=>i.id).slice(0,100))}>{ui('Select All Loaded')} ({Math.min(100,visible.length)})</button><p>{selected.length} {ui('items selected')}</p>{canManage&&selected.length>0&&<button className="r-btn r-btn--outline" data-tone="danger" onClick={()=>setBulkReview(true)}>Review Archive / Delete</button>}</StickyActionBar>}
       </main>
       {stockPage&&!selecting&&<StickyActionBar><button className="r-btn r-btn--primary" id="add-item-btn" onClick={()=>navigate('/retail/items/add')}><Plus size={22}/>{ui('Add Item')}</button><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/purchases/new')}><ShoppingCart size={22}/>{ui('Buy Stock')}</button></StickyActionBar>}
       <FilterSheet

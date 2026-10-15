@@ -47,7 +47,7 @@ desktop.ini
 *.log
 logs/
 
-# Scratchpad — temporary/disposable files
+# Scratchpad â€” temporary/disposable files
 scratchpad/
 
 # Build artifacts
@@ -117,3 +117,6 @@ frontend/android/local.properties
 frontend/android/.gradle/
 frontend/android/app/src/main/assets/public/
 frontend/android/app/src/main/assets/capacitor.config.json
+
+# Local OCR model cache contains downloaded model binaries only.
+.ocr-cache/

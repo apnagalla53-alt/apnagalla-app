@@ -1,3 +1,4 @@
+import { BrandHeader } from '../experience/ExperienceComponents';
 import { ui, useUiLanguage } from '../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -9,6 +10,7 @@ import ReportNotificationBell from '../reports/ReportNotificationBell';
 import { DrawerAccordionGroup, DrawerFooter, DrawerQuickLinks } from './DrawerNavigation';
 import { activeDrawerItem, visibleDrawerNavigation } from './retailNavigation';
 import { OPEN_RETAIL_DRAWER_EVENT } from './DrawerMenuButton';
+import { QuickAccessEditor, useQuickAccess } from './QuickAccess';
 
 export default function RetailNavigationDrawer() {
   useUiLanguage();
@@ -16,6 +18,7 @@ export default function RetailNavigationDrawer() {
   const toggle = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
+  const quickAccess=useQuickAccess(),[editQuick,setEditQuick]=useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const access=useRetailEntitlements();
@@ -25,7 +28,7 @@ export default function RetailNavigationDrawer() {
   const location = useLocation();
   const BrandTitle = location.pathname === '/retail/home' ? 'h1' : 'div';
   const features = access.data ? new Set(access.data.entitlements.features.filter(feature=>feature.enabled).map(feature=>feature.code)) : null;
-  const navigation = visibleDrawerNavigation({ user, features });
+  const navigation = {...visibleDrawerNavigation({ user, features }),quick:quickAccess.sidebar};
   const activeChild = activeDrawerItem(navigation.groups.flatMap(group => group.children), location);
   const activeQuick = activeDrawerItem(navigation.quick, location);
   const activeGroup = navigation.groups.find(group => group.children.some(item => item.id === activeChild))?.id || null;
@@ -88,7 +91,7 @@ export default function RetailNavigationDrawer() {
       <button ref={toggle} id="retail-menu-toggle" type="button" className="r-btn r-btn--icon"
         aria-label={ui('Open shop menu')} aria-haspopup="dialog" aria-expanded={open}
         aria-controls="retail-navigation-drawer" onClick={openDrawer}><Menu size={25} aria-hidden="true" /></button>
-      <BrandTitle className="r-toolbar-brand">Evolix {ui('Retail')}<small>{tenant?.company_name || ui('My Shop')}</small></BrandTitle>
+      <BrandTitle className="r-toolbar-brand"><BrandHeader compact={location.pathname!=='/retail/home'}/></BrandTitle>
       <ReportNotificationBell />
       <Link to="/retail/more/profile" className="r-btn r-btn--icon r-toolbar-profile"
         aria-label={ui('Open account and settings')}><UserRound size={21} aria-hidden="true" /></Link>
@@ -98,12 +101,12 @@ export default function RetailNavigationDrawer() {
       onClick={event => { if (event.target === event.currentTarget) close(); }}>
       <div className="r-drawer-content">
         <header className="r-drawer-header">
-          <div><h2>EVOLIX</h2><p title={tenant?.company_name || ui('My Shop')}>{tenant?.company_name || ui('My Shop')}</p></div>
+          <div><h2>Apna Galla</h2><p title={tenant?.company_name || ui('My Shop')}>{tenant?.company_name || ui('My Shop')}</p></div>
           <button type="button" className="r-btn r-btn--icon" aria-label={ui('Close shop menu')}
             onClick={close} autoFocus><X size={22} aria-hidden="true" /></button>
         </header>
         <nav className="r-drawer-navigation" aria-label={ui('Shop navigation')}>
-          <DrawerQuickLinks items={navigation.quick} activeItem={activeQuick} onNavigate={close} />
+          <DrawerQuickLinks items={navigation.quick} activeItem={activeQuick} onNavigate={close} onEdit={quickAccess.canEdit?()=>{close();setEditQuick(true);}:undefined} />
           <div className="r-drawer-accordions">
             {navigation.groups.map(group => <DrawerAccordionGroup key={group.id} group={group}
               expanded={expandedGroup === group.id} activeItem={activeChild}
@@ -115,5 +118,6 @@ export default function RetailNavigationDrawer() {
         <DrawerFooter onLogout={() => void logout()} busy={loggingOut} />
       </div>
     </dialog>
+    <QuickAccessEditor open={editQuick} onClose={()=>setEditQuick(false)}/>
   </>;
 }

@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Navigate } from 'react-router-dom';
+import { Outlet, NavLink, Navigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, LogOut, ShoppingCart, Package, Truck,
   Receipt, BarChart3, Warehouse, ArrowRightLeft,
@@ -11,8 +11,12 @@ import {
 import { useAuthStore } from '../store/authStore';
 import api from '../api';
 import { useState, useRef, useEffect } from 'react';
+import { workflowFor, workflowStyle } from '../workflowTheme';
+import WorkflowBanner from './WorkflowBanner';
+import '../workflow-theme.css';
 
 const TenantShell = () => {
+  const workflow=workflowFor(useLocation().pathname);
   const { user, tenantContext, logout } = useAuthStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -129,7 +133,7 @@ const TenantShell = () => {
   ];
 
   return (
-    <div className="app-container">
+    <div className="app-container workflow-surface" data-workflow={workflow.key} style={workflowStyle(workflow)}>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />
@@ -138,10 +142,10 @@ const TenantShell = () => {
       <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="brand-logo">E</div>
+            <div className="brand-logo"><img src="/brand/apna-galla-app-192.png" alt="" width="36" height="36" /></div>
             {!sidebarCollapsed && (
               <div className="brand-text">
-                <span className="brand-name-text">EVOLIX</span>
+                <span className="brand-name-text">Apna Galla</span>
                 <span className="brand-sub">Trade ERP</span>
               </div>
             )}
@@ -316,7 +320,7 @@ const TenantShell = () => {
         </header>
 
         <div className="page-content">
-          <Outlet />
+          <WorkflowBanner workflow={workflow}/><Outlet />
         </div>
       </main>
     </div>

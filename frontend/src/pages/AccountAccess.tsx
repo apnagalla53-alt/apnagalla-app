@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Phone, ShieldCheck } from 'lucide-react';
 import api from '../shared/api';
 import { useAuthStore } from '../shared/store/authStore';
@@ -9,6 +9,7 @@ import './Login.css';
 
 export default function AccountAccess({ signup = false }: { signup?: boolean }) {
   const navigate = useNavigate();
+  const user=useAuthStore(s=>s.user),session=useAuthStore(s=>s.session_id);
   const [params] = useSearchParams();
   const [caps, setCaps] = useState<any>(null);
   const [phone, setPhone] = useState('');
@@ -22,7 +23,7 @@ export default function AccountAccess({ signup = false }: { signup?: boolean }) 
 
   useEffect(() => {
     if (params.get('ref')) sessionStorage.setItem('evolix-referral', params.get('ref')!);
-    api.get('/auth/capabilities').then(response => setCaps(response.data)).catch(() => setError('Cannot connect to EVOLIX. Please retry.'));
+    api.get('/auth/capabilities').then(response => setCaps(response.data)).catch(() => setError('Cannot connect to Apna Galla. Please retry.'));
   }, [params]);
 
   function done(result: any) {
@@ -53,14 +54,16 @@ export default function AccountAccess({ signup = false }: { signup?: boolean }) 
     } finally { setBusy(false); }
   }
 
+  if(!signup&&session&&user&&!user.is_platform)return <Navigate replace to={user.must_change_password?'/change-password':user.onboarding_state&&user.onboarding_state!=='READY'?'/onboarding':'/retail/home'}/>;
   return <main className="login-container"><section className="login-card">
-    <div className="login-brand">EVOLIX</div>
+    <div className="login-brand"><img src="/brand/apna-galla-logo.webp" alt="Apna Galla — Har dukaan ka apna hisaab" width="240" height="198" /></div>
     <h1>{signup ? 'Create your shop account' : 'Welcome to your shop'}</h1>
     <p>{signup ? 'Use your Google account, then set up your business.' : 'Sign in to continue your daily business.'}</p>
     <nav className="account-auth-tabs" aria-label="Account access">
       <Link aria-current={!signup ? 'page' : undefined} to="/login">Sign in</Link>
       <Link aria-current={signup ? 'page' : undefined} to="/signup">Create account</Link>
     </nav>
+    {!signup&&<Link className="login-staff-entry" to="/password-login"><Phone size={18} aria-hidden="true"/>Staff sign in · Mobile number &amp; password</Link>}
     {caps === null && !error && <p role="status">Checking sign-in options…</p>}
 
     {signup && <>
@@ -81,7 +84,7 @@ export default function AccountAccess({ signup = false }: { signup?: boolean }) 
     </>}
     {!signup && caps?.google_client_id && <section className="account-google-section" aria-label="Google sign in">
       <GoogleSignIn onSuccess={done} />
-      <p className="login-hint">New to EVOLIX? <Link to="/signup">Create account with Google</Link></p>
+      <p className="login-hint">New to Apna Galla? <Link to="/signup">Create account with Google</Link></p>
     </section>}
 
     {caps?.mobile_otp_configured && <details className="account-mobile-option" open={!!challenge || !caps.google_client_id}>

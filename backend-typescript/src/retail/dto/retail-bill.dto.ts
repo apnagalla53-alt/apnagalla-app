@@ -1,8 +1,16 @@
-import { IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, MaxLength } from 'class-validator';
+import { IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, MaxLength, MinLength, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PurchaseDimensionsDto } from './retail-purchase.dto';
+export class QuickBillItemDto {
+  @IsUUID() client_id: string;
+  @IsString() @MinLength(1) @MaxLength(255) name: string;
+  @IsString() @Matches(/^[A-Z][A-Z0-9_]{0,19}$/) unit_code: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(100) unit_name?: string;
+  @IsIn(['PIECE','WEIGHT','LENGTH']) selling_mode: string;
+}
 export class RetailBillLineDto {
-  @IsUUID() item_id: string;
+  @IsOptional() @IsUUID() item_id?: string;
+  @IsOptional() @ValidateNested() @Type(()=>QuickBillItemDto) new_item?: QuickBillItemDto;
   @IsNumber() @Min(0.000001) quantity: number;
   @IsNumber() @Min(0) rate: number;
   @IsOptional() @IsNumber() @Min(0) discount_amount?: number;

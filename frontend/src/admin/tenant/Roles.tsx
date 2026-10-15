@@ -223,7 +223,7 @@ const Roles = () => {
                 <div key={p.code} className="badge badge-success flex items-center gap-2 p-2">
                   {p.code}
                   {!showPerms.is_system && (
-                    <button className="btn-icon" style={{padding:0}} onClick={() => handleRemovePerm(showPerms.id, p.code)}><X size={12}/></button>
+                    <button className="btn-icon" style={{padding:0}} data-tone="danger" onClick={() => handleRemovePerm(showPerms.id, p.code)}><X size={12}/></button>
                   )}
                 </div>
               ))}

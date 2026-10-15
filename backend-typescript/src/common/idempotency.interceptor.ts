@@ -16,7 +16,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const path=req.path;
     const financial=/\/retail\/(bills(?:\/amount-sale|\/return)?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(path)
       || /\/erp\/pos\/(sale|return)$/.test(path);
-    if(req.method!=='POST'||!financial||!req.user) return next.handle();
+    const intakeConfirm=/\/retail\/account\/intake\/[0-9a-f-]+\/confirm$/.test(path);
+    const entityCreate=/\/retail\/(?:items(?:\/inline|\/bulk)?|customers|suppliers)$/.test(path);
+    if(req.method!=='POST'||(!financial&&!entityCreate&&!intakeConfirm)||!req.user) return next.handle();
     const key=req.headers['idempotency-key'];
     if(!key) {
       if(process.env.NODE_ENV==='production') throw new BadRequestException('Idempotency-Key is required for financial writes');

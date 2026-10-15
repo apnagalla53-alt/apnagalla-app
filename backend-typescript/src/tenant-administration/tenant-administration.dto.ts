@@ -11,8 +11,8 @@ export class DirectoryQuery {
   @IsOptional() @IsUUID() user_id?: string;
 }
 export class CreateStaffDto {
-  @IsString() @MinLength(1) @MaxLength(255) username: string;
-  @IsString() @MinLength(12) @MaxLength(128) password: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(255) username?: string;
+  @IsString() @MinLength(8) @MaxLength(72) password: string;
   @IsString() @MinLength(1) @MaxLength(255) display_name: string;
   @IsOptional() @IsString() @MaxLength(255) email?: string;
   @IsOptional() @IsString() @MaxLength(50) phone?: string;
@@ -24,7 +24,7 @@ export class StaffUpdateDto {
   @IsOptional() @IsString() @MaxLength(50) phone?: string;
   @IsOptional() @IsString() @MaxLength(10) language?: string;
 }
-export class AdminPasswordDto { @IsString() @MinLength(12) @MaxLength(128) new_password: string; }
+export class AdminPasswordDto { @IsString() @MinLength(8) @MaxLength(72) new_password: string; }
 export class RoleDto {
   @IsString() @MinLength(1) @MaxLength(255) name: string;
   @IsOptional() @IsString() @MaxLength(1000) description?: string;

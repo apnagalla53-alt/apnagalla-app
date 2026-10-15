@@ -169,6 +169,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               type="button"
               disabled={disabled || uploading}
               onClick={handleRemove}
+              data-tone="danger"
               className="px-3 py-1.5 bg-red-600 text-white rounded shadow text-sm font-medium hover:bg-red-700"
             >
               {ui('Remove')}

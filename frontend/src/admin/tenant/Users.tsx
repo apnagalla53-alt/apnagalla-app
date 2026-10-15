@@ -30,6 +30,7 @@ const Users = () => {
   const [showRoles, setShowRoles] = useState<UserData | null>(null);
   const [showPassword, setShowPassword] = useState<UserData | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [formError, setFormError] = useState('');
 
   // Forms
@@ -226,13 +227,14 @@ const Users = () => {
         <form onSubmit={handleCreateUser}>
           {formError && <p role="alert" className="form-error">{formError}</p>}
           <div className="form-group">
-            <label className="form-label">Username</label>
-            <input required type="text" className="form-control" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+            <label className="form-label">Staff mobile number / username</label>
+            <input required type="tel" autoComplete="tel" maxLength={20} className="form-control" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input required minLength={12} maxLength={72} autoComplete="new-password" type="password" className="form-control" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-            <small>Use 12 or more characters with a capital letter, small letter, number and symbol. Staff must change this temporary password within 24 hours.</small>
+            <input required minLength={8} maxLength={72} autoComplete="new-password" type={passwordVisible?'text':'password'} className="form-control" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            <label><input type="checkbox" checked={passwordVisible} onChange={e=>setPasswordVisible(e.target.checked)}/> Show password</label>
+            <small>Use at least 8 characters. Uppercase letters, numbers and symbols are optional. Staff must change this temporary password within 24 hours.</small>
           </div>
           <div className="form-group">
             <label className="form-label">Display Name</label>
@@ -254,7 +256,8 @@ const Users = () => {
           <p>This signs the staff member out of every device. They must choose their own password within 24 hours.</p>
           {formError && <p role="alert" className="form-error">{formError}</p>}
           <label className="form-label" htmlFor="staff-temporary-password">Temporary password</label>
-          <input id="staff-temporary-password" required type="password" autoComplete="new-password" minLength={12} maxLength={72} className="form-control" value={newPassword} onChange={event => setNewPassword(event.target.value)} />
+          <input id="staff-temporary-password" required type={passwordVisible?'text':'password'} autoComplete="new-password" minLength={8} maxLength={72} className="form-control" value={newPassword} onChange={event => setNewPassword(event.target.value)} />
+          <label><input type="checkbox" checked={passwordVisible} onChange={e=>setPasswordVisible(e.target.checked)}/> Show password</label>
           <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowPassword(null)}>Cancel</button><button type="submit" className="btn btn-primary">Set temporary password</button></div>
         </form>
       </Modal>
@@ -295,7 +298,7 @@ const Users = () => {
               {showRoles.roles?.map(r => (
                 <div key={r.id} className="badge badge-success flex items-center gap-2 p-2">
                   {r.name}
-                  <button className="btn-icon" style={{padding:0}} onClick={() => handleRemoveRole(showRoles.id, r.id)}><X size={12}/></button>
+                  <button className="btn-icon" style={{padding:0}} data-tone="danger" onClick={() => handleRemoveRole(showRoles.id, r.id)}><X size={12}/></button>
                 </div>
               ))}
               {(!showRoles.roles || showRoles.roles.length === 0) && <span className="text-muted">No roles assigned.</span>}

@@ -8,6 +8,8 @@ import { PrismaService } from '../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { validatePassword } from './password-policy';
 import { auditIdentityChange } from './auth-audit';
+import { ActivationCampaignService } from './activation-campaign.service';
+class ActivationCodeDto { @IsString() @MinLength(3) @MaxLength(40) code:string; }
 class InitialPasswordDto { @IsString() @MinLength(12) @MaxLength(72) password:string; }
 class RequestOtpDto {
   @IsString() @MinLength(10) @MaxLength(25) phone: string;
@@ -43,7 +45,7 @@ class PlanChoiceDto { @IsIn(['TRIAL','REQUEST']) choice: 'TRIAL'|'REQUEST'; @IsO
 class MigrationDto { @IsIn(['FRESH','IMPORT']) choice: 'FRESH'|'IMPORT'; @IsOptional() @IsUUID() device_id?: string; }
 @Controller('auth/account')
 export class AccountController {
-  constructor(private otp: MobileOtpService, private onboarding: OnboardingService, private referrals: ReferralService, private db: PrismaService) {}
+  constructor(private otp: MobileOtpService, private onboarding: OnboardingService, private referrals: ReferralService, private db: PrismaService, private campaigns:ActivationCampaignService) {}
   @Post('password/create') @UseGuards(AccountSessionGuard)
   async createPassword(@Body() dto:InitialPasswordDto,@Req() req:any){
    validatePassword(dto.password);
@@ -66,6 +68,10 @@ export class AccountController {
   verifyLink(@Body() dto: LinkVerifyDto, @Req() req: any) { return this.otp.verify(dto.challenge_id, dto.code, { ip: req.ip }, req.account.id, dto.current_password); }
   @Get('onboarding') @UseGuards(AccountSessionGuard)
   state(@Req() req: any) { return this.onboarding.state(req.account.id); }
+  @Post('onboarding/activation-request') @UseGuards(AccountSessionGuard)
+  activationRequest(@Req() req:any) { return this.onboarding.requestActivation(req.account.id); }
+  @Post('onboarding/activation-code') @UseGuards(AccountSessionGuard)
+  async activationCode(@Body() dto:ActivationCodeDto,@Req() req:any) { const applied=await this.campaigns.redeem(req.account.id,dto.code);return {...await this.onboarding.state(req.account.id),code_result:applied}; }
   @Post('onboarding/owner') @UseGuards(AccountSessionGuard)
   owner(@Body() dto: OwnerDto, @Req() req: any) { return this.onboarding.owner(req.account.id, dto.name); }
   @Post('onboarding/business') @UseGuards(AccountSessionGuard)

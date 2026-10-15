@@ -16,6 +16,7 @@ export interface User {
   organization_name?: string;
   role?: string;
   must_change_password?: boolean;
+  password_min_length?: number;
   onboarding_state?: string;
 }
 
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthState>()(
       login: (session_id, user, csrf_token) => set({ session_id:session_id||'cookie', csrf_token:csrf_token||null, authEpoch:createUuid(), user, tenantContext: null }),
       clearSession: () => set({ session_id:null, csrf_token:null, authEpoch:createUuid(), user:null, tenantContext:null }),
       logout: () => {
+        navigator.serviceWorker?.controller?.postMessage({type:'PURGE_INTAKE_SHARED'});
         const destination = window.location.pathname.startsWith('/platform') ? '/platform/login' : '/login';
         set({ session_id: null, csrf_token:null, authEpoch:createUuid(), user: null, tenantContext: null });
         void clearNativeGoogleState().finally(()=>{window.location.href = destination;});

@@ -9,7 +9,7 @@ export default function BrowserSessionBootstrap({children}:{children:ReactNode})
   const [ready,setReady]=useState(skip),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   useEffect(()=>{
     if(skip)return;
-    let current=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
+    let current=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),70000);
     (async()=>{
       try {
         const response=await fetch(base+'/auth/session',{credentials:'include',signal:controller.signal});

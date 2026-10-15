@@ -29,6 +29,7 @@ export default function StaffManager() {
   const advanced=access.isFeatureEffective('ADVANCED_STAFF');
   const current = useAuthStore((s) => s.user);
   const loadVersion = useRef(0);
+  const [showPassword, setShowPassword] = useState(false);
   const [resetStaff, setResetStaff] = useState<any>(null),
     [newPassword, setNewPassword] = useState("");
   const [users, setUsers] = useState<any[]>([]),
@@ -155,7 +156,7 @@ export default function StaffManager() {
           {error}
         </p>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {notice && <p role="status" data-tone="success">{notice}</p>}
       {tab === "staff" ? (
         <>
           <SearchField
@@ -270,6 +271,7 @@ export default function StaffManager() {
                   ? [
                       {
                         label: "Reset Password",
+                        tone: 'warning' as const,
                         Icon: ShieldCheck,
                         onAction: () => {
                           setResetStaff(actions);
@@ -281,6 +283,7 @@ export default function StaffManager() {
                         ? [
                             {
                               label: "Unlock Account",
+                              tone: 'success' as const,
                               Icon: CheckCircle,
                               onAction: () =>
                                 void run(
@@ -298,6 +301,7 @@ export default function StaffManager() {
                           ? "Disable Access"
                           : "Enable Access",
                         Icon: actions.is_active ? Ban : CheckCircle,
+                        tone: actions.is_active ? 'danger' as const : 'success' as const,
                         onAction: () =>
                           void run(
                             () =>
@@ -312,6 +316,7 @@ export default function StaffManager() {
                       },
                       {
                         label: "Revoke Logged-in Devices",
+                        tone: 'danger' as const,
                         Icon: LogOut,
                         onAction: () =>
                           void run(
@@ -339,7 +344,7 @@ export default function StaffManager() {
               e.preventDefault();
               void run(async () => {
                 await (edit.create
-                  ? api.post("/users", form)
+                  ? api.post("/users", {...form, username:form.phone})
                   : api.patch("/users/" + edit.id, {
                       display_name: form.display_name,
                       phone: form.phone,
@@ -351,7 +356,7 @@ export default function StaffManager() {
           >
             {[
               "display_name",
-              ...(edit.create ? ["username", "password"] : []),
+              ...(edit.create ? ["password"] : []),
               "phone",
               "email",
             ].map((key) => (
@@ -362,8 +367,8 @@ export default function StaffManager() {
                       {
                         display_name: "Full name",
                         username: "Username",
-                        password: "Temporary password (12+ characters)",
-                        phone: "Phone (optional)",
+                        password: "Temporary password (8+ characters)",
+                        phone: "Staff mobile number / username",
                         email: "Email (optional)",
                       } as any
                     )[key]
@@ -374,16 +379,17 @@ export default function StaffManager() {
                   className="r-input"
                   type={
                     key === "password"
-                      ? "password"
+                      ? showPassword ? "text" : "password"
                       : key === "phone"
                         ? "tel"
                         : key === "email"
                           ? "email"
                           : "text"
                   }
-                  minLength={key === "password" ? 12 : undefined}
-                  maxLength={key === "password" ? 128 : 255}
-                  required={["display_name", "username", "password"].includes(
+                  minLength={key === "password" ? 8 : undefined}
+                  maxLength={key === "password" ? 72 : key === "phone" ? 20 : 255}
+                  autoComplete={key === 'password' ? 'new-password' : key === 'phone' ? 'tel' : undefined}
+                  required={["display_name", "phone", "password"].includes(
                     key,
                   )}
                   value={(form as any)[key]}
@@ -391,6 +397,7 @@ export default function StaffManager() {
                 />
               </div>
             ))}
+            {edit.create && <><label className="r-toggle-row"><input type="checkbox" checked={showPassword} onChange={e=>setShowPassword(e.target.checked)}/>Show password</label><p className="r-caption">Use at least 8 characters. The staff member signs in with this mobile number and chooses their own password on first login.</p></>}
             {error && <p role="alert">{error}</p>}
             <button className="r-btn r-btn--primary r-w-full" disabled={busy}>
               {busy ? ui("Saving…") : "Save Staff"}
@@ -543,23 +550,24 @@ export default function StaffManager() {
           }}
         >
           <label htmlFor="staff-new-password">
-            New temporary password (12+ characters)
+            New temporary password (8+ characters)
           </label>
           <input
             id="staff-new-password"
             className="r-input"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
-            minLength={12}
-            maxLength={128}
+            minLength={8}
+            maxLength={72}
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
           <p className="r-caption">
-            Use upper and lower case letters, a number and a symbol. The staff
+            Use at least 8 characters. Uppercase letters, numbers and symbols are optional. The staff
             member must change this password when signing in.
           </p>
+          <label className="r-toggle-row"><input type="checkbox" checked={showPassword} onChange={e=>setShowPassword(e.target.checked)}/>Show password</label>
           {error && <p role="alert">{error}</p>}
           <button className="r-btn r-btn--primary r-w-full" disabled={busy}>
             Reset Password

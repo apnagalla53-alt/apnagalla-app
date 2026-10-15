@@ -1,4 +1,5 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, Min, Max, IsInt, IsUUID, IsIn, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, Min, Max, IsInt, IsUUID, IsIn, MinLength, MaxLength,IsArray,ArrayMinSize,ArrayMaxSize,ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateRetailItemDto {
   @IsOptional() @IsBoolean() skip_opening_cost?: boolean;
@@ -103,4 +104,13 @@ export class UpdateRetailItemDto extends CreateRetailItemDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+}
+
+export class InlineRetailItemDto extends CreateRetailItemDto {
+  @IsOptional() @IsNumber() @Min(0) purchase_unit_selling_price?: number;
+  @IsOptional() @IsString() @MaxLength(20) purchase_unit_code?:string;
+  @IsOptional() @IsNumber() @Min(0.000001) purchase_unit_factor?:number;
+}
+export class BulkRetailItemsDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(50) @ValidateNested({each:true}) @Type(()=>CreateRetailItemDto) items:CreateRetailItemDto[];
 }
