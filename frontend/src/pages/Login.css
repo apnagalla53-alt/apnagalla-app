@@ -33,3 +33,41 @@
 .onboarding-plans article {border:1px solid #dce7e1;padding:12px;border-radius:14px}
 .onboarding-plans h2 {font-size:17px}.onboarding-plans button{font-size:13px;margin-top:12px;padding:10px}
 @media(max-width:420px){.onboarding-plans{grid-template-columns:1fr}.onboarding-plans article{display:flex;align-items:center;justify-content:space-between;gap:8px}.onboarding-plans button{margin:0;width:auto}}
+
+/* Shared shop account pages; keep onboarding and platform forms independent. */
+.account-access-page{padding:24px 16px;background:radial-gradient(ellipse at top,#edf6f0 0,transparent 65%),#fafbf9}
+.account-access-card{max-width:440px;border-radius:24px;padding:28px;box-shadow:0 12px 40px #173c2810}
+.account-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;color:#07452d}
+.account-brand img{width:48px;height:48px;object-fit:contain;flex-shrink:0;border-radius:12px}
+.account-brand>span{font-size:23px;line-height:1.2;font-weight:800;letter-spacing:-.6px}
+.account-brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;margin-top:6px;text-transform:uppercase;color:#53665a}
+.account-access-card h1{font-size:26px;letter-spacing:-.7px;line-height:1.25;margin:0 0 10px}
+.account-access-card .account-intro{margin:0;font-size:14px;line-height:1.6}
+.account-access-card .account-auth-tabs{margin:20px 0}
+.account-access-card .account-auth-tabs a{min-height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;font-size:14px}
+.account-setup-steps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;list-style:none;padding:0;margin:22px 0 24px}
+.account-setup-steps li{display:flex;align-items:center;gap:6px;color:#5b6e62;font-size:11px;line-height:1.4;white-space:nowrap}
+.account-setup-steps li>span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#eef3ef;color:#5b6e62;flex-shrink:0;font-weight:700}
+.account-setup-steps li[aria-current]{color:#0d6548;font-weight:700}
+.account-setup-steps li[aria-current]>span{background:#0d6548;color:#fff}
+.account-access-card .account-referral{border:1px solid #dce7df;border-radius:12px;margin:0 0 18px;padding:0 14px;background:#fcfdfb}
+.account-referral summary{padding:14px 0;cursor:pointer;color:#355d49;font-size:13px;line-height:1.5;min-height:48px;box-sizing:border-box}
+.account-optional{font-size:11px;font-weight:400;color:#667b6e;margin-left:5px}
+.account-referral label{margin:0 0 14px}
+.account-referral summary:focus-visible{outline:3px solid #2fa75a;outline-offset:3px;border-radius:6px}
+.account-access-card .account-google-section{margin:18px 0}
+.account-access-card .account-google-section .login-checkbox{margin:0 0 14px;font-size:13px;line-height:1.7;gap:10px}
+.account-access-card .login-checkbox input{accent-color:#0d6548;min-width:18px;min-height:18px;cursor:pointer}
+.account-access-card .account-google-section .login-checkbox input{margin-top:2px}
+.account-access-card .login-hint{font-size:12px;line-height:1.6;margin:10px 0}
+.account-access-card .account-next-step{background:#f2f7f3;padding:10px 12px;border-radius:10px;color:#466458}
+.account-access-card .google-native-button{border-radius:10px;min-height:48px}
+.account-access-card .account-returning{text-align:center;font-size:13px;margin:22px 0 16px}
+.account-returning a{font-weight:700}
+.account-access-card .account-security-note{justify-content:center;font-size:12px;line-height:1.5;margin:18px 0 0;text-align:center;gap:7px}
+.account-security-note svg{flex-shrink:0}
+.account-access-card .login-legal{justify-content:center;flex-wrap:wrap;gap:12px 18px;margin-top:20px;padding-top:18px}
+.account-access-card .login-legal a{font-size:11px;color:#5a7061}
+.account-access-card .login-legal a:last-child{flex-basis:100%;text-align:center}
+@media(max-width:380px){.account-access-card{padding:24px 20px}.account-access-card h1{font-size:24px}.account-setup-steps{gap:5px}.account-setup-steps li{font-size:10px;gap:5px}.account-setup-steps li>span{width:20px;height:20px}}
+@media(prefers-reduced-motion:no-preference){.account-referral{transition:border-color .18s ease}.account-referral[open]{border-color:#91b7a0}}

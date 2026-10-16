@@ -11,6 +11,16 @@ import RetailSubscription from '../subscription/RetailSubscription';
 import RetailDataExports from '../subscription/RetailDataExports';
 import RetailShopFeatures from '../subscription/RetailShopFeatures';
 import {useRetailEntitlements} from '../subscription/useRetailEntitlements';
+import { canShowDrawerItem, drawerGroups } from '../components/retailNavigation';
+import { useBusinessPreset } from '../experience/useBusinessPreset';
+
+function BusinessLinks() {
+  const user=useAuthStore(state=>state.user),access=useRetailEntitlements(),preset=useBusinessPreset();
+  const features=access.data?new Set(access.data.entitlements.features.filter(f=>f.enabled).map(f=>f.code)):null;
+  const ids=['subscription','features','referrals'];
+  const links=drawerGroups.flatMap(group=>group.children).filter(item=>ids.includes(item.id)&&canShowDrawerItem(item,{user,features}));
+  return <section className="r-card"><h2>{ui('Business settings')}</h2><p>{ui(preset.displayName)}</p>{access.isFeatureEffective('GST_INVOICES')&&<Link className="r-drawer-link" to="/retail/gst">{ui('GST profile')}</Link>}{links.map(item=><Link key={item.id} className="r-drawer-link" to={item.route}><item.icon size={21} aria-hidden="true"/>{ui(item.label)}</Link>)}</section>;
+}
 
 type Section = 'business' | 'profile' | 'subscription' | 'features' | 'backup';
 type Account = {
@@ -69,6 +79,7 @@ function RetailAccountDetails({section}:{section:Section}) {
       {loading && <div className="r-state-message" role="status">Loading {title.toLowerCase()}…</div>}
       {error && <div className="r-state-message" role="alert"><p>{error}</p><button className="r-btn r-btn--outline" onClick={load}>{ui("Try Again")}</button></div>}
       {account && <>
+        {section === 'business' && <BusinessLinks/>}
         {section === 'business' && <><div className="r-card"><h2>Shop details</h2>{row('Business name', account.business.name)}{row('Legal name', account.business.legal_name)}{row('Phone', account.business.phone)}{row('Email', account.business.email)}{row('Address', account.business.address)}{row('GSTIN', account.business.gstin)}</div><div className="r-card"><h2>Current store</h2>{row('Branch', account.branch?.name)}{row('Store code', account.branch?.code)}{row('Financial year', tenant?.financial_year_label)}<Link className="r-btn r-btn--outline r-btn--full" to="/retail/more/locations">View Stock Locations</Link></div></>}
         {section === 'profile' && <><div className="r-card"><h2>{account.profile.display_name}</h2>{row('Username', account.profile.username)}{row('Email', account.profile.email)}{row('Phone', account.profile.phone)}{row('Recovery email', account.profile.email_verified ? 'Verified' : 'Not verified')}{row('Google account', account.profile.google_linked ? 'Connected' : 'Not connected')}</div><Link className="r-btn r-btn--outline r-btn--full" to="/retail/more/security"><ShieldCheck size={20} />Manage account security</Link><div className="r-card"><h2>Your data</h2><p className="r-caption">Complete business export is a Pro convenience. For account exit, use the data portability process on any plan.</p><button className="r-btn r-btn--outline r-btn--full" onClick={() => void exportData()} disabled={exporting}><Download size={20} />{exporting ? 'Preparing data…' : ui('Complete Business Export')}</button><Link className="r-btn r-btn--ghost r-btn--full" to="/retail/more/backup">{ui("Backup, exports & data portability")}</Link></div></>}
         {section === 'backup' && <><BackupStatus backup={account.backup}/><RetailDataExports/>{access.canManage&&<div className="r-card"><h2>{ui('Complete Business Export')}</h2><p className="r-caption">{ui('Pro includes a complete business records export. Attachment files are downloaded separately. This file is not a database restore archive.')}</p><button className="r-btn r-btn--outline r-btn--full" onClick={()=>void exportData()} disabled={exporting}><Download size={20}/>{ui(exporting?'Preparing data…':access.isFeatureEffective('EXPORT_FULL_BUSINESS')?'Download Business Records':'Available in Pro')}</button></div>}{access.canManage&&<div className="r-card"><h2>{ui('Account exit & data portability')}</h2><p className="r-caption">{ui('Leaving EVOLIX? Request your core business records on any plan. This process does not delete your account. Support receives your request.')}</p><button className="r-btn r-btn--outline r-btn--full" onClick={()=>void exportData(true)} disabled={exporting}>{ui('Request portability copy')}</button><Link className="r-btn r-btn--ghost r-btn--full" to="/delete-account">{ui('Request account deletion')}</Link></div>}</>}

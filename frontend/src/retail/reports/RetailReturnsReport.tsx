@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { downloadReturnsExport } from './returns-export';
@@ -82,7 +83,7 @@ const RetailReturnsReport = () => {
                   <div key={r.id} className="r-card" style={{ padding: '0.75rem', display: 'flex', justifyContent: 'space-between', gap:12 }}>
                     <div>
                       <div style={{ fontWeight: 600 }}>{r.customer_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{r.document_number} • {new Date(r.document_date).toLocaleDateString()}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{r.document_number} • {formatDate(r.document_date)}</div>
                       {r.lines?.map((line:any)=><p className="r-caption" key={line.id}>{line.item_name} · {line.quantity} {line.unit}{line.batch_number?' · '+line.batch_number:''}</p>)}
                       <p className="r-caption">{ui(r.refund_method==='CASH'?'Cash refund':'Khata credit')} · ₹{Number(r.cash_refunded || r.credit_adjusted || 0).toLocaleString('en-IN')}</p>
                       {r.original_invoice_id&&<button className="r-btn r-btn--ghost" onClick={()=>navigate('/retail/bills/'+r.original_invoice_id)}>{ui('View original bill')}</button>}

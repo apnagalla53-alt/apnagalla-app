@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Field, Notice, Rows, usePlatform } from './platform-ui';
@@ -14,6 +15,6 @@ export default function PlatformPublishing(){
       <Field label="Change reason"><input required minLength={3} value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})}/></Field><button className="primary" disabled={state.busy}>Save publishing details</button>{saved&&<p role="status">Publishing details saved.</p>}
       <p><Link to="/privacy">Preview privacy policy</Link> · <Link to="/terms">Preview terms</Link> · <Link to="/delete-account">Preview deletion page</Link></p>
     </form>}
-    <section className="platform-card"><h2>Account deletion requests</h2><p>Review identity and retention obligations before processing. A pending request is not proof of completed deletion. Record the operator procedure outside this queue until an audited fulfillment process is approved.</p><Notice state={requests}/>{requests.data&&<Rows rows={requests.data} columns={[{name:'Request',render:r=>r.id},{name:'Tenant',render:r=><Link to={'/platform/tenants/'+r.organization_id}>{r.organization_id}</Link>},{name:'User',render:r=>r.user_id},{name:'Status',render:r=>r.status},{name:'Created',render:r=>new Date(r.created_at).toLocaleString()}]}/>}</section>
+    <section className="platform-card"><h2>Account deletion requests</h2><p>Review identity and retention obligations before processing. A pending request is not proof of completed deletion. Record the operator procedure outside this queue until an audited fulfillment process is approved.</p><Notice state={requests}/>{requests.data&&<Rows rows={requests.data} columns={[{name:'Request',render:r=>r.id},{name:'Tenant',render:r=><Link to={'/platform/tenants/'+r.organization_id}>{r.organization_id}</Link>},{name:'User',render:r=>r.user_id},{name:'Status',render:r=>r.status},{name:'Created',render:r=>formatDateTime(r.created_at)}]}/>}</section>
   </div>;
 }

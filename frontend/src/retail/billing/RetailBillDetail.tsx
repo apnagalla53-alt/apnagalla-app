@@ -1,6 +1,9 @@
+import DateInput from '../../shared/components/DateInput';
+import { formatDate } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
+import BillCorrection from './BillCorrection';
+import AuditHistoryLink from '../components/AuditHistoryLink';
 import { ui, useUiLanguage } from "../../i18n";
-import UpiQr from '../payments/UpiQr';
 import WhatsAppCustomer from '../payments/WhatsAppCustomer';
 import BillLineDescription from './BillLineDescription';
 import {getApiErrorMessage as calendarError} from '../../shared/api';
@@ -33,7 +36,6 @@ const RetailBillDetail = () => {
   if (error) return <div className="r-section" role="alert"><p>{error}</p><button className="r-btn" onClick={() => window.location.reload()}>{ui("Try Again")}</button><button className="r-btn" onClick={() => navigate('/retail/bills')}>{ui("Bill History")}</button></div>;
   if (!bill) return <div className="r-page" role="status" style={{ padding: 20 }}>{ui("Loading...")}</div>;
 
-  const upiAmount=(bill.payments||[]).filter((p:any)=>p.method==='UPI').reduce((sum:number,p:any)=>sum+Number(p.amount),0);
   return (
     <div className="r-page-with-sticky" style={{ paddingBottom: 160 }}>
       <StitchHeader className="r-page-header" hasBack>
@@ -50,12 +52,11 @@ const RetailBillDetail = () => {
         </div>
         {!!bill.returns?.length && <p className="r-caption">{ui('Original bill total')}</p>}
         <div style={{ color: 'var(--r-text-muted)', marginTop: 4 }}>
-          {bill.document_number} • {new Date(bill.document_date).toLocaleDateString()}
+          {bill.document_number} • {formatDate(bill.document_date)}
         </div>
       </div>
 
-      {Number(bill.outstanding_amount)>0&&<section className="r-section r-card"><label htmlFor="bill-promise-date">Customer promised payment on</label><input className="r-input" id="bill-promise-date" type="date" min={bill.document_date.slice(0,10)} value={(bill.due_date||'').slice(0,10)} onChange={async e=>{if(!e.target.value)return;try{await api.patch('/retail/calendar/receivables/'+bill.id,{title:'Customer repayment promise',date:e.target.value});setBill({...bill,due_date:e.target.value});}catch(error){setError(calendarError(error));}}}/><p className="r-caption">Shown under Calendar → Receivables while this bill is unpaid.</p></section>}
-      {upiAmount>0&&<div className="r-section"><UpiQr amount={upiAmount} paid/></div>}
+      {Number(bill.outstanding_amount)>0&&<section className="r-section r-card"><label htmlFor="bill-promise-date">Customer promised payment on</label><DateInput className="r-input" id="bill-promise-date" type="date" min={bill.document_date.slice(0,10)} value={(bill.due_date||'').slice(0,10)} onChange={async e=>{if(!e.target.value)return;try{await api.patch('/retail/calendar/receivables/'+bill.id,{title:'Customer repayment promise',date:e.target.value});setBill({...bill,due_date:e.target.value});}catch(error){setError(calendarError(error));}}} lang="en-GB"/><p className="r-caption">Shown under Calendar → Receivables while this bill is unpaid.</p></section>}
       <div className="r-section"><button className="r-btn r-btn--outline r-w-full" onClick={()=>navigate('/retail/gst/bills/'+bill.id)}><Printer size={18}/>{ui('A4 GST Invoice')}</button></div>
       <div className="r-section" style={{ marginTop: 'var(--r-space-lg)' }}>
         <div className="r-card">
@@ -68,7 +69,7 @@ const RetailBillDetail = () => {
             <span style={{ fontWeight: 600 }}>{bill.return_status==='FULL'?ui('Fully returned'):bill.return_status==='PARTIAL'?ui('Partially returned'):bill.status}</span>
           </div>
           <p>Paid: ₹{Number(bill.paid_amount).toLocaleString('en-IN')}</p><p>Due: ₹{Number(bill.outstanding_amount).toLocaleString('en-IN')}</p>
-          {bill.payments?.map((p: any, index: number) => <p key={index}>{p.method}: ₹{p.amount}</p>)}
+          {bill.payments?.map((p: any, index: number) => <p key={index}>{p.method}: ₹{p.amount}{p.receiving_upi_id?' · '+p.receiving_label+' · '+p.receiving_upi_id:p.received_on_mobile?' · Received on '+p.received_on_mobile:''}</p>)}
         </div>
       </div>
 
@@ -78,9 +79,9 @@ const RetailBillDetail = () => {
         {[['Return value',bill.settlement.return_value],['Net bill after returns',bill.settlement.net_total],['Payments recorded',bill.settlement.received_total],['Cash refunded',bill.settlement.cash_refunded],['Payment retained after refunds',bill.settlement.net_received],['Current amount due',bill.settlement.due],...(bill.settlement.customer_credit>0?[['Customer credit',bill.settlement.customer_credit]]:[])].map(([label,amount])=><div className="r-detail-row" key={String(label)}><span>{ui(String(label))}</span><strong>₹{Number(amount).toLocaleString('en-IN',{maximumFractionDigits:2})}</strong></div>)}
         <h3>{ui('Return history')}</h3>
         {bill.returns.map((r:any)=><article key={r.id} className="r-card">
-          <strong>{r.document_number}</strong><p>{new Date(r.document_date).toLocaleDateString()} · {ui(r.refund_method==='CASH'?'Cash refund':'Khata credit')} · ₹{Number(r.grand_total).toLocaleString('en-IN')}</p>
+          <strong>{r.document_number}</strong><p>{formatDate(r.document_date)} · {ui(r.refund_method==='CASH'?'Cash refund':'Khata credit')} · ₹{Number(r.grand_total).toLocaleString('en-IN')}</p>
           {r.lines.map((line:any)=><p className="r-caption" key={line.id}>{line.item_name} · {ui('Returned')}: {line.quantity} {line.unit}{line.batch_number?' · '+line.batch_number:''}</p>)}
-          {r.refunds.map((refund:any)=><p className="r-caption" key={refund.id}>{ui('Cash refunded')}: ₹{refund.amount.toLocaleString('en-IN')} · {new Date(refund.date).toLocaleDateString()}</p>)}
+          {r.refunds.map((refund:any)=><p className="r-caption" key={refund.id}>{ui('Cash refunded')}: ₹{refund.amount.toLocaleString('en-IN')} · {formatDate(refund.date)}</p>)}
           {r.credit_adjusted>0&&<p className="r-caption">{ui('Khata credit')}: ₹{r.credit_adjusted.toLocaleString('en-IN')}</p>}
         </article>)}
       </section>}
@@ -110,7 +111,7 @@ const RetailBillDetail = () => {
       </div>
 
       {bill.sales_invoice_line?.some((l:any)=>'cost_status' in l)&&<section className="r-section r-card"><h2>Saved bill profit</h2><p className="r-caption">Original posted costs; Output GST is excluded. Returns appear in Profit Reports.</p>{bill.sales_invoice_line.map((l:any)=><div key={l.id}><strong>{l.item?.name}</strong><p>Net revenue: ₹{Number(l.net_revenue??l.taxable_value).toFixed(2)} · COGS: {l.cogs_total==null?'Unknown':'₹'+Number(l.cogs_total).toFixed(2)}</p><p>Profit: {l.gross_profit==null?'Incomplete — cost not known':'₹'+Number(l.gross_profit).toFixed(2)}</p></div>)}<button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/reports/financial/bills?bill_id='+bill.id+'&from='+bill.document_date.slice(0,10))}>View Bill Profit Report</button></section>}
-      <div className="r-section"><WhatsAppCustomer billId={bill.id}/></div>
+      <BillCorrection bill={bill}/><div className="r-section"><AuditHistoryLink sourceId={bill.id}/><WhatsAppCustomer billId={bill.id}/></div>
       <div className="r-sticky-bottom">
         <div style={{ display: 'flex', gap: 'var(--r-space-md)' }}>
           <button className="r-btn r-btn--ghost r-flex-1" onClick={() => navigator.clipboard.writeText(`${bill.document_number}: ₹${bill.grand_total}`).then(()=>alert('Bill summary copied')).catch(()=>alert('Could not copy bill.'))}>

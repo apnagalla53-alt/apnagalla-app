@@ -4,17 +4,23 @@ import { useState } from 'react';
 import { khataApi, supplierApi } from './retailApi';
 import api, { getApiErrorMessage } from '../shared/api';
 import { ChevronDown, UserRound, MapPin, BadgeIndianRupee } from 'lucide-react';
+import { gstInputMode } from './gst/gstInput';
+import DateInput from '../shared/components/DateInput';
+import { readWorkflowDraft,useWorkflowDraft } from './experience/workflowDraft';
 
 export default function RetailPartyForm({ supplier = false, stickyActions = false, initial,initialName='', onSaved }: { supplier?: boolean; stickyActions?: boolean; initial?: any;initialName?:string; onSaved: (id: string) => void }) {
   useUiLanguage();
-  const [form, setForm] = useState<Record<string, string>>(() => { const values:Record<string,string>={name:initialName,mobile:'',supplier_category:'REGULAR',credit_days:'0'}; if(initial)for(const key of ['name','mobile','code','nickname','supplier_category','credit_days','credit_limit','max_credit_bills','address','state','email','gstin','pan','visit_cycle','visit_date'])values[key]=initial[key]==null?'':key==='visit_date'?String(initial[key]).slice(0,10):String(initial[key]);return values; });
-  const [credit, setCredit] = useState(initial?.credit_allowed ?? true); const [advanced, setAdvanced] = useState(false);
+  const flow=(supplier?'supplier-form:':'customer-form:')+(initial?.id||initialName||'new');const [seed]=useState(()=>readWorkflowDraft<{form:Record<string,string>;credit:boolean;advanced:boolean}>(flow));
+  const [form, setForm] = useState<Record<string, string>>(() => { if(seed)return seed.form;const values:Record<string,string>={name:initialName,mobile:'',supplier_category:'REGULAR',credit_days:'0'}; if(initial)for(const key of ['name','mobile','code','nickname','supplier_category','credit_days','credit_limit','max_credit_bills','address','state','email','gstin','pan','visit_cycle','visit_date'])values[key]=initial[key]==null?'':key==='visit_date'?String(initial[key]).slice(0,10):String(initial[key]);return values; });
+  const [credit, setCredit] = useState(seed?.credit??initial?.credit_allowed ?? true); const [advanced, setAdvanced] = useState(seed?.advanced||false);
+  const draft=useWorkflowDraft(flow,{form,credit,advanced});
   const [saving, setSaving] = useState(false); const [error, setError] = useState('');
-  const field = (key: string, label: string, type = 'text', required = false, placeholder?: string) => <div className="form-group" key={key}>
+  const field = (key: string, label: string, type = 'text', required = false, placeholder?: string) => {const Input=type==='date'?DateInput:'input';return <div className="form-group" key={key}>
     <label htmlFor={(supplier ? 'supplier-' : 'customer-') + key}>{ui(label)}{required && !label.includes('*') && <span className="r-required-hint" aria-hidden="true"> · Required</span>}</label>
-    <input id={(supplier ? 'supplier-' : 'customer-') + key} className="r-input" type={type} min={type === 'number' ? 0 : undefined}
-      placeholder={placeholder} required={required} value={form[key] || ''} onChange={e => setForm({ ...form, [key]: e.target.value })} />
-  </div>;
+    <Input id={(supplier ? 'supplier-' : 'customer-') + key} className="r-input" type={type} min={type === 'number' ? 0 : undefined}
+      inputMode={key==='gstin'?gstInputMode(form[key]||''):type==='number'?'decimal':type==='tel'?'tel':'text'} autoCapitalize={['gstin','pan'].includes(key)?'characters':'sentences'} spellCheck={['gstin','pan'].includes(key)?false:undefined} maxLength={key==='gstin'?15:key==='pan'?10:undefined}
+      placeholder={placeholder} required={required} value={form[key] || ''} onChange={e => setForm({ ...form, [key]: ['gstin','pan'].includes(key)?e.target.value.toUpperCase().trim():e.target.value })} />
+  </div>;};
   return <form onSubmit={async e => {
     e.preventDefault(); if (saving) return; setSaving(true); setError('');
     const payload: any = { name: form.name.trim(), credit_allowed: credit };
@@ -22,7 +28,7 @@ export default function RetailPartyForm({ supplier = false, stickyActions = fals
       if(value.trim())payload[key]=['credit_days','credit_limit','max_credit_bills','opening_balance'].includes(key)?Number(value):value.trim();
       else if(initial&&['mobile','nickname','address','state','email','gstin','pan','visit_date','credit_limit','max_credit_bills'].includes(key))payload[key]=null;
     }
-    try { const response = await (initial ? api.patch('/retail/'+(supplier?'suppliers':'customers')+'/'+initial.id,payload) : supplier ? supplierApi.createSupplier(payload) : khataApi.createCustomer(payload)); onSaved(initial?.id || response.data.data.id); }
+    try { const response = await (initial ? api.patch('/retail/'+(supplier?'suppliers':'customers')+'/'+initial.id,payload) : supplier ? supplierApi.createSupplier(payload) : khataApi.createCustomer(payload)); draft.clear();onSaved(initial?.id || response.data.data.id); }
     catch (err) { setError(getApiErrorMessage(err)); } finally { setSaving(false); }
   }}>
     <div className="r-card r-form-section"><h2><UserRound size={21}/>{supplier?ui("Supplier details"):ui("Customer details")}</h2>

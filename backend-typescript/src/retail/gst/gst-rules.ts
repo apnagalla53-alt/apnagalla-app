@@ -15,7 +15,9 @@ export function gstChecksum(first14:string) {
 }
 export function requireGstin(gstin:string,code:string) {
   requireState(code);
-  if(!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/.test(gstin)||gstin.slice(0,2)!==code||gstChecksum(gstin.slice(0,14))!==gstin[14])throw new BadRequestException('GSTIN format, checksum or state code is invalid. This does not verify GST registration with the government.');
+  if(!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/.test(gstin))throw new BadRequestException('Enter the complete 15-character GSTIN from your registration certificate.');
+  if(gstin.slice(0,2)!==code)throw new BadRequestException('This GSTIN begins with '+gstin.slice(0,2)+'. Select '+(GST_STATES[gstin.slice(0,2)]||'the matching registered state')+' or correct the GSTIN.');
+  if(gstChecksum(gstin.slice(0,14))!==gstin[14])throw new BadRequestException('The GSTIN check digit does not match. Please check all 15 characters on your certificate.');
 }
 export function defaultUqc(code:string) {
   const normalized=code.toUpperCase();return ({KG:'KGS',G:'GMS',GM:'GMS',SQFT:'SQF',ML:'MLT',L:'LTR',M:'MTR'} as Record<string,string>)[normalized]||(GST_UQC.includes(normalized)?normalized:'OTH');

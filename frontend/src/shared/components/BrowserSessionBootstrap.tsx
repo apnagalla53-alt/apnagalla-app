@@ -9,12 +9,14 @@ export default function BrowserSessionBootstrap({children}:{children:ReactNode})
   const skip=Capacitor.isNativePlatform()||window.location.pathname.startsWith('/platform')||(window.location.pathname!=='/auth/continue'&&!!useAuthStore.getState().user?.is_platform);
   const [ready,setReady]=useState(skip),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   useEffect(()=>{
-    preloadInitialRoute(window.location.pathname);
+    const saved=useAuthStore.getState(),path=window.location.pathname;
+    const reopening=['/','/login','/auth/continue'].includes(path)&&saved.session_id==='cookie'&&saved.user&&!saved.user.is_platform&&!saved.user.must_change_password&&saved.user.onboarding_state==='READY';
+    preloadInitialRoute(reopening?'/retail/home':path);
     if(skip)return;
     let current=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),70000);
     (async()=>{
       try {
-        const response=await fetch(base+'/auth/session',{credentials:'include',signal:controller.signal});
+        const response=await fetch(base+'/auth/session',{credentials:'include',headers:{'X-Requested-With':'XMLHttpRequest'},signal:controller.signal});
         if(!current)return;
         if(response.status===401){useAuthStore.getState().clearSession();setReady(true);return;}
         if(!response.ok)throw new Error('Could not check your account. Please retry.');

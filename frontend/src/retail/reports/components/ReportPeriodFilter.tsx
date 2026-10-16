@@ -1,3 +1,4 @@
+import DateInput from '../../../shared/components/DateInput';
 import { useState } from 'react';
 import { Sheet } from '../../components/MobileControls';
 interface ReportPeriodFilterProps {
@@ -20,5 +21,5 @@ export default function ReportPeriodFilter({ value, onChange, allowAllTime = tru
   return <><div className="r-report-periods" role="group" aria-label="Report period">{choices.map(choice => {
     const selected = value.from?.slice(0, 10) === choice.from && value.to?.slice(0, 10) === choice.to;
     return <button className={'r-btn ' + (selected ? 'r-btn--primary' : 'r-btn--secondary')} key={choice.name} aria-pressed={selected} onClick={() => onChange({ from: choice.from, to: choice.to })}>{choice.name}</button>;
-  })}<button className="r-btn r-btn--secondary" onClick={()=>{setFrom(value.from||today);setTo(value.to||today);setCustom(true);}}>Custom</button></div><Sheet open={custom} onClose={()=>setCustom(false)} title="Custom Report Dates"><form onSubmit={e=>{e.preventDefault();onChange({from,to});setCustom(false);}}><label htmlFor="report-custom-from">From date</label><input id="report-custom-from" type="date" className="r-input" value={from} onChange={e=>setFrom(e.target.value)} max={to||undefined} required/><label htmlFor="report-custom-to">To date</label><input id="report-custom-to" type="date" className="r-input" value={to} onChange={e=>setTo(e.target.value)} min={from||undefined} required/><button className="r-btn r-btn--primary r-w-full">Apply Dates</button></form></Sheet></>;
+  })}<button className="r-btn r-btn--secondary" onClick={()=>{setFrom(value.from||today);setTo(value.to||today);setCustom(true);}}>Custom</button></div><Sheet open={custom} onClose={()=>setCustom(false)} title="Custom Report Dates"><form onSubmit={e=>{e.preventDefault();onChange({from,to});setCustom(false);}}><label htmlFor="report-custom-from">From date</label><DateInput id="report-custom-from" type="date" className="r-input" value={from} onChange={e=>setFrom(e.target.value)} max={to||undefined} required lang="en-GB"/><label htmlFor="report-custom-to">To date</label><DateInput id="report-custom-to" type="date" className="r-input" value={to} onChange={e=>setTo(e.target.value)} min={from||undefined} required lang="en-GB"/><button className="r-btn r-btn--primary r-w-full">Apply Dates</button></form></Sheet></>;
 }

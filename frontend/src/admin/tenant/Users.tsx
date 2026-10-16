@@ -228,7 +228,7 @@ const Users = () => {
           {formError && <p role="alert" className="form-error">{formError}</p>}
           <div className="form-group">
             <label className="form-label">Staff mobile number / username</label>
-            <input required type="tel" autoComplete="tel" maxLength={20} className="form-control" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+            <input required type="tel" autoComplete="tel" maxLength={20} className="form-control" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} inputMode="tel" />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>

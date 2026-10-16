@@ -65,21 +65,22 @@ export function clearWorkflowDraft(flow: string, scope = workflowScope()) {
       /* Optional local recovery. */
     }
 }
-export function useWorkflowDraft(flow: string, data: unknown) {
-  const [resumed] = useState(() => !!readWorkflowDraft(flow)),
+export function useWorkflowDraft(flow: string, data: unknown, enabled = true) {
+  const [resumed] = useState(() => enabled && !!readWorkflowDraft(flow)),
     latest = useRef(data),
     cleared = useRef(false),
     scope = workflowScope();
   latest.current = data;
   useEffect(() => {
-    if (cleared.current) return;
+    if (!enabled || cleared.current) return;
     const timer = setTimeout(
       () => writeWorkflowDraft(flow, latest.current, scope),
       120,
     );
     return () => clearTimeout(timer);
-  }, [flow, scope, JSON.stringify(data)]);
+  }, [flow, scope, enabled, JSON.stringify(data)]);
   useEffect(() => {
+    if (!enabled) return;
     const flush = () => {
       if (!cleared.current) writeWorkflowDraft(flow, latest.current, scope);
     };
@@ -88,10 +89,12 @@ export function useWorkflowDraft(flow: string, data: unknown) {
       flush();
       window.removeEventListener("pagehide", flush);
     };
-  }, [flow, scope]);
+  }, [flow, scope, enabled]);
   return {
     resumed,
+    resume: () => { cleared.current = false; },
     clear: () => {
+      if (!enabled) return;
       cleared.current = true;
       clearWorkflowDraft(flow, scope);
     },

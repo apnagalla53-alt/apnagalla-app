@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import { useCallback, useEffect, useState, useId, isValidElement, cloneElement } from 'react';
 import api, { getApiErrorMessage } from '../../shared/api';
 import './platform.css';
@@ -34,7 +35,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 }
 export const dateInput = (date?: string) => date ? date.slice(0, 10) : new Date().toISOString().slice(0, 10);
 export const money = (value: unknown) => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
-export const when = (value: string | null) => value ? new Date(value).toLocaleString() : 'No activity recorded';
+export const when = (value: string | null) => value ? formatDateTime(value) : 'No activity recorded';
 export function Rows({ rows, columns }: { rows: any[]; columns: { name: string; render: (row: any) => React.ReactNode }[] }) {
   if (!rows.length) return <p className="platform-empty">No records yet.</p>;
   return <div className="platform-table-wrap"><table className="platform-table"><thead><tr>{columns.map(c => <th key={c.name}>{c.name}</th>)}</tr></thead>

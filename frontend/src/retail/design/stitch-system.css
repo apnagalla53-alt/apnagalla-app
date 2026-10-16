@@ -24,6 +24,13 @@
 .retail-app.retail-stitch[data-theme='dark'] :is(.r-btn--primary,.r-btn--primary-lg,.retail-button.primary) { color:#00201d; }
 .retail-app.retail-stitch :is(.r-btn--secondary,.r-btn--outline) { background:var(--r-surface); border:1px solid var(--r-primary); color:var(--r-primary-text); }
 .retail-app.retail-stitch :is(input:not([type='checkbox']):not([type='radio']):not([type='file']),textarea,.r-mobile-select) { min-height:52px; border-radius:var(--r-radius); border:1px solid var(--r-border); background:var(--r-surface); color:var(--r-text); font-size:max(16px,var(--r-text-base)); padding:12px 14px; }
+.retail-app.retail-stitch .r-search-bar > input:not([type='checkbox']):not([type='radio']):not([type='file']) { padding-inline-start:46px; }
+.retail-app.retail-stitch .r-search-bar .r-search-icon { display:grid;place-items:center;width:20px;height:20px; }
+.retail-app.retail-stitch .r-drawer-flat { display:grid;gap:3px;padding-block:8px; }
+.retail-app.retail-stitch .r-drawer-flat>[data-drawer-item='business'] { border-top:1px solid var(--r-border);margin-top:12px;padding-top:16px; }
+.retail-app.retail-stitch .r-drawer-flat .r-drawer-link { min-height:52px; }
+.retail-app.retail-stitch .r-settings-hub-links { display:grid;gap:4px; }
+.retail-app.retail-stitch .r-settings-hub h2 { font-size:18px; }
 .retail-app.retail-stitch :is(input,textarea)::placeholder { color:var(--r-text-hint); opacity:1; }
 .retail-app.retail-stitch :is(button,a,input,textarea,summary):focus-visible { outline:2px solid var(--r-primary); outline-offset:3px; }
 .retail-app.retail-stitch :is(.r-label,label) { color:var(--r-text-secondary); font-size:var(--r-text-sm); line-height:1.5; }

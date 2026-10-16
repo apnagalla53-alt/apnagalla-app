@@ -9,7 +9,7 @@ export default function ChangePassword() {
   const user = useAuthStore(state => state.user);
   const platform = !!user?.is_platform;
   const forced = !!(user as any)?.must_change_password;
-  const minimum = platform ? 16 : user?.password_min_length === 8 ? 8 : 12;
+  const minimum = platform ? 16 : 8;
   const [showPassword, setShowPassword] = useState(false);
   const [current, setCurrent] = useState(''); const [password, setPassword] = useState(''); const [repeat, setRepeat] = useState('');
   const [loading, setLoading] = useState(false); const [done, setDone] = useState(false); const [error, setError] = useState('');

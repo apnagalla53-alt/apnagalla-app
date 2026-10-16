@@ -1,3 +1,4 @@
+import { BULK_ITEM_NUMBER_MAX, bulkRowError, isEmptyBulkRow } from './bulkRows';
 import { trackExperience } from "./experienceEvents";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,9 +8,9 @@ import api, { getApiErrorMessage } from "../../shared/api";
 import { ui, useUiLanguage } from "../../i18n";
 import StitchHeader from "../design/StitchHeader";
 import UnitPicker, { type RetailUnitChoice } from "../components/UnitPicker";
-import { useBusinessPreset } from "./useBusinessPreset";
 import { useRetailEntitlements } from "../subscription/useRetailEntitlements";
 import { readWorkflowDraft, useWorkflowDraft } from "./workflowDraft";
+import ItemEntryModes from './ItemEntryModes';
 type Row = {
   id: string;
   name: string;
@@ -27,7 +28,6 @@ const empty = (): Row => ({
 export default function BulkItemEditor() {
   useUiLanguage();
   const navigate = useNavigate(),
-    preset = useBusinessPreset(),
     access = useRetailEntitlements();
   const [rows, setRows] = useState<Row[]>(
       () =>
@@ -35,8 +35,7 @@ export default function BulkItemEditor() {
     ),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [rowErrors, setRowErrors] = useState<Record<string, string>>({}),
-    [paste, setPaste] = useState("");
+    [rowErrors, setRowErrors] = useState<Record<string, string>>({});
   useEffect(() => {
     trackExperience("bulk_item_started", { workflow: "BULK" });
   }, []);
@@ -53,27 +52,22 @@ export default function BulkItemEditor() {
     );
   const save = async () => {
     if (busy) return;
-    const active = rows.filter((r) => r.name.trim() || r.price || r.stock),
+    const active = rows.filter((r) => !isEmptyBulkRow(r)),
       issues: Record<string, string> = {};
     for (const r of active) {
-      if (
-        !r.name.trim() ||
-        !r.price ||
-        !Number.isFinite(Number(r.price)) ||
-        Number(r.price) < 0 ||
-        (r.stock !== "" &&
-          (!Number.isFinite(Number(r.stock)) || Number(r.stock) < 0))
-      )
-        issues[r.id] = ui(
-          "Enter a name, valid price and optional non-negative stock.",
-        );
+      const issue = bulkRowError(r);
+      if (issue) issues[r.id] = ui(issue);
     }
     if (!active.length) {
       setError(ui("Add at least one item."));
       return;
     }
     setRowErrors(issues);
-    if (Object.keys(issues).length) return;
+    if (Object.keys(issues).length) {
+      const first = active.find(r => issues[r.id])!;
+      setError(`${ui('Item')} ${rows.indexOf(first) + 1}: ${issues[first.id]}`);
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -111,74 +105,7 @@ export default function BulkItemEditor() {
         <h1>{ui("Add Many Items")}</h1>
       </StitchHeader>
       <main className="r-section xp-stack">
-        <button
-          type="button"
-          className="r-btn r-btn--outline"
-          onClick={() => navigate("/retail/more/import")}
-        >
-          {ui("Import existing data")}
-        </button>
-        <p>{ui("Add a few items now. You can add the rest as you sell.")}</p>
-        <p className="xp-muted">
-          {ui(
-            "Leave stock blank if you have not counted it. Exact profit stays unknown until purchase cost is recorded.",
-          )}
-        </p>
-        <p className="xp-unit-hint">
-          {ui("Suggested for your shop")}: {ui(preset.displayName)}
-        </p>
-        <details className="xp-card">
-          <summary>{ui("Paste rows (optional)")}</summary>
-          <p className="xp-muted">
-            {ui(
-              "One item per line: name | selling price | stock (optional). Choose units below.",
-            )}
-          </p>
-          <label htmlFor="bulk-paste">{ui("Rows to paste")}</label>
-          <textarea
-            id="bulk-paste"
-            className="r-input"
-            value={paste}
-            onChange={(e) => setPaste(e.target.value)}
-          />
-          <button
-            type="button"
-            className="r-btn"
-            disabled={busy || !paste.trim()}
-            onClick={() => {
-              const parsed = paste
-                .split(/\r?\n/)
-                .filter((l) => l.trim())
-                .map((line) => {
-                  const [name, price, stock] = line
-                    .split(/\t|\|/)
-                    .map((s) => s.trim());
-                  return {
-                    ...empty(),
-                    name,
-                    price: (price || "").replace(/[₹,]/g, ""),
-                    stock: stock || "",
-                  };
-                });
-              if (
-                parsed.length +
-                  rows.filter((r) => r.name.trim() || r.price || r.stock)
-                    .length >
-                50
-              ) {
-                setError(ui("Use up to 50 rows at a time."));
-                return;
-              }
-              setRows((current) => [
-                ...current.filter((r) => r.name.trim() || r.price || r.stock),
-                ...parsed,
-              ]);
-              setPaste("");
-            }}
-          >
-            {ui("Add pasted rows")}
-          </button>
-        </details>
+        <ItemEntryModes/>
         {rows.map((row, index) => (
           <fieldset key={row.id} className="xp-card r-fieldset" disabled={busy}>
             <div className="xp-section-title">
@@ -215,9 +142,10 @@ export default function BulkItemEditor() {
                   className="r-input"
                   type="number"
                   min="0"
+                  max={BULK_ITEM_NUMBER_MAX}
                   step=".01"
                   value={row.price}
-                  onChange={(e) => update(row.id, { price: e.target.value })}
+                  onChange={(e) => update(row.id, { price: e.target.value })} inputMode="decimal"
                 />
               </div>
               <div>
@@ -229,9 +157,10 @@ export default function BulkItemEditor() {
                   className="r-input"
                   type="number"
                   min="0"
+                  max={BULK_ITEM_NUMBER_MAX}
                   step="any"
                   value={row.stock}
-                  onChange={(e) => update(row.id, { stock: e.target.value })}
+                  onChange={(e) => update(row.id, { stock: e.target.value })} inputMode="decimal"
                 />
               </div>
             </div>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/write-release.mjs",
     "lint": "oxlint",
     "test:unit": "vitest run --config vitest.config.ts",
     "preview": "vite preview",
@@ -20,6 +20,7 @@
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource/noto-sans-devanagari": "^5.3.0",
     "@noble/hashes": "2.4.0",
+    "@zxing/browser": "0.2.1",
     "axios": "^1.20.0",
     "i18next": "^26.4.2",
     "lucide-react": "^1.48.0",

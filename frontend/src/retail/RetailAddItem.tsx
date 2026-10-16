@@ -1,7 +1,8 @@
+import { readWorkflowDraft,useWorkflowDraft } from './experience/workflowDraft';
 import api from '../shared/api';
-import { RecommendationCard } from './experience/ExperienceComponents';
 import { categorySuggestion } from './experience/categorySuggestion';
 import StitchHeader from './design/StitchHeader';
+import ItemEntryModes from './experience/ItemEntryModes';
 import { ui, useUiLanguage } from "../i18n";
 import ItemCategoryPicker from "./components/ItemCategoryPicker";
 import UnitPicker, { sellingModeLabel } from './components/UnitPicker';
@@ -38,34 +39,35 @@ const RetailAddItem = () => {
   const billingPrefs=useBillingPreferences();
 
   // Default fields
-  const [name, setName] = useState("");
-  const [sellingPrice, setSellingPrice] = useState("");
-  const [openingStock, setOpeningStock] = useState("");
-  const [openingCost,setOpeningCost]=useState('');
-  const [skipOpeningCost,setSkipOpeningCost]=useState(false);
+  const [seed]=useState(()=>readWorkflowDraft<any>('add-item'));
+  const [name, setName] = useState<string>(seed?.name??"");
+  const [sellingPrice, setSellingPrice] = useState<string>(seed?.sellingPrice??"");
+  const [openingStock, setOpeningStock] = useState<string>(seed?.openingStock??"");
+  const [openingCost,setOpeningCost]=useState<string>(seed?.openingCost??'');
+  const [skipOpeningCost,setSkipOpeningCost]=useState<boolean>(seed?.skipOpeningCost??false);
 
   // Advanced fields
-  const [showAdvanced, setShowAdvanced] = useState(false),[showCapabilities,setShowCapabilities]=useState(false),[allCapabilities,setAllCapabilities]=useState(false),[trackStock,setTrackStock]=useState(false);
-  const unitTouched=useRef(false),categoryTouched=useRef(false);
-  const [buyUnit,setBuyUnit]=useState<{code:string;name:string}|null>(null),[packQuantity,setPackQuantity]=useState(''),[packSellingPrice,setPackSellingPrice]=useState('');
-  const [sku, setSku] = useState("");
-  const [barcode, setBarcode] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [unit, setUnit] = useState("PCS");
-  const [unitName, setUnitName] = useState('');
-  const [purchasePrice, setPurchasePrice] = useState("");
-  const [mrp, setMrp] = useState("");
-  const [gstRate, setGstRate] = useState("");
-  const [customGstRate, setCustomGstRate] = useState(false);
-  const [hsn, setHsn] = useState("");
-  const [lowStockAlert, setLowStockAlert] = useState("");
-  const [kind, setKind] = useState("STOCK"),
-    [sellingMode, setSellingMode] = useState("PIECE"),
-    [batch, setBatch] = useState(false),
-    [serial, setSerial] = useState(false),
-    [variants, setVariants] = useState(false),
-    [warranty, setWarranty] = useState("0");
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(seed?.showAdvanced??false),[showCapabilities,setShowCapabilities]=useState<boolean>(seed?.showCapabilities??false),[allCapabilities,setAllCapabilities]=useState<boolean>(seed?.allCapabilities??false),[trackStock,setTrackStock]=useState<boolean>(seed?.trackStock??false);
+  const unitTouched=useRef(!!seed),categoryTouched=useRef(!!seed);
+  const [buyUnit,setBuyUnit]=useState<{code:string;name:string}|null>(seed?.buyUnit??null),[packQuantity,setPackQuantity]=useState<string>(seed?.packQuantity??''),[packSellingPrice,setPackSellingPrice]=useState<string>(seed?.packSellingPrice??'');
+  const [sku, setSku] = useState<string>(seed?.sku??"");
+  const [barcode, setBarcode] = useState<string>(seed?.barcode??"");
+  const [category, setCategory] = useState<string>(seed?.category??"");
+  const [description, setDescription] = useState<string>(seed?.description??"");
+  const [unit, setUnit] = useState<string>(seed?.unit??"PCS");
+  const [unitName, setUnitName] = useState<string>(seed?.unitName??'');
+  const [purchasePrice, setPurchasePrice] = useState<string>(seed?.purchasePrice??"");
+  const [mrp, setMrp] = useState<string>(seed?.mrp??"");
+  const [gstRate, setGstRate] = useState<string>(seed?.gstRate??"");
+  const [customGstRate, setCustomGstRate] = useState<boolean>(seed?.customGstRate??false);
+  const [hsn, setHsn] = useState<string>(seed?.hsn??"");
+  const [lowStockAlert, setLowStockAlert] = useState<string>(seed?.lowStockAlert??"");
+  const [kind, setKind] = useState<string>(seed?.kind??"STOCK"),
+    [sellingMode, setSellingMode] = useState<string>(seed?.sellingMode??"PIECE"),
+    [batch, setBatch] = useState<boolean>(seed?.batch??false),
+    [serial, setSerial] = useState<boolean>(seed?.serial??false),
+    [variants, setVariants] = useState<boolean>(seed?.variants??false),
+    [warranty, setWarranty] = useState<string>(seed?.warranty??"0");
   const access=useRetailEntitlements(),preset=useBusinessPreset(category);
   const recommended=(code:string)=>allCapabilities||preset.recommendedCapabilities.includes(code)||preset.categoryCapabilities.includes(code);
   useEffect(()=>{if(unitTouched.current)return;const suggested=preset.recommendedUnits.map(code=>preset.unitSuggestions.find(u=>u.code===code)).find(u=>u&&(u.selling_mode==='PIECE'||access.isFeatureEffective(u.selling_mode)));if(suggested){setUnit(suggested.code);setUnitName(suggested.name);setSellingMode(suggested.selling_mode);}},[preset.key,preset.recommendedUnits.join(','),access.data]);
@@ -77,10 +79,13 @@ const RetailAddItem = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-  const photoUpload = useOptionalPhotoUpload();
-  const [savedItemId, setSavedItemId] = useState('');
+  const photoUpload = useOptionalPhotoUpload('add-item');
+  const [savedItemId, setSavedItemId] = useState<string>(seed?.savedItemId??'');
 
+  const draft=useWorkflowDraft('add-item',{name,sellingPrice,openingStock,openingCost,skipOpeningCost,showAdvanced,showCapabilities,allCapabilities,trackStock,buyUnit,packQuantity,packSellingPrice,sku,barcode,category,description,unit,unitName,purchasePrice,mrp,gstRate,customGstRate,hsn,lowStockAlert,kind,sellingMode,batch,serial,variants,warranty,savedItemId});
   const finishSave = () => {
+    draft.clear();
+    photoUpload.select(null);
     setSaved(true);
     if(!variants)setTimeout(() => navigate('/retail/items'), 700);
   };
@@ -160,7 +165,7 @@ const RetailAddItem = () => {
   return <div className="r-page-with-sticky r-item-form r-stitch-item-form">
     <StitchHeader><h1>{ui('Add Item')}</h1></StitchHeader>
     <main className="r-section">
-      <RecommendationCard title={ui('Recommended for')+' '+ui(preset.displayName)} description="We've suggested settings for your shop. You can change them."/>
+      <ItemEntryModes/>
       {error&&<p className="r-state-message" role="alert">{photoUpload.failed ? ui('Item saved. Photo upload failed. Retry or continue without the photo.') + ' ' : ''}{error}</p>}
       <fieldset className="r-fieldset" disabled={saving||!!savedItemId}>
         <section className="r-card r-stitch-quick-entry">
@@ -176,7 +181,7 @@ const RetailAddItem = () => {
               />
             </div><div className="r-input-group">
               <label className="r-label" htmlFor="selling-price-input">
-                Selling Price (₹) *
+                {ui('Selling Price (₹)')} · {ui(unitName||unit)} *
               </label>
               <input
                 id="selling-price-input"
@@ -190,7 +195,7 @@ const RetailAddItem = () => {
                 onChange={(e) => setSellingPrice(e.target.value)}
                 required
               />
-              <p className="r-caption">Selling price before GST · Tax Exclusive. GST is added using this item's saved tax rate.</p>
+              {Number(gstRate)>0&&<p className="r-caption">Selling price before GST · Tax Exclusive. GST is added using this item's saved tax rate.</p>}
             </div>
 
           <div className="r-input-group xp-unit-section">
@@ -200,10 +205,10 @@ const RetailAddItem = () => {
                 if (kind === 'STOCK' && !serial && choice.selling_mode && (choice.selling_mode==='PIECE'||features.includes(choice.selling_mode))) setSellingMode(choice.selling_mode);
               }} />
             </div>
-          {kind==='STOCK'&&access.isFeatureEffective('MULTI_UNIT')&&<section className="xp-unit-section"><label htmlFor="item-buy-unit">{ui('How do you buy it?')}</label><small>{ui('From supplier')}</small><UnitPicker id="item-buy-unit" title="How do you buy it?" category={category} value={buyUnit?.code||unit} allowedModes={serial?['PIECE']:['PIECE',...features]} onChange={choice=>setBuyUnit(choice)}/>{buyUnit&&buyUnit.code!==unit&&<div className="xp-conversion"><label htmlFor="item-pack-quantity">{ui('How many')} {unitName||unit} {ui('in 1')} {buyUnit.name}?</label><div className="xp-conversion-stepper"><button type="button" aria-label={ui('Decrease pack quantity')} disabled={Number(packQuantity)<=1} onClick={()=>setPackQuantity(String(Math.max(1,Number(packQuantity)-1)))}><Minus size={18}/></button><input id="item-pack-quantity" className="r-input" inputMode="decimal" type="number" min="0.000001" step="any" value={packQuantity} onChange={e=>setPackQuantity(e.target.value)}/><button type="button" aria-label={ui('Increase pack quantity')} onClick={()=>setPackQuantity(String(Number(packQuantity)+1))}><Plus size={18}/></button></div><label htmlFor="item-pack-selling-price">Selling price per {buyUnit.name} · optional</label><input id="item-pack-selling-price" className="r-input" type="number" min="0" step=".01" value={packSellingPrice} onChange={e=>setPackSellingPrice(e.target.value)}/><p className="xp-unit-hint">{ui('Helps keep stock and purchase costs correct.')}</p></div>}</section>}
+          {kind==='STOCK'&&access.isFeatureEffective('MULTI_UNIT')&&<details className="xp-unit-section r-card" open={preset.family==='PHARMACY'?true:undefined}><summary>{ui('Buy and sell in different packs?')}</summary><label htmlFor="item-buy-unit">{ui('How do you buy it?')}</label><small>{ui('From supplier')}</small><UnitPicker id="item-buy-unit" title="How do you buy it?" category={category} value={buyUnit?.code||unit} allowedModes={serial?['PIECE']:['PIECE',...features]} onChange={choice=>setBuyUnit(choice)}/>{buyUnit&&buyUnit.code!==unit&&<div className="xp-conversion"><label htmlFor="item-pack-quantity">{ui('How many')} {unitName||unit} {ui('in 1')} {buyUnit.name}?</label><div className="xp-conversion-stepper"><button type="button" aria-label={ui('Decrease pack quantity')} disabled={Number(packQuantity)<=1} onClick={()=>setPackQuantity(String(Math.max(1,Number(packQuantity)-1)))}><Minus size={18}/></button><input id="item-pack-quantity" className="r-input" inputMode="decimal" type="number" min="0.000001" step="any" value={packQuantity} onChange={e=>setPackQuantity(e.target.value)}/><button type="button" aria-label={ui('Increase pack quantity')} onClick={()=>setPackQuantity(String(Number(packQuantity)+1))}><Plus size={18}/></button></div><label htmlFor="item-pack-selling-price">Selling price per {buyUnit.name} · optional</label><input id="item-pack-selling-price" className="r-input" type="number" min="0" step=".01" value={packSellingPrice} onChange={e=>setPackSellingPrice(e.target.value)} inputMode="decimal"/><p className="xp-unit-hint">{ui('Helps keep stock and purchase costs correct.')}</p></div>}</details>}
           {['CLOTHING','FOOTWEAR'].includes(preset.family)&&<section className="r-card"><p id="item-size-question">{ui(preset.itemPrompts.variants)}</p><div className="r-form-grid" role="group" aria-labelledby="item-size-question"><button type="button" className="r-btn r-btn--outline" aria-pressed={!variants} onClick={()=>{setVariants(false);setOpeningStock('');}}>{ui('No')}</button><button type="button" className="r-btn r-btn--outline" disabled={!access.isFeatureEffective('VARIANTS')} aria-pressed={variants} onClick={()=>{setVariants(true);setOpeningStock('');}}>{ui('Yes')}</button></div><p className="r-caption">{access.isFeatureEffective('VARIANTS')?ui('Choose Yes only for items sold in different sizes or colours.'):ui('Sizes and colours require a plan with this feature.')}</p></section>}
           {preset.family==='PHARMACY'&&<section className="r-card"><label className="r-toggle-row"><input type="checkbox" disabled={!access.isFeatureEffective('BATCH_TRACKING')} checked={batch} onChange={e=>{setBatch(e.target.checked);setOpeningStock('');}}/>{ui('Track Batch & Expiry?')}</label>{!access.isFeatureEffective('BATCH_TRACKING')&&<p className="r-caption">{ui('Your current plan does not include batch and expiry tracking.')}</p>}</section>}
-          {preset.family==='ELECTRONICS'&&<section className="r-card"><label className="r-toggle-row"><input type="checkbox" disabled={!access.isFeatureEffective('SERIAL_TRACKING')} checked={serial} onChange={e=>{setSerial(e.target.checked);setUnit('PCS');setSellingMode('PIECE');setOpeningStock('');}}/>{ui('Track serial numbers and warranty?')}</label>{serial&&<label>Warranty in days<input className="r-input" type="number" min="0" max="36500" value={warranty} onChange={e=>setWarranty(e.target.value)}/></label>}{!access.isFeatureEffective('SERIAL_TRACKING')&&<p className="r-caption">{ui('Serial and warranty tracking require a plan with this feature.')}</p>}</section>}
+          {preset.family==='ELECTRONICS'&&<section className="r-card"><label className="r-toggle-row"><input type="checkbox" disabled={!access.isFeatureEffective('SERIAL_TRACKING')} checked={serial} onChange={e=>{setSerial(e.target.checked);setUnit('PCS');setSellingMode('PIECE');setOpeningStock('');}}/>{ui('Track serial numbers and warranty?')}</label>{serial&&<label>Warranty in days<input className="r-input" type="number" min="0" max="36500" value={warranty} onChange={e=>setWarranty(e.target.value)} inputMode="decimal"/></label>}{!access.isFeatureEffective('SERIAL_TRACKING')&&<p className="r-caption">{ui('Serial and warranty tracking require a plan with this feature.')}</p>}</section>}
           {preset.family==='EATERY'&&access.isFeatureEffective('MODIFIERS')&&<p className="xp-unit-hint">Any options or add-ons? You can add sugar choices or extras in Item Details after saving.</p>}
           <label className="r-toggle-row"><input type="checkbox" checked={trackStock||tracked} disabled={tracked} onChange={e=>{setTrackStock(e.target.checked);if(!e.target.checked){setOpeningStock('');setOpeningCost('');}}}/>{ui('I want to count stock for this item')}</label>
           {(trackStock||tracked)&&<>          <div className="r-input-group">
@@ -238,8 +243,8 @@ const RetailAddItem = () => {
           {!trackStock&&!tracked&&<p className="xp-muted">{ui('Stock not set up yet. You can sell this item now and receive stock later.')}</p>}
 
         </section>
-        <button type="button" className="r-stitch-disclosure" id="more-details-toggle" aria-expanded={showAdvanced} aria-controls="item-advanced-fields" onClick={()=>setShowAdvanced(!showAdvanced)}><span className="r-ledger-icon"><SlidersHorizontal size={24}/></span><span><strong>{ui('Additional Details')}</strong><small>{ui('Optional · cost, MRP, tax and more')}</small></span><ChevronDown size={22}/></button>
-        {showAdvanced&&<section id="item-advanced-fields" className="r-card"><h2>{ui('Additional Details')}</h2>          <div className="r-input-group"><ItemCategoryPicker value={category} onChange={v=>{categoryTouched.current=true;setCategory(v);}}/>{category&&!categoryTouched.current&&<p className="xp-unit-hint">{ui('Auto-suggested from your item name. Change it if needed.')}</p>}</div><div className="r-input-group">
+        <button type="button" className="r-stitch-disclosure" id="more-details-toggle" aria-expanded={showAdvanced} aria-controls="item-advanced-fields" onClick={()=>setShowAdvanced(!showAdvanced)}><span className="r-ledger-icon"><SlidersHorizontal size={24}/></span><span><strong>{ui('More Details')}</strong><small>{ui('Optional · cost, MRP, tax and more')}</small></span><ChevronDown size={22}/></button>
+        {showAdvanced&&<section id="item-advanced-fields" className="r-card"><h2>{ui('More Details')}</h2>          <div className="r-input-group"><ItemCategoryPicker value={category} onChange={v=>{categoryTouched.current=true;setCategory(v);}}/>{category&&!categoryTouched.current&&<p className="xp-unit-hint">{ui('Auto-suggested from your item name. Change it if needed.')}</p>}</div><div className="r-input-group">
 
             </div><div className="r-form-columns">
               <div className="r-input-group">
@@ -326,7 +331,7 @@ const RetailAddItem = () => {
                       ))}
                       <option value="CUSTOM">{ui('Custom Rate')}</option>
                     </MobileSelect>
-                    {customGstRate && <><label className="r-label" htmlFor="item-gst-custom">{ui('Custom GST Rate (%)')} *</label><input id="item-gst-custom" className="r-input" type="number" min="0" max="100" step="0.01" required value={gstRate} onChange={event=>setGstRate(event.target.value)}/></>}
+                    {customGstRate && <><label className="r-label" htmlFor="item-gst-custom">{ui('Custom GST Rate (%)')} *</label><input id="item-gst-custom" className="r-input" type="number" min="0" max="100" step="0.01" required value={gstRate} onChange={event=>setGstRate(event.target.value)} inputMode="decimal"/></>}
                   </div>
                   <div className="r-input-group">
                     <label className="r-label" htmlFor="item-hsn">
@@ -469,7 +474,7 @@ const RetailAddItem = () => {
                               max="36500"
                               step="1"
                               value={warranty}
-                              onChange={(e) => setWarranty(e.target.value)}
+                              onChange={(e) => setWarranty(e.target.value)} inputMode="decimal"
                             />
                           </>
                         )}

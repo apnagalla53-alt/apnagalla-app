@@ -1,3 +1,4 @@
+import CorrectionPrompt from './components/CorrectionPrompt';
 import { ui, useUiLanguage } from "../i18n";
 import './retail-mobile.css';
 /**
@@ -6,7 +7,7 @@ import './retail-mobile.css';
  */
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import {
-  Home, Package, BookOpen, Plus, Sparkles
+  Home, Package, BookOpen, Plus
 } from 'lucide-react';
 import { useAuthStore } from '../shared/store/authStore';
 import '../retail/retail.css';
@@ -23,7 +24,8 @@ import './design/stitch-inventory.css';
 import './design/stitch-forms.css';
 import './design/stitch-billing.css';
 import './design/stitch-parties.css';
-import {refreshRetailEntitlements} from './subscription/useRetailEntitlements';
+import {refreshRetailEntitlements, useRetailEntitlements} from './subscription/useRetailEntitlements';
+import { visibleSimpleDrawer } from './components/retailNavigation';
 import TrialBanner from './subscription/TrialBanner';
 import './retail-usability.css';
 import { workflowFor, workflowStyle } from '../shared/workflowTheme';
@@ -33,12 +35,20 @@ import { useBillStore } from './retailStore';
 import './experience/experience.css';
 import './experience/experience-layout.css';
 import FloatingAssistant from './assistant/FloatingAssistant';
+import QuickActionsButton from './components/QuickActionsButton';
+import { useKeyboardLayout } from './components/useKeyboardLayout';
+import './retail-refinements.css';
 
 const RetailShell = () => {
   useUiLanguage();
   const user = useAuthStore((s) => s.user);
+  const access=useRetailEntitlements();
+  const features=access.data?new Set(access.data.entitlements.features.filter(f=>f.enabled).map(f=>f.code)):null;
+  const allowedNav=new Set(visibleSimpleDrawer({user,features}).map(item=>item.id));
+  const canItems=allowedNav.has('inventory'),canBill=allowedNav.has('quick-sale'),canKhata=allowedNav.has('khata');
   const tenant = useAuthStore((s) => s.tenantContext);
   const location = useLocation();
+  const keyboardOpen=useKeyboardLayout();
   const navigate=useNavigate();
   const workflow=workflowFor(location.pathname),lines=useBillStore(s=>s.items);
   const detail=['/retail/bill','/retail/payment'].includes(location.pathname)?`${lines.length} product ${lines.length===1?'line':'lines'} · ${location.pathname.endsWith('/payment')?'Confirm payment':'Draft bill'}`:undefined;
@@ -64,7 +74,7 @@ const RetailShell = () => {
   }
 
   return (
-    <div className="retail-app retail-stitch workflow-surface" style={workflowStyle(workflow)} data-workflow={workflow.key} data-theme={theme} data-text-size={textSize} data-route={location.pathname} data-navigation={showNavigation?'visible':'hidden'}>
+    <div className="retail-app retail-stitch workflow-surface" style={workflowStyle(workflow)} data-workflow={workflow.key} data-theme={theme} data-text-size={textSize} data-route={location.pathname} data-keyboard={keyboardOpen?'open':'closed'} data-navigation={showNavigation?'visible':'hidden'}>
       <a className="r-skip-link" href="#retail-page-content">{ui("Skip to page content")}</a>
       <div className="r-shell">
         <MigrationWelcome/>
@@ -80,7 +90,7 @@ const RetailShell = () => {
         </div>
 
         {/* Bottom Navigation */}
-        <nav className="r-bottom-nav r-bottom-nav--five" id="retail-bottom-nav" aria-label={ui("Main navigation")}>
+        <nav className="r-bottom-nav r-bottom-nav--five" id="retail-bottom-nav" style={{gridTemplateColumns:`repeat(${2+Number(canItems)+Number(canBill)+Number(canKhata)},minmax(0,1fr))`}} aria-label={ui("Main navigation")}>
           <NavLink
             to="/retail/home"
             className={({ isActive }) => `r-nav-item ${isActive ? 'active' : ''}`}
@@ -90,16 +100,16 @@ const RetailShell = () => {
             <span>{ui("Home")}</span>
           </NavLink>
 
-          <NavLink
+          {canItems&&<NavLink
             to="/retail/items"
             className={({ isActive }) => `r-nav-item ${isActive ? 'active' : ''}`}
             id="nav-items"
           >
             <Package />
             <span>{ui("Items")}</span>
-          </NavLink>
+          </NavLink>}
 
-          <NavLink
+          {canBill&&<NavLink
             to="/retail/quick-sale"
             className={({ isActive }) => `r-nav-item r-nav-item--quick ${isActive ? 'active' : ''}`}
             id="nav-quick-bill"
@@ -107,20 +117,20 @@ const RetailShell = () => {
             title={ui('Quick Bill')}
           >
             <Plus aria-hidden="true" />
-          </NavLink>
+          </NavLink>}
 
-          <NavLink
+          {canKhata&&<NavLink
             to="/retail/khata"
             className={({ isActive }) => `r-nav-item ${isActive ? 'active' : ''}`}
             id="nav-khata"
           >
             <BookOpen />
             <span>{ui("Khata")}</span>
-          </NavLink>
+          </NavLink>}
 
-          <NavLink to="/retail/assistant" id="nav-assistant" className={({isActive})=>'r-nav-item'+(isActive?' active':'')}><Sparkles aria-hidden="true"/><span>{ui('AI Assistant')}</span></NavLink>
+          <QuickActionsButton/>
         </nav>
-        <FloatingAssistant key={[user?.id,tenant?.company_id,tenant?.branch_id,tenant?.financial_year_id].join(':')} />
+        <CorrectionPrompt/><FloatingAssistant key={[user?.id,tenant?.company_id,tenant?.branch_id,tenant?.financial_year_id].join(':')} />
       </div>
     </div>
   );

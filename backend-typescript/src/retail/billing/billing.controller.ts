@@ -2,7 +2,9 @@ import { FinancialCostVisibilityInterceptor } from '../../common/financial-cost-
 import { Controller, Post, Get, Body, Req, UseGuards, UseInterceptors, Query, Param } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { RetailBillDto, RetailHoldDto, RetailReturnDto, RetailAmountSaleDto } from '../dto/retail-bill.dto';
-import { AuthGuard } from '../../common/guards/auth.guard';
+import { AuthGuard, RequirePermissions } from '../../common/guards/auth.guard';
+import { BillCorrectionService } from './bill-correction.service';
+import { BillCorrectionDto,EditRetailBillDto } from './bill-correction.dto';
 import { SubscriptionGuard } from '../../common/guards/subscription.guard';
 import { FeatureGuard, RequireFeature } from '../../common/guards/feature.guard';
 
@@ -11,7 +13,11 @@ import { FeatureGuard, RequireFeature } from '../../common/guards/feature.guard'
 @RequireFeature('RETAIL_POS')
 @UseInterceptors(FinancialCostVisibilityInterceptor)
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(private readonly billingService: BillingService,private corrections:BillCorrectionService) {}
+  @Post(':id/cancel') @RequirePermissions('sales.write')
+  cancel(@Req() req:any,@Param('id') id:string,@Body() dto:BillCorrectionDto){return this.corrections.correct(req.user.company_id,req.user.branch_id,req.user.id,id,dto);}
+  @Post(':id/edit') @RequirePermissions('sales.write')
+  edit(@Req() req:any,@Param('id') id:string,@Body() dto:EditRetailBillDto){return this.corrections.correct(req.user.company_id,req.user.branch_id,req.user.id,id,dto,true);}
 
   @Get()
   async getBills(@Req() req: any, @Query() query: any) {

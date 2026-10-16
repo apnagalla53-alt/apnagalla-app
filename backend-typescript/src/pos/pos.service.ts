@@ -1,3 +1,4 @@
+import { paymentRecipient } from '../retail/counter/upi-profiles';
 import { snapshotDocumentCosts } from '../inventory/cost-snapshots';
 import { allocateBillDiscount } from './bill-discount';
 import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { BatchExpiryService } from '../inventory/batch-expiry.service';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { ItemCompositionService } from '../item-composition/item-composition.service';
+import { nextShopBillNumber } from './bill-number';
 
 @Injectable()
 export class PosService {
@@ -408,7 +410,7 @@ export class PosService {
           branch_id: dto.branch_id,
           financial_year_id: fy.id,
           party_id: partyId,
-          document_number: `POS-${randomUUID()}`,
+          document_number: await nextShopBillNumber(tx,companyId),
           document_date: docDate,
           status: 'POSTED',
           is_pos: true,
@@ -423,7 +425,7 @@ export class PosService {
           due_date: due,
           notes: dto.note,
           sales_channel: dto.sales_channel || 'COUNTER',
-          payment_snapshot: dto.payments.filter(p => p.amount > 0).map(p => ({ method: p.payment_method, amount: p.amount })),
+          payment_snapshot: dto.payments.filter(p => p.amount > 0).map(p => ({ method: p.payment_method, amount: p.amount, ...paymentRecipient(config?.payment_configuration,p) })),
           posted_at: new Date(),
           posted_by: userId,
           lines: {

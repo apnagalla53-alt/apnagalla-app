@@ -61,7 +61,7 @@ export class AuthController {
   capabilities() { return { google_client_id: this.googleIdentity.clientId(), mobile_otp_configured: this.sms.configured(), password_recovery_configured: this.email.isConfigured(), payment_provider_configured: false }; }
   @Get('session') @UseGuards(AccountSessionGuard)
   async currentSession(@Req() req:any) {
-    return { ...await this.authService.sessionProfile(req.account.id), session_mode:'cookie', csrf_token:csrfForSession(req.account.session_id) };
+    return { ...await this.authService.restoreDeviceSession(req.account.id,req.account.session_id), session_mode:'cookie', csrf_token:csrfForSession(req.account.session_id) };
   }
   @Post('browser-session') @UseGuards(AccountSessionGuard)
   async browserSession(@Req() req:any){

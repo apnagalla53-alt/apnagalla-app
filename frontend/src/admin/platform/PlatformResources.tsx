@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlatform, Notice, Rows, Field, dateInput, money, when } from './platform-ui';
@@ -12,8 +13,8 @@ export function PlatformPlans() {
     {open&&<section className="platform-card"><form className="platform-form" onSubmit={submit}>
       <Field label="Plan code"><input required readOnly value={form.code}/></Field>
       <Field label="Plan name"><input required readOnly value={form.name}/></Field>
-      <Field label="Monthly list price"><input required readOnly type="number" value={form.monthly_price}/></Field>
-      {Object.entries(form.limits).map(([key,value])=><Field key={key} label={key.replace('_',' ')}><input type="number" readOnly value={value}/></Field>)}
+      <Field label="Monthly list price"><input required readOnly type="number" value={form.monthly_price} inputMode="decimal"/></Field>
+      {Object.entries(form.limits).map(([key,value])=><Field key={key} label={key.replace('_',' ')}><input type="number" readOnly value={value} inputMode="decimal"/></Field>)}
       <Field label="Description"><textarea readOnly value={form.description}/></Field>
       <div><label><input type="checkbox" checked={form.is_active} onChange={e=>setForm({...form,is_active:e.target.checked})}/>Available to new shops</label></div>
       <div>{features.data?.map(f=><label key={f.id} style={{display:'block',margin:'8px 0'}}><input type="checkbox" disabled checked={form.feature_codes.includes(f.code)}/>{f.name}{featureAvailability(f)!=='AVAILABLE'?' · '+featureAvailability(f).replaceAll('_',' '):''}</label>)}</div>
@@ -32,7 +33,7 @@ export function PlatformFeatures(){
     <section className="platform-card"><form className="platform-form" onSubmit={async e=>{e.preventDefault();if(await state.save('features',form))setForm(initial);}}>
       <Field label="Feature code"><input required maxLength={50} value={form.code} onChange={e=>setForm({...form,code:e.target.value})}/></Field><Field label="Feature name"><input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></Field>
       <Field label="Rollout"><select value={form.rollout_mode} onChange={e=>setForm({...form,rollout_mode:e.target.value})}>{['OFF','BETA','PERCENTAGE','ON'].map(m=><option key={m}>{m}</option>)}</select></Field>
-      {form.rollout_mode==='PERCENTAGE'&&<Field label="Percent of tenants"><input type="number" min="0" max="100" value={form.rollout_percent} onChange={e=>setForm({...form,rollout_percent:Number(e.target.value)})}/></Field>}
+      {form.rollout_mode==='PERCENTAGE'&&<Field label="Percent of tenants"><input type="number" min="0" max="100" value={form.rollout_percent} onChange={e=>setForm({...form,rollout_percent:Number(e.target.value)})} inputMode="decimal"/></Field>}
       {form.rollout_mode==='BETA'&&<Field label="Beta organizations"><select multiple value={form.beta_tenants} onChange={e=>setForm({...form,beta_tenants:Array.from(e.target.selectedOptions,o=>o.value)})}>{tenants.data?.map(t=><option key={t.id} value={t.id}>{t.name} {t.public_id}</option>)}</select></Field>}
       <label><input type="checkbox" checked={form.is_active} onChange={e=>setForm({...form,is_active:e.target.checked})}/>Feature active</label><button className="primary" disabled={state.busy}>Save rollout</button>
     </form></section>
@@ -49,14 +50,14 @@ export function PlatformPayments({organizationId}:{organizationId?:string}){
   return <div className="platform-page"><h1>Subscription billing</h1><Notice state={state}/><section className="platform-card"><h2>Record actual payment</h2>
     <form className="platform-form" onSubmit={async e=>{e.preventDefault();if(await state.save('payments',form))setForm(initial);}}>
       <Field label="Organization"><select required value={form.organization_id} onChange={e=>setForm({...form,organization_id:e.target.value})}><option value="">Choose organization</option>{tenants.data?.map(t=><option key={t.id} value={t.id}>{t.name} {t.public_id}</option>)}</select></Field>
-      {(['amount','tax','discount','period_months'] as const).map(k=><Field key={k} label={k.replace('_',' ')}><input type="number" min={k==='period_months'?1:0} step={k==='period_months'?1:'.01'} required value={form[k]} onChange={e=>setForm({...form,[k]:Number(e.target.value)})}/></Field>)}
+      {(['amount','tax','discount','period_months'] as const).map(k=><Field key={k} label={k.replace('_',' ')}><input type="number" min={k==='period_months'?1:0} step={k==='period_months'?1:'.01'} required value={form[k]} onChange={e=>setForm({...form,[k]:Number(e.target.value)})} inputMode="decimal"/></Field>)}
       <Field label="Payment status"><select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{['PAID','PENDING','FAILED'].map(s=><option key={s}>{s}</option>)}</select></Field>
       <Field label="Payment method"><select value={form.method} onChange={e=>setForm({...form,method:e.target.value})}>{['MANUAL','CASH','UPI','CARD','BANK'].map(s=><option key={s}>{s}</option>)}</select></Field>
       <Field label="Payment reference"><input required value={form.reference} onChange={e=>setForm({...form,reference:e.target.value})}/></Field>
-      <Field label="Payment date"><input required type="date" value={form.paid_at} onChange={e=>setForm({...form,paid_at:e.target.value})}/></Field><button className="primary" disabled={state.busy}>Record payment</button>
+      <Field label="Payment date"><DateInput required type="date" value={form.paid_at} onChange={e=>setForm({...form,paid_at:e.target.value})} lang="en-GB"/></Field><button className="primary" disabled={state.busy}>Record payment</button>
     </form><p className="platform-muted">Recording a payment does not automatically change expiry. Renew the subscription from the organization page.</p></section>
     {refund.id&&<section className="platform-card"><h2>Refund subscription payment</h2><form className="platform-form" onSubmit={async e=>{e.preventDefault();if(await state.save('payments/'+refund.id+'/refund',{amount:refund.amount,reason:refund.reason}))setRefund({id:'',amount:0,reason:''});}}>
-      <Field label="Refund amount"><input type="number" min=".01" step=".01" required value={refund.amount} onChange={e=>setRefund({...refund,amount:Number(e.target.value)})}/></Field>
+      <Field label="Refund amount"><input type="number" min=".01" step=".01" required value={refund.amount} onChange={e=>setRefund({...refund,amount:Number(e.target.value)})} inputMode="decimal"/></Field>
       <Field label="Refund reason"><input required minLength={3} value={refund.reason} onChange={e=>setRefund({...refund,reason:e.target.value})}/></Field><button disabled={state.busy}>Record refund</button>
     </form></section>}
     {state.data&&<Rows rows={state.data.filter(p=>!organizationId||p.organization_id===organizationId)} columns={[{name:'Organization',render:p=>p.organization.name},{name:'Plan snapshot',render:p=>p.plan_name},{name:'Charge / refund',render:p=>money(Number(p.amount)+Number(p.tax)-Number(p.discount))+' / '+money(p.refund_amount)},
@@ -69,8 +70,8 @@ export function PlatformExpenses(){
   return <div className="platform-page"><h1>Platform expenses</h1><p className="platform-muted">SaaS operating costs are recorded separately from each shop’s expenses.</p><Notice state={state}/>
     <section className="platform-card"><form className="platform-form" onSubmit={async e=>{e.preventDefault();if(await state.save('expenses',form))setForm(initial);}}>
       <Field label="Cost category"><select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{['SERVER','DATABASE','STORAGE','DOMAIN','EMAIL_SMS','GATEWAY','SUPPORT','ADS','SALARY','SOFTWARE','MISC'].map(c=><option key={c}>{c}</option>)}</select></Field>
-      <Field label="Amount"><input required type="number" min=".01" step=".01" value={form.amount} onChange={e=>setForm({...form,amount:Number(e.target.value)})}/></Field>
-      <Field label="Expense date"><input required type="date" value={form.expense_date} onChange={e=>setForm({...form,expense_date:e.target.value})}/></Field>
+      <Field label="Amount"><input required type="number" min=".01" step=".01" value={form.amount} onChange={e=>setForm({...form,amount:Number(e.target.value)})} inputMode="decimal"/></Field>
+      <Field label="Expense date"><DateInput required type="date" value={form.expense_date} onChange={e=>setForm({...form,expense_date:e.target.value})} lang="en-GB"/></Field>
       <Field label="Payment method"><select value={form.method} onChange={e=>setForm({...form,method:e.target.value})}>{['CASH','UPI','CARD','BANK','MANUAL'].map(m=><option key={m}>{m}</option>)}</select></Field>
       <Field label="Reference"><input value={form.reference} onChange={e=>setForm({...form,reference:e.target.value})}/></Field><Field label="Note"><textarea value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/></Field><button className="primary" disabled={state.busy}>Record platform expense</button>
     </form></section>
@@ -141,8 +142,8 @@ export function PlatformSettings(){
       <Field label="Title"><input required value={message.title} onChange={e=>setMessage({...message,title:e.target.value})}/></Field><Field label="Message"><textarea required value={message.message} onChange={e=>setMessage({...message,message:e.target.value})}/></Field>
       <Field label="Audience"><select value={message.audience} onChange={e=>setMessage({...message,audience:e.target.value})}>{['ALL','FREE','RETAIL','RETAIL_PLUS','SELECTED'].map(a=><option key={a}>{a}</option>)}</select></Field>
       {message.audience==='SELECTED'&&<Field label="Selected organizations"><select multiple value={message.tenant_ids} onChange={e=>setMessage({...message,tenant_ids:Array.from(e.target.selectedOptions,o=>o.value)})}>{tenants.data?.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></Field>}
-      <Field label="Starts"><input type="date" required value={message.starts_at} onChange={e=>setMessage({...message,starts_at:e.target.value})}/></Field><Field label="Ends"><input type="date" required value={message.ends_at} onChange={e=>setMessage({...message,ends_at:e.target.value})}/></Field>
-      <Field label="Priority"><input type="number" min="0" max="10" value={message.priority} onChange={e=>setMessage({...message,priority:Number(e.target.value)})}/></Field><button className="primary" disabled={announcements.busy}>Publish announcement</button>
+      <Field label="Starts"><DateInput type="date" required value={message.starts_at} onChange={e=>setMessage({...message,starts_at:e.target.value})} lang="en-GB"/></Field><Field label="Ends"><DateInput type="date" required value={message.ends_at} onChange={e=>setMessage({...message,ends_at:e.target.value})} lang="en-GB"/></Field>
+      <Field label="Priority"><input type="number" min="0" max="10" value={message.priority} onChange={e=>setMessage({...message,priority:Number(e.target.value)})} inputMode="decimal"/></Field><button className="primary" disabled={announcements.busy}>Publish announcement</button>
     </form></section>{announcements.data&&<Rows rows={announcements.data} columns={[{name:'Title',render:a=>a.title},{name:'Message',render:a=>a.message},{name:'Audience',render:a=>a.audience},{name:'Dates',render:a=>dateInput(a.starts_at)+' – '+dateInput(a.ends_at)}]}/>}
   </div>;
 }

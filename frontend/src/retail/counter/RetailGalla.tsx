@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { Sheet } from "../components/MobileControls";
@@ -117,13 +118,13 @@ export default function RetailGalla() {
             }}
           >
             <label htmlFor="galla-date">{ui("Custom Date")}</label>
-            <input
+            <DateInput
               id="galla-date"
               type="date"
               className="r-input"
               required
               value={draftDate}
-              onChange={(e) => setDraftDate(e.target.value)}
+              onChange={(e) => setDraftDate(e.target.value)} lang="en-GB"
             />
             <button className="r-btn r-btn--primary r-w-full">
               Show Galla
@@ -228,7 +229,7 @@ export default function RetailGalla() {
                   "Ledger opening " + rupee(data.ledger_opening_cash)
                 }
                 value={opening}
-                onChange={(e) => setOpening(e.target.value)}
+                onChange={(e) => setOpening(e.target.value)} inputMode="decimal"
               />
               <label htmlFor="galla-actual">{ui("Actual Cash Count · optional")}</label>
               <input
@@ -238,7 +239,7 @@ export default function RetailGalla() {
                 min="0"
                 step=".01"
                 value={actual}
-                onChange={(e) => setActual(e.target.value)}
+                onChange={(e) => setActual(e.target.value)} inputMode="decimal"
               />
               <label htmlFor="galla-note">{ui("Note")}</label>
               <textarea

@@ -31,8 +31,8 @@ function loadGoogle() {
 export function googleWebAvailable() { return !Capacitor.isNativePlatform(); }
 export function googleSignInAvailable() { return googleWebAvailable() || nativeGoogleAvailable(); }
 
-export default function GoogleSignIn({ mode = 'login', enabled = true, password = '', terms = false, referral = '', onSuccess }: {
-  mode?: 'login' | 'link' | 'signup'; enabled?: boolean; password?: string; terms?: boolean; referral?: string; onSuccess: (result: any) => void;
+export default function GoogleSignIn({ mode = 'login', enabled = true, password = '', terms = false, referral = '', onSuccess, onBlocked }: {
+  mode?: 'login' | 'link' | 'signup'; enabled?: boolean; password?: string; terms?: boolean; referral?: string; onSuccess: (result: any) => void; onBlocked?: () => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const latest = useRef({ password, onSuccess, terms, referral }); latest.current = { password, onSuccess, terms, referral };
@@ -80,8 +80,9 @@ export default function GoogleSignIn({ mode = 'login', enabled = true, password 
     return () => { disposed = true; };
   }, [mode, enabled, revision]);
   if (nativeGoogleAvailable()) return <div className="google-sign-in">
-    <button className="google-native-button" type="button" disabled={working || !enabled} onClick={async () => {
-      if (working || !enabled) return; setWorking(true); setError(''); setSignupRequired(false);
+    <button className="google-native-button" type="button" disabled={working || !enabled && !onBlocked} onClick={async () => {
+      if (!enabled) { onBlocked?.(); return; }
+      if (working) return; setWorking(true); setError(''); setSignupRequired(false);
       try {
         const challenge = (await api.post(challengePath)).data;
         const identity = await nativeGoogleSignIn(challenge.client_id, challenge.nonce);
@@ -101,7 +102,7 @@ export default function GoogleSignIn({ mode = 'login', enabled = true, password 
   </div>;
   if (!googleWebAvailable()) return null;
   if (!googleOriginSupported(window.location.origin)) return <p className="login-hint" role="status">Google sign-in needs the live HTTPS website or localhost on the server PC. On this LAN address, use your shop username and password.</p>;
-  if (!enabled) return <div className="google-sign-in"><button className="google-native-button" type="button" disabled>
+  if (!enabled) return <div className="google-sign-in"><button className="google-native-button" type="button" disabled={!onBlocked} onClick={onBlocked}>
     <img src={googleLogo} alt="" width="20" height="20" />{mode === 'signup' ? 'Sign up with Google' : 'Continue with Google'}
   </button></div>;
   return <div className="google-sign-in" aria-busy={working}>

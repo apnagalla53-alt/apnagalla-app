@@ -141,11 +141,12 @@ const RetailKhata = () => {
           <div className="r-section r-party-quick-actions"><button id="add-customer-btn" className="r-btn r-btn--primary" onClick={()=>navigate('/retail/customers/add')}><Plus size={20}/>{ui('Add Customer')}</button><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/receive-payment')}>{ui('Customer Paid Me')}</button></div>
           {/* Search */}
           <div className="r-search-bar">
-            <span className="r-search-icon">
+            <span className="r-search-icon" aria-hidden="true">
               <Search size={20} />
             </span>
             <input
-              type="text"
+              type="search"
+              aria-label={ui("Search customer")}
               placeholder="Search customer"
               value={searchQuery}
               onChange={(e) => {

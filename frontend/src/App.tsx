@@ -1,3 +1,4 @@
+const RetailAudit = lazy(() => import('./retail/RetailAudit'));
 const RetailIntake = lazy(() => import('./retail/intake/RetailIntake'));
 import { lazy, Suspense } from 'react';
 import RetailErrorBoundary from './retail/RetailErrorBoundary';
@@ -262,7 +263,7 @@ function App() {
           <Route path="bills/held" element={<RetailHeldBills />} />
           <Route path="payment" element={<RetailPayment />} />
           <Route path="sale-complete" element={<RetailSaleComplete />} />
-          <Route path="items" element={<RetailItems />} />
+          <Route path="audit" element={<RetailAudit/>}/><Route path="items" element={<RetailItems />} />
           <Route path="items/add" element={<RetailAddItem />} />
           <Route path="items/add-faster" element={<RetailIntake />} />
           <Route path="items/bulk" element={<BulkItemEditor />} />

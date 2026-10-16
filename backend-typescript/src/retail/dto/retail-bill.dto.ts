@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, MaxLength, MinLength, Matches } from 'class-validator';
+import { IsBoolean, IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, MaxLength, MinLength, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PurchaseDimensionsDto } from './retail-purchase.dto';
 export class QuickBillItemDto {
@@ -23,6 +23,9 @@ export class RetailBillLineDto {
   @IsOptional() @IsArray() @ArrayMaxSize(200) @IsUUID('all', { each: true }) modifier_option_ids?: string[];
 }
 export class RetailPaymentSplitDto {
+  @IsOptional() @IsString() @Matches(/^(primary|[a-f0-9-]{36})$/) receiving_profile_id?:string;
+  @IsOptional() @IsString() @Matches(/^[6-9]\d{9}$/) received_on_mobile?:string;
+  @IsOptional() @IsBoolean() receipt_confirmed?:boolean;
   @IsIn(['CASH','UPI','CARD','BANK']) method: string;
   @IsNumber() @Min(0) amount: number;
 }
@@ -51,6 +54,9 @@ export class RetailReturnDto {
   @IsIn(['CASH','KHATA']) refund_method: string;
 }
 export class RetailAmountSaleDto {
+  @IsOptional() @IsString() @Matches(/^(primary|[a-f0-9-]{36})$/) receiving_profile_id?:string;
+  @IsOptional() @IsString() @Matches(/^[6-9]\d{9}$/) received_on_mobile?:string;
+  @IsOptional() @IsBoolean() receipt_confirmed?:boolean;
   @IsNumber() @Min(0.01) amount: number;
   @IsIn(['CASH','UPI','CARD','BANK','UDHAR']) payment_method: string;
   @IsOptional() @IsUUID() customer_id?: string;

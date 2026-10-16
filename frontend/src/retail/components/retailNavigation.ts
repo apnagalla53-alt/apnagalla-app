@@ -43,7 +43,7 @@ const khata = ['RETAIL_POS', 'KHATA'] as const;
 export const drawerQuickLinks: readonly DrawerNavItem[] = [
   { id: 'home', label: 'Home', route: '/retail/home', icon: House },
   { id: 'quick-sale', label: 'Quick Bill', route: '/retail/quick-sale', icon: Zap, permissions: ['sales.write'], features: retail },
-  { id: 'bill', label: 'Make Bill', route: '/retail/bill', icon: ReceiptText, permissions: ['sales.write'], features: inventory },
+  { id: 'bill', label: 'Detailed Bill', route: '/retail/bill', icon: ReceiptText, permissions: ['sales.write'], features: inventory },
   { id: 'gst', label: 'GST Invoices', route: '/retail/gst', icon: FileBadge, permissions: ['sales.read'], features: ['RETAIL_POS','GST_INVOICES'] },
   { id: 'inventory', label: 'Inventory', route: '/retail/stock', icon: Package, permissions: ['inventory.read'], features: inventory },
   { id: 'khata', label: 'Khata', route: '/retail/khata', icon: BookOpen, permissions: ['accounting.read'], features: khata },
@@ -100,7 +100,8 @@ export const drawerGroups: readonly DrawerNavGroup[] = [
     { id: 'help', label: 'Help & Support', route: '/retail/more/help', icon: Headset },
     { id: 'privacy', label: 'Privacy', route: '/privacy', icon: ShieldCheck },
     { id: 'terms', label: 'Terms', route: '/terms', icon: FileText },
-    { id: 'about', label: 'About EVOLIX', route: '/about', icon: Info },
+    { id: 'about', label: 'About Apna Galla', route: '/about', icon: Info },
+    { id:'audit',label:'Audit History',route:'/retail/audit',icon:History,permissions:['settings.write'] },
     { id: 'all-tools', label: 'All settings & tools', route: '/retail/more', icon: Grid2X2 },
   ] },
 ];
@@ -122,6 +123,20 @@ export function visibleDrawerNavigation(access: DrawerAccess) {
       .filter(group => group.children.length > 0),
   };
 }
+
+// Daily navigation has one destination per task. The larger registry above is
+// retained for permission-filtered settings pages and saved quick shortcuts.
+const findTool = (id: string) => [...drawerQuickLinks, ...drawerGroups.flatMap(group => group.children)].find(item => item.id === id)!;
+export const simpleDrawerItems: readonly DrawerNavItem[] = [
+  findTool('home'), findTool('quick-sale'), findTool('galla'),
+  { ...findTool('bills'), label: 'Bills / Sales' },
+  { ...findTool('purchases'), label: 'Purchases / Buy Stock' },
+  { ...findTool('items'), id: 'inventory', label: 'Inventory' },
+  findTool('khata'), findTool('suppliers'), findTool('expenses'), findTool('reports'), findTool('staff'),
+  findTool('business'),
+  { id: 'settings-help', label: 'Settings & Help', route: '/retail/more', icon: Settings2 },
+];
+export const visibleSimpleDrawer = (access: DrawerAccess) => simpleDrawerItems.filter(item => canShowDrawerItem(item, access));
 
 export interface DrawerLocation { pathname: string; search: string; hash: string }
 function matchScore(item: DrawerNavItem, location: DrawerLocation): number {

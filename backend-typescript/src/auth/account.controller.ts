@@ -10,7 +10,7 @@ import { validatePassword } from './password-policy';
 import { auditIdentityChange } from './auth-audit';
 import { ActivationCampaignService } from './activation-campaign.service';
 class ActivationCodeDto { @IsString() @MinLength(3) @MaxLength(40) code:string; }
-class InitialPasswordDto { @IsString() @MinLength(12) @MaxLength(72) password:string; }
+class InitialPasswordDto { @IsString() @MinLength(8) @MaxLength(72) password:string; }
 class RequestOtpDto {
   @IsString() @MinLength(10) @MaxLength(25) phone: string;
   @IsIn(['SIGN_IN','SIGN_UP']) purpose: 'SIGN_IN'|'SIGN_UP';

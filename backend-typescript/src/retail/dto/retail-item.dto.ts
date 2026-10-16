@@ -1,9 +1,12 @@
 import { IsString, IsNumber, IsOptional, IsBoolean, Min, Max, IsInt, IsUUID, IsIn, MinLength, MaxLength,IsArray,ArrayMinSize,ArrayMaxSize,ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
+// Matches the existing DECIMAL(15,6) item and opening-stock columns.
+const ITEM_NUMBER_MAX = 999_999_999.999999;
+
 export class CreateRetailItemDto {
   @IsOptional() @IsBoolean() skip_opening_cost?: boolean;
-  @IsOptional() @IsNumber() @Min(0) opening_cost?: number;
+  @IsOptional() @IsNumber() @Min(0) @Max(ITEM_NUMBER_MAX, { message: 'Opening cost is too large. Enter an amount below 1,000,000,000.' }) opening_cost?: number;
   @IsOptional() @IsBoolean() inventory_tracking?: boolean;
   @IsString()
   @MinLength(1) @MaxLength(255)
@@ -11,11 +14,13 @@ export class CreateRetailItemDto {
 
   @IsNumber()
   @Min(0)
+  @Max(ITEM_NUMBER_MAX, { message: 'Selling price is too large. Enter an amount below 1,000,000,000.' })
   selling_price: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(ITEM_NUMBER_MAX, { message: 'Stock quantity is too large. Enter a quantity below 1,000,000,000.' })
   opening_stock?: number;
 
   @IsOptional()
@@ -40,11 +45,13 @@ export class CreateRetailItemDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(ITEM_NUMBER_MAX, { message: 'Purchase price is too large. Enter an amount below 1,000,000,000.' })
   purchase_price?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(ITEM_NUMBER_MAX, { message: 'MRP is too large. Enter an amount below 1,000,000,000.' })
   mrp?: number;
 
   @IsOptional()
@@ -58,6 +65,7 @@ export class CreateRetailItemDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(ITEM_NUMBER_MAX, { message: 'Low-stock quantity is too large. Enter a quantity below 1,000,000,000.' })
   low_stock_threshold?: number;
 
   @IsOptional()

@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import { useEffect, useState } from 'react';
 import { Search, Plus, Play, Lock, X, Calendar } from 'lucide-react';
 import api from '../../shared/api';
@@ -184,11 +185,11 @@ const FinancialYears = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <div className="form-group">
               <label className="form-label">Start Date</label>
-              <input required type="date" className="form-control" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} />
+              <DateInput required type="date" className="form-control" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} lang="en-GB" />
             </div>
             <div className="form-group">
               <label className="form-label">End Date</label>
-              <input required type="date" className="form-control" value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })} />
+              <DateInput required type="date" className="form-control" value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })} lang="en-GB" />
             </div>
           </div>
           <div className="modal-footer">

@@ -1,3 +1,4 @@
+import { BusinessEditAuditInterceptor } from './common/business-edit-audit.interceptor';
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -58,7 +59,7 @@ import { SecurityContextMiddleware } from './database/security-context.middlewar
     BarcodeModule,
   ],
   controllers: [AppController],
-  providers: [AppService, {provide:APP_INTERCEPTOR,useClass:BrowserSessionInterceptor}, { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },{provide:APP_FILTER,useClass:SafeHttpErrorFilter}],
+  providers: [AppService, {provide:APP_INTERCEPTOR,useClass:BrowserSessionInterceptor}, { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },{provide:APP_INTERCEPTOR,useClass:BusinessEditAuditInterceptor},{provide:APP_FILTER,useClass:SafeHttpErrorFilter}],
 })
 export class AppModule implements NestModule{
  configure(consumer:MiddlewareConsumer){consumer.apply(SecurityContextMiddleware).forRoutes({path:'{*path}',method:RequestMethod.ALL});}

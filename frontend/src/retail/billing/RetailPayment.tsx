@@ -1,3 +1,5 @@
+import DateInput from '../../shared/components/DateInput';
+import { readWorkflowDraft, useWorkflowDraft } from '../experience/workflowDraft';
 import { trackExperience } from '../experience/experienceEvents';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
@@ -7,7 +9,7 @@ import { ui, useUiLanguage } from "../../i18n";
  * Large amount at top → Payment methods → Cash/UPI/Udhar/Split flows
  * Single CTA: COMPLETE SALE / SAVE AS UDHAR
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { getApiErrorMessage } from "../../shared/api";
 import api from "../../shared/api";
@@ -40,7 +42,9 @@ type PaymentMode = "CASH" | "UPI" | "UDHAR" | "SPLIT";
 const RetailPayment = () => {
   useUiLanguage();
   const navigate = useNavigate();
+  const completedReceipt = useRef<string | null>(null);
   const {
+    draft_id,
     items,
     discount: billDiscount,
     setBillDiscount,
@@ -62,6 +66,10 @@ const RetailPayment = () => {
   const total = quote ?? getTotal();
   const itemCount = getItemCount();
 
+  const signature=JSON.stringify([draft_id,items.map(i=>[i.row_id,i.item_id,i.new_item?.client_id,i.quantity,i.rate,i.discount_amount,i.unit_id,i.variant_id,i.batch_id,i.dimensions])]);
+  const [recovered]=useState(()=>{const saved=readWorkflowDraft<any>('bill-payment');return saved?.signature===signature?saved:null;});
+  const [receivingProfile,setReceivingProfile]=useState(recovered?.receivingProfile||'');
+  const [alternate,setAlternate]=useState(!!recovered?.alternate),[receivingMobile,setReceivingMobile]=useState(recovered?.receivingMobile||'');
   const [selectedMode, setSelectedMode] = useState<PaymentMode | null>(
     savedSale
       ? savedSale.mode === "Cash"
@@ -71,11 +79,11 @@ const RetailPayment = () => {
           : savedSale.mode === "Udhar"
             ? "UDHAR"
             : "SPLIT"
-      : null,
+      : recovered?.selectedMode || null,
   );
 
   // Cash state
-  const [cashReceived, setCashReceived] = useState("");
+  const [cashReceived, setCashReceived] = useState(recovered?.cashReceived||"");
   const cashAmount = parseFloat(cashReceived) || 0;
   const cashChange = Math.max(0, cashAmount - total);
 
@@ -86,9 +94,9 @@ const RetailPayment = () => {
   const [addingCustomer,setAddingCustomer]=useState(false);
 
   // Split state
-  const [splitCash, setSplitCash] = useState("");
-  const [splitUPI, setSplitUPI] = useState("");
-  const [splitUdhar, setSplitUdhar] = useState(false);
+  const [splitCash, setSplitCash] = useState(recovered?.splitCash||"");
+  const [splitUPI, setSplitUPI] = useState(recovered?.splitUPI||"");
+  const [splitUdhar, setSplitUdhar] = useState(!!recovered?.splitUdhar);
   const splitCashAmt = Math.round((Number(splitCash) || 0) * 100) / 100;
   const splitUPIAmt = Math.round((Number(splitUPI) || 0) * 100) / 100;
   const splitPaidPaise = Math.round(splitCashAmt * 100) + Math.round(splitUPIAmt * 100);
@@ -111,8 +119,9 @@ const RetailPayment = () => {
   const [error, setError] = useState("");
   const photoUpload = useOptionalPhotoUpload();
   const [upiConfirmed, setUpiConfirmed] = useState(false);
+  const draft=useWorkflowDraft('bill-payment',{signature,selectedMode,cashReceived,splitCash,splitUPI,splitUdhar,receivingProfile,alternate,receivingMobile});
   useEffect(()=>{photoUpload.select(attachment || null);},[attachment]);
-  useEffect(()=>{setUpiConfirmed(false);},[selectedMode, quote, splitUPI]);
+  useEffect(()=>{setUpiConfirmed(false);},[selectedMode, quote, splitUPI,receivingProfile,alternate,receivingMobile]);
 
   useEffect(() => {
     let active = true;
@@ -186,6 +195,7 @@ const RetailPayment = () => {
   }, [showUdharCustomerSelect, customerSearch, customerOffset, customerRetry]);
 
   // Redirect if no items
+  if (completedReceipt.current) return <Navigate to={completedReceipt.current} replace />;
   if (items.length === 0) {
     return <Navigate to="/retail/bill" replace />;
   }
@@ -195,6 +205,7 @@ const RetailPayment = () => {
     payments?: PaymentSplit[],
   ) => {
     if (saving || quoteLoading || quote === null) return;
+    if((selectedMode==='UPI'||selectedMode==='SPLIT'&&splitUPIAmt>0)&&alternate&&!/^[6-9]\d{9}$/.test(receivingMobile)){setError('Enter the 10-digit number that received payment.');return;}
     if (!savedSale && (selectedMode==='UPI' || selectedMode==='SPLIT' && splitUPIAmt>0) && !upiConfirmed) return;
     setSaving(true);
     setError("");
@@ -207,11 +218,7 @@ const RetailPayment = () => {
         : await posApi.postSale({
             items: items.map(billLinePayload),
             customer_id: customer?.id,
-            payment_splits:
-              payments ||
-              (mode === "Udhar"
-                ? []
-                : [{ method: mode.toUpperCase(), amount: total }]),
+            payment_splits: (payments || (mode === "Udhar" ? [] : [{method:mode.toUpperCase(),amount:total}])).map(payment=>({...payment,...(payment.method==='UPI'?{receipt_confirmed:upiConfirmed,...(alternate?{received_on_mobile:receivingMobile}:receivingProfile?{receiving_profile_id:receivingProfile}:{})}:{})})),
             total_amount: total,
             discount: items.reduce((acc, i) => acc + i.discount_amount, 0),
             bill_discount: billDiscount,
@@ -219,7 +226,7 @@ const RetailPayment = () => {
             due_date: (mode === "Udhar" || (selectedMode === "SPLIT" && splitHasCredit)) ? details.due_date || undefined : undefined,
             note: details.note || undefined,
             sales_channel: details.sales_channel,
-          });
+          },draft_id);
       if (!res.data?.id || !res.data?.document_number)
         throw new Error("Sale confirmation missing");
       posted=true;
@@ -240,7 +247,10 @@ const RetailPayment = () => {
         timestamp: new Date(),
       });
 
-      navigate("/retail/sale-complete", { replace: true });
+      // Clearing the shared draft synchronously renders this screen again.
+      // Commit the receipt target first so its empty-cart redirect cannot win.
+      completedReceipt.current='/retail/bills/'+res.data.id+'/print';
+      draft.clear();useBillStore.getState().clearBill();navigate(completedReceipt.current, { replace: true });
     } catch (e) {
       if(!posted)trackExperience('bill_failed',{workflow:'PAYMENT'});
       setError(getApiErrorMessage(e));
@@ -300,7 +310,8 @@ const RetailPayment = () => {
                   lines_count: items.length,
                   timestamp: new Date(),
                 });
-                navigate("/retail/sale-complete", { replace: true });
+                completedReceipt.current='/retail/bills/'+savedSale.invoice.id+'/print';
+                draft.clear();useBillStore.getState().clearBill();navigate(completedReceipt.current,{replace:true});
               }}
             >
               Continue without photo
@@ -365,7 +376,7 @@ const RetailPayment = () => {
         <label className="r-label" htmlFor="bill-discount">Bill discount (optional)</label>
         <input id="bill-discount" className="r-input" type="number" min="0" step="0.01"
           disabled={saving} value={billDiscount || ''} placeholder="₹0"
-          onChange={e => setBillDiscount(Math.max(0, Number(e.target.value) || 0))}/>
+          onChange={e => setBillDiscount(Math.max(0, Number(e.target.value) || 0))} inputMode="decimal"/>
         <p className="r-caption">Applied across the items before tax. The bill total updates after checking prices.</p>
       </div>}
       {!savedSale && (
@@ -376,7 +387,7 @@ const RetailPayment = () => {
                 key={mode}
                 className={'r-payment-method'+(selectedMode===mode?' is-selected':'')}
                 aria-pressed={selectedMode===mode}
-                disabled={saving}
+                disabled={saving||quoteLoading||quote===null}
                 onClick={() => {
                   if (mode === "UDHAR" && !customer) {
                     setShowUdharCustomerSelect(true);
@@ -407,9 +418,9 @@ const RetailPayment = () => {
       )}
 
       {/* ── CASH Flow ─────────────────────────────────── */}
-      {selectedMode === "UPI" && quote !== null && (
+      {selectedMode === "UPI" && quote !== null && !alternate && (
         <div className="r-section">
-          <UpiQr amount={total} />
+          <UpiQr amount={total} selectedProfileId={receivingProfile} onProfileChange={setReceivingProfile}/>
         </div>
       )}
       {selectedMode === "CASH" && (
@@ -433,7 +444,7 @@ const RetailPayment = () => {
               placeholder={total.toString()}
               value={cashReceived}
               onChange={(e) => setCashReceived(e.target.value)}
-              id="cash-received-input"
+              id="cash-received-input" inputMode="decimal"
             />
           </div>
 
@@ -497,60 +508,7 @@ const RetailPayment = () => {
         </div>
       )}
 
-      {/* ── UPI Flow ──────────────────────────────────── */}
-      {selectedMode === "UPI" && (
-        <div style={{ padding: "var(--r-space-lg) var(--r-space-base)" }}>
-          <button
-            className="r-btn r-btn--ghost r-btn--sm"
-            onClick={() => {
-              if (!savedSale) setSelectedMode(null);
-            }}
-            disabled={saving || !!savedSale}
-            style={{ marginBottom: "var(--r-space-lg)" }}
-          >
-            <ArrowLeft size={16} /> Change method
-          </button>
-
-          <div
-            className="r-card"
-            style={{ textAlign: "center", padding: "var(--r-space-2xl)" }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: "var(--r-info-light)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto var(--r-space-lg)",
-              }}
-            >
-              <Smartphone size={28} style={{ color: "var(--r-info)" }} />
-            </div>
-            <div
-              style={{
-                fontSize: "var(--r-text-lg)",
-                fontWeight: 600,
-                marginBottom: 4,
-              }}
-            >
-              {ui('Record UPI already received')}
-            </div>
-            <div
-              style={{
-                color: "var(--r-text-muted)",
-                fontSize: "var(--r-text-sm)",
-              }}
-            >
-              Confirm the customer has paid ₹{total.toLocaleString("en-IN")} via
-              UPI
-            </div>
-          </div>
-          {!savedSale && <ManualUpiConfirmation checked={upiConfirmed} onChange={setUpiConfirmed}/>}
-        </div>
-      )}
+      {selectedMode === "UPI" && <div className="r-section"><button type="button" className="r-btn r-btn--ghost" disabled={saving||!!savedSale} onClick={()=>setSelectedMode(null)}><ArrowLeft size={16}/>Change method</button>{!savedSale&&<ManualUpiConfirmation checked={upiConfirmed} onChange={setUpiConfirmed}/>}</div>}
 
       {/* ── UDHAR Flow ────────────────────────────────── */}
       {selectedMode === "UDHAR" && (
@@ -670,7 +628,7 @@ const RetailPayment = () => {
               placeholder="0"
               value={splitCash}
               onChange={(e) => setSplitCash(e.target.value)}
-              id="split-cash-input"
+              id="split-cash-input" inputMode="decimal"
             />
           </div>
 
@@ -689,12 +647,12 @@ const RetailPayment = () => {
               placeholder="0"
               value={splitUPI}
               onChange={(e) => setSplitUPI(e.target.value)}
-              id="split-upi-input"
+              id="split-upi-input" inputMode="decimal"
             />
           </div>
 
-          {validSplitAmounts && splitUPIAmt > 0 && splitPaidPaise <= totalPaise && (
-            <UpiQr amount={splitUPIAmt} />
+          {validSplitAmounts && splitUPIAmt > 0 && splitPaidPaise <= totalPaise && !alternate && (
+            <UpiQr amount={splitUPIAmt} selectedProfileId={receivingProfile} onProfileChange={setReceivingProfile}/>
           )}
           {!savedSale && splitUPIAmt>0 && <ManualUpiConfirmation checked={upiConfirmed} onChange={setUpiConfirmed}/>}
           <label className="r-card" style={{display:'flex',alignItems:'center',gap:12,cursor:'pointer'}}>
@@ -767,13 +725,14 @@ const RetailPayment = () => {
       {(selectedMode === "UDHAR" || (selectedMode === "SPLIT" && splitHasCredit)) && (
         <div className="r-section r-input-group">
           <label className="r-label" htmlFor="payment-promise-date">When will the customer pay? (optional)</label>
-          <input id="payment-promise-date" className="r-input" type="date"
+          <DateInput id="payment-promise-date" className="r-input" type="date"
             min={details.date || undefined} value={details.due_date} disabled={saving || !!savedSale}
-            onChange={e => setDetails({ due_date: e.target.value })} />
+            onChange={e => setDetails({ due_date: e.target.value })} lang="en-GB" />
           <p className="r-caption">Unpaid bills appear on this date in Calendar.</p>
         </div>
       )}
 
+      {(selectedMode==='UPI'||selectedMode==='SPLIT'&&splitUPIAmt>0)&&!savedSale&&<div className="r-section"><label className="r-upi-confirmation"><input type="checkbox" checked={alternate} onChange={e=>setAlternate(e.target.checked)}/><span>Received payment on another number<small>Use when payment went to an account without a saved QR.</small></span></label>{alternate&&<label>Receiving mobile number<input className="r-input" type="tel" inputMode="numeric" maxLength={10} value={receivingMobile} onChange={e=>setReceivingMobile(e.target.value.replace(/\D/g,''))}/></label>}</div>}
       {/* ── Sticky CTA ────────────────────────────────── */}
       {selectedMode && (
         <div className="r-sticky-footer">
@@ -807,7 +766,7 @@ const RetailPayment = () => {
                 ? ui("Saving…")
                 : photoUpload.failed
                   ? ui("Retry Photo Upload")
-                  : ui('Record UPI received')}
+                  : ui('Save bill')}
             </button>
           )}
           {selectedMode === "UDHAR" && (

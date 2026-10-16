@@ -1,3 +1,4 @@
+import { formatTime } from '../../shared/dateFormat';
 import { ui, useUiLanguage } from "../../i18n";
 import CompletedPaymentQr from '../payments/CompletedPaymentQr';
 import WhatsAppCustomer from '../payments/WhatsAppCustomer';
@@ -109,7 +110,7 @@ const RetailSaleComplete = () => {
         </>}
         <div className="r-success-detail-row">
           <span>{ui("Time")}</span>
-          <span>{completedSale.timestamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span>{formatTime(completedSale.timestamp)}</span>
         </div>
       </div>
 

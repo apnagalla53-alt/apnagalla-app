@@ -70,7 +70,7 @@ export interface BillDetails {
   sales_channel: 'COUNTER' | 'PHONE' | 'WHATSAPP' | 'ONLINE' | 'OTHER';
   note: string;
 }
-const newBillDetails = (): BillDetails => ({ date: new Date().toLocaleDateString('en-CA'), due_date: '', sales_channel: 'COUNTER', note: '' });
+const newBillDetails = (): BillDetails => ({ date: new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()), due_date: '', sales_channel: 'COUNTER', note: '' });
 
 export interface CompletedSale {
   gst_workflow?: boolean;
@@ -107,6 +107,7 @@ export function billLinePayload(i: BillLineItem) {
 }
 
 interface BillState {
+  draft_id:string;
   gstWorkflow: boolean;
   setGstWorkflow: (value:boolean) => void;
   savedSale: { invoice: any; mode: string } | null;
@@ -132,6 +133,7 @@ interface BillState {
 }
 
 export const useBillStore = create<BillState>((set, get) => ({
+  draft_id:createUuid(),
   gstWorkflow: false,
   setGstWorkflow: (gstWorkflow) => set({gstWorkflow}),
   savedSale: null,
@@ -221,7 +223,7 @@ export const useBillStore = create<BillState>((set, get) => ({
     return get().items.reduce((sum, i) => sum + i.quantity, 0);
   },
 
-  clearBill: () => set({ items: [], customer: null, discount: 0, details: newBillDetails(), attachment: null, savedSale: null, gstWorkflow:false }),
+  clearBill: () => set({ draft_id:createUuid(),items: [], customer: null, discount: 0, details: newBillDetails(), attachment: null, savedSale: null, gstWorkflow:false }),
 }));
 
 // ── Sale Completion Store ──────────────────────────────
@@ -240,13 +242,13 @@ export const useSaleCompleteStore = create<SaleCompleteState>((set) => ({
 
 // Recover only the unfinished UI draft, scoped to this user/company/branch/year.
 // Financial posting and retries still pass through the server's idempotency path.
-type SavedDraft=Pick<BillState,'items'|'customer'|'details'|'discount'|'gstWorkflow'>;
+type SavedDraft=Pick<BillState,'draft_id'|'items'|'customer'|'details'|'discount'|'gstWorkflow'>;
 let draftScope='',hydratingDraft=false;
 function syncBillDraft(){const scope=workflowScope();if(scope===draftScope)return;hydratingDraft=true;draftScope=scope;
  const saved=readWorkflowDraft<SavedDraft>('bill',scope);
- useBillStore.setState({items:[],customer:null,details:newBillDetails(),discount:0,gstWorkflow:false,attachment:null,savedSale:null,...(saved&&Array.isArray(saved.items)&&saved.items.length<=200?saved:{})});
+ useBillStore.setState({draft_id:createUuid(),items:[],customer:null,details:newBillDetails(),discount:0,gstWorkflow:false,attachment:null,savedSale:null,...(saved&&Array.isArray(saved.items)&&saved.items.length<=200?saved:{})});
  useSaleCompleteStore.getState().clearCompletedSale();hydratingDraft=false;
 }
 useAuthStore.subscribe(syncBillDraft);
-useBillStore.subscribe(state=>{if(hydratingDraft||!draftScope)return;if(state.savedSale||!state.items.length){clearWorkflowDraft('bill',draftScope);return;}writeWorkflowDraft('bill',{items:state.items,customer:state.customer,details:state.details,discount:state.discount,gstWorkflow:state.gstWorkflow},draftScope);});
+useBillStore.subscribe(state=>{if(hydratingDraft||!draftScope)return;if(state.savedSale||!state.items.length){clearWorkflowDraft('bill',draftScope);return;}writeWorkflowDraft('bill',{draft_id:state.draft_id,items:state.items,customer:state.customer,details:state.details,discount:state.discount,gstWorkflow:state.gstWorkflow},draftScope);});
 syncBillDraft();

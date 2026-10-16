@@ -7,10 +7,10 @@ import { useAuthStore } from '../../shared/store/authStore';
 import api from '../../shared/api';
 import {useRetailEntitlements} from '../subscription/useRetailEntitlements';
 import ReportNotificationBell from '../reports/ReportNotificationBell';
-import { DrawerAccordionGroup, DrawerFooter, DrawerQuickLinks } from './DrawerNavigation';
-import { activeDrawerItem, visibleDrawerNavigation } from './retailNavigation';
+import LanguageButton from './LanguageButton';
+import { DrawerNavItem, DrawerFooter } from './DrawerNavigation';
+import { activeDrawerItem, visibleSimpleDrawer } from './retailNavigation';
 import { OPEN_RETAIL_DRAWER_EVENT } from './DrawerMenuButton';
-import { QuickAccessEditor, useQuickAccess } from './QuickAccess';
 
 export default function RetailNavigationDrawer() {
   useUiLanguage();
@@ -18,8 +18,6 @@ export default function RetailNavigationDrawer() {
   const toggle = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
-  const quickAccess=useQuickAccess(),[editQuick,setEditQuick]=useState(false);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const access=useRetailEntitlements();
   const featureError=!!access.error;
@@ -28,10 +26,8 @@ export default function RetailNavigationDrawer() {
   const location = useLocation();
   const BrandTitle = location.pathname === '/retail/home' ? 'h1' : 'div';
   const features = access.data ? new Set(access.data.entitlements.features.filter(feature=>feature.enabled).map(feature=>feature.code)) : null;
-  const navigation = {...visibleDrawerNavigation({ user, features }),quick:quickAccess.sidebar};
-  const activeChild = activeDrawerItem(navigation.groups.flatMap(group => group.children), location);
-  const activeQuick = activeDrawerItem(navigation.quick, location);
-  const activeGroup = navigation.groups.find(group => group.children.some(item => item.id === activeChild))?.id || null;
+  const navigation = visibleSimpleDrawer({ user, features });
+  const activeItem = activeDrawerItem(navigation, location);
 
   useEffect(() => {
     if(open)void access.refresh(true);
@@ -39,10 +35,7 @@ export default function RetailNavigationDrawer() {
 
   useEffect(() => {
     dialog.current?.close();
-    setExpandedGroup(activeGroup);
   }, [location.pathname, location.search, location.hash]);
-  // The first account response may arrive after the active route is rendered.
-  useEffect(() => { setExpandedGroup(activeGroup); }, [activeGroup]);
 
   useEffect(() => {
     if (!open) return;
@@ -55,30 +48,28 @@ export default function RetailNavigationDrawer() {
     if (!open) return;
     const frame = requestAnimationFrame(() => {
       const navigationElement = dialog.current?.querySelector<HTMLElement>('.r-drawer-navigation');
-      const selected = navigationElement?.querySelector<HTMLElement>('.r-drawer-submenu:not([hidden]) [aria-current="page"]');
+      const selected = navigationElement?.querySelector<HTMLElement>('[aria-current="page"]');
       if (selected) selected.scrollIntoView({ block: 'nearest' });
       else if (navigationElement) navigationElement.scrollTop = 0;
     });
     return () => cancelAnimationFrame(frame);
-  }, [open, activeGroup]);
+  }, [open, activeItem]);
 
   const close = () => dialog.current?.close();
   const openDrawer = () => {
     returnFocus.current = toggle.current;
-    setExpandedGroup(activeGroup);
     dialog.current?.showModal();
     setOpen(true);
   };
   useEffect(() => {
     const show = (event: Event) => {
       returnFocus.current = (event as CustomEvent<HTMLElement>).detail;
-      setExpandedGroup(activeGroup);
       if (!dialog.current?.open) dialog.current?.showModal();
       setOpen(true);
     };
     window.addEventListener(OPEN_RETAIL_DRAWER_EVENT, show);
     return () => window.removeEventListener(OPEN_RETAIL_DRAWER_EVENT, show);
-  }, [activeGroup]);
+  }, []);
   const logout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -92,7 +83,7 @@ export default function RetailNavigationDrawer() {
         aria-label={ui('Open shop menu')} aria-haspopup="dialog" aria-expanded={open}
         aria-controls="retail-navigation-drawer" onClick={openDrawer}><Menu size={25} aria-hidden="true" /></button>
       <BrandTitle className="r-toolbar-brand"><BrandHeader compact={location.pathname!=='/retail/home'}/></BrandTitle>
-      <ReportNotificationBell />
+      <LanguageButton/><ReportNotificationBell />
       <Link to="/retail/more/profile" className="r-btn r-btn--icon r-toolbar-profile"
         aria-label={ui('Open account and settings')}><UserRound size={21} aria-hidden="true" /></Link>
     </div>
@@ -106,11 +97,8 @@ export default function RetailNavigationDrawer() {
             onClick={close} autoFocus><X size={22} aria-hidden="true" /></button>
         </header>
         <nav className="r-drawer-navigation" aria-label={ui('Shop navigation')}>
-          <DrawerQuickLinks items={navigation.quick} activeItem={activeQuick} onNavigate={close} onEdit={quickAccess.canEdit?()=>{close();setEditQuick(true);}:undefined} />
-          <div className="r-drawer-accordions">
-            {navigation.groups.map(group => <DrawerAccordionGroup key={group.id} group={group}
-              expanded={expandedGroup === group.id} activeItem={activeChild}
-              onToggle={() => setExpandedGroup(current => current === group.id ? null : group.id)} onNavigate={close} />)}
+          <div className="r-drawer-flat">
+            {navigation.map(item => <DrawerNavItem key={item.id} item={item} active={activeItem === item.id} onNavigate={close} />)}
           </div>
           {!features && !featureError && <p className="r-drawer-notice" role="status">{ui('Loading tools…')}</p>}
           {featureError && <p className="r-drawer-notice" role="status">{ui('Some tools could not be refreshed. Reopen the menu to retry.')}</p>}
@@ -118,6 +106,5 @@ export default function RetailNavigationDrawer() {
         <DrawerFooter onLogout={() => void logout()} busy={loggingOut} />
       </div>
     </dialog>
-    <QuickAccessEditor open={editQuick} onClose={()=>setEditQuick(false)}/>
   </>;
 }

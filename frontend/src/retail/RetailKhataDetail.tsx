@@ -1,3 +1,5 @@
+import AuditHistoryLink from './components/AuditHistoryLink';
+import { formatDate } from '../shared/dateFormat';
 import StitchHeader from './design/StitchHeader';
 import { ui, useUiLanguage } from "../i18n";
 /**
@@ -116,7 +118,7 @@ const RetailKhataDetail = () => {
       </div>
 
       {/* Timeline */}
-      <div className="r-section"><MasterRecordActions kind="customers" id={customer.id} name={customer.name} active={customer.active} onEdit={()=>setEditing(true)} onChanged={()=>setRevision(v=>v+1)}/>{customer.active===false&&<p role="status">{ui('Removed. Past records are kept.')}</p>}</div>
+      <div className="r-section"><AuditHistoryLink/><MasterRecordActions kind="customers" id={customer.id} name={customer.name} active={customer.active} onEdit={()=>setEditing(true)} onChanged={()=>setRevision(v=>v+1)}/>{customer.active===false&&<p role="status">{ui('Removed. Past records are kept.')}</p>}</div>
       {editing&&<Sheet open title={ui('Edit Customer')} onClose={()=>setEditing(false)}><RetailPartyForm initial={customer} onSaved={()=>{setEditing(false);setRevision(v=>v+1);}}/></Sheet>}
       <div className="r-section">
         <h3 className="r-section-title">{ui("Transaction History")}</h3>
@@ -134,7 +136,7 @@ const RetailKhataDetail = () => {
                 <div className="r-timeline-content">
                   <div>
                     <div className="r-timeline-text">{txn.reference || txn.type}</div>
-                    <div className="r-timeline-date">{new Date(txn.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                    <div className="r-timeline-date">{formatDate(txn.date)}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div className={`r-timeline-amount ${txn.type === 'SALE' ? 'r-timeline-amount--credit' : txn.type === 'PAYMENT' ? 'r-timeline-amount--debit' : ''}`}>

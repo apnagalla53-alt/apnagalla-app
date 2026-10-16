@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import {downloadTenantExport} from '../subscription/downloadTenantExport';
@@ -86,7 +87,7 @@ const RetailExpenseReport = () => {
                   <div key={e.id} className="r-card" style={{ padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontWeight: 600 }}>{e.type === 'OWNER_WITHDRAWAL' ? ui("Owner Withdrawal") : e.category || 'Uncategorized'}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{new Date(e.date).toLocaleDateString()} {e.paid_to && `• To: ${e.paid_to}`}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{formatDate(e.date)} {e.paid_to && `• To: ${e.paid_to}`}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 600, color: e.type === 'OWNER_WITHDRAWAL' ? 'var(--r-warning)' : 'var(--r-text)' }}>₹{e.amount.toLocaleString('en-IN')}</div>

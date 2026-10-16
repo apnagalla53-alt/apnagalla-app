@@ -9,7 +9,7 @@ const messageFor = (error: any) => {
 };
 
 function RecoveryCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return <main className="login-container"><section className="login-card"><div className="login-brand">EVOLIX</div><h1>{title}</h1>{children}<Link to="/login">Back to sign in</Link></section></main>;
+  return <main className="login-container"><section className="login-card"><div className="login-brand">Apna Galla</div><h1>{title}</h1>{children}<Link to="/login">Back to sign in</Link></section></main>;
 }
 
 export function ForgotPassword() {
@@ -39,7 +39,7 @@ export function ResetPassword() {
   const [loading, setLoading] = useState(false); const [done, setDone] = useState(false); const [error, setError] = useState('');
   return <RecoveryCard title={done ? 'Password changed' : 'Choose a new password'}>
     {done ? <p role="status">Your other devices have been signed out. Sign in with your new password.</p> : !token ? <p role="alert">This link has no reset token. <Link to="/forgot-password">Request a new reset link</Link>.</p> : <>
-      <p>Staff: use at least 8 characters. Owners: use 12 or more characters with uppercase, lowercase, a number and a symbol. Keep it different from recent passwords.</p>
+      <p>Use at least 8 characters. Letters or numbers alone are allowed. Keep it different from recent passwords.</p>
       <form onSubmit={async event => {
         event.preventDefault(); if (loading) return;
         if (password !== repeat) { setError('The two passwords do not match.'); return; }

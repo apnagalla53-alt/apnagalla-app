@@ -1,3 +1,5 @@
+import AuditHistoryLink from './components/AuditHistoryLink';
+import { formatDate } from '../shared/dateFormat';
 import StitchHeader from './design/StitchHeader';
 import { ui, useUiLanguage } from "../i18n";
 import { useEffect, useState, useRef } from 'react';
@@ -33,7 +35,7 @@ export default function RetailPurchases() {
   useEffect(() => { const timer = setTimeout(() => loadPurchases(), 250); return () => { clearTimeout(timer); version.current++; }; }, [search]);
   return <>
     <StitchHeader className="r-page-header" hasBack><button className="r-btn r-btn--icon" aria-label={ui("Back to Home")} onClick={() => navigate('/retail/home')}><ArrowLeft size={24} /></button><h1>{ui("Purchases")}</h1><span className="r-header-spacer" /></StitchHeader>
-    <main className="r-section">
+    <main className="r-section"><AuditHistoryLink/>
       <div className="r-form-grid"><button className="r-btn r-btn--primary" onClick={() => navigate('/retail/purchases/new')}><Plus size={20} />{ui("Add Purchase")}</button><button className="r-btn r-btn--outline" onClick={() => navigate('/retail/suppliers')}><Wallet size={20} />{ui("Make Payment")}</button></div>
       <p className="r-caption">Bought stock? Add a purchase. Paying an old bill? Open the supplier and choose Pay.</p>
       <div className="r-section-heading"><h2>{ui("Purchase History")}</h2></div>
@@ -48,7 +50,7 @@ export default function RetailPurchases() {
           <button className="r-purchase-row item-card" aria-expanded={expanded} aria-controls={'purchase-details-' + purchase.id} onClick={() => setExpandedId(expanded ? null : purchase.id)}>
             <span className="item-info">
               <span className="item-name" title={supplierName}>{supplierName}</span>
-              <span className="r-caption r-purchase-reference"><span>{new Date(purchase.document_date).toLocaleDateString('en-IN')}</span><span aria-hidden="true">·</span><span title={purchase.document_number}>{purchase.document_number}</span></span>
+              <span className="r-caption r-purchase-reference"><span>{formatDate(purchase.document_date)}</span><span aria-hidden="true">·</span><span title={purchase.document_number}>{purchase.document_number}</span></span>
               {purchase.attachment && <span className="r-caption r-purchase-photo"><Image size={14} />{ui("Bill photo attached")}</span>}
             </span>
             <span className="r-list-item-right">

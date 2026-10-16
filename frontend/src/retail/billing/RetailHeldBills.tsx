@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { useEffect, useState } from 'react';
@@ -78,7 +79,7 @@ const RetailHeldBills = () => {
             {heldBills.map(bill => (
               <div key={bill.id} className="r-card r-card--elevated" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontWeight: 600 }}>Held {bill.created_at ? new Date(bill.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'}) : 'time unavailable'}</div>
+                  <div style={{ fontWeight: 600 }}>Held {bill.created_at ? formatDateTime(bill.created_at) : 'time unavailable'}</div>
                   <div style={{ fontSize: 'var(--r-text-sm)', color: 'var(--r-text-muted)' }}>
                     {bill.lines.length} items
                   </div>

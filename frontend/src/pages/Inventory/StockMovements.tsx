@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import { useEffect, useState } from 'react';
 import { Activity } from 'lucide-react';
 import api from '../../shared/api';
@@ -65,7 +66,7 @@ const StockMovements = () => {
                 movements.map((row) => (
                   <tr key={row.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(row.business_date).toLocaleDateString()}
+                      {formatDate(row.business_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {row.item.name}

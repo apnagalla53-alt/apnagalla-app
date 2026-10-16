@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import { trackExperience } from "../experience/experienceEvents";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -367,7 +368,7 @@ export default function RetailIntake() {
                         </strong>
                         <small>
                           {ui(statusLabel[h.status] || h.status)} ·{" "}
-                          {new Date(h.created_at).toLocaleDateString("en-IN")}
+                          {formatDate(h.created_at)}
                         </small>
                       </span>
                     </button>

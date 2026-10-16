@@ -1,3 +1,4 @@
+import { formatDate } from '../shared/dateFormat';
 import StitchHeader from './design/StitchHeader';
 import { ui, useUiLanguage } from "../i18n";
 import { useEffect, useState } from 'react';
@@ -83,7 +84,7 @@ export default function RetailSupplierKhata() {
                       {t.type === 'PURCHASE' ? ui("Purchase") : ui("Payment")}
                       {t.attachment && <span> 📸</span>}
                     </div>
-                    <div className="timeline-date">{new Date(t.date).toLocaleDateString()}</div>
+                    <div className="timeline-date">{formatDate(t.date)}</div>
                   </div>
                   <div className="timeline-amounts">
                     <div className="timeline-amount" style={{ color: t.type === 'PURCHASE' ? 'var(--r-warning)' : 'var(--r-success)' }}>

@@ -1,3 +1,4 @@
+import { ShopFreshStartService } from './shop-fresh-start.service';
 import { BadRequestException, Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { IsBoolean, IsDateString, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { AccountPolicyService, AccountPolicy } from '../auth/account-policy.service';
@@ -8,8 +9,9 @@ import { TenantLifecycleService } from './tenant-lifecycle.service';
 import { TenantCredentialsService } from './tenant-credentials.service';
 import { PrismaService } from '../database/prisma.service';
 import { TenantUserLifecycleService } from './tenant-user-lifecycle.service';
+class FreshStartDto { @IsUUID() company_id:string; @IsString() @MinLength(3) @MaxLength(1000) reason:string; @IsString() @MaxLength(255) password:string; @IsString() @MaxLength(100) confirmation:string; }
 class LifecycleDto { @IsString() @MinLength(3) @MaxLength(2000) reason:string; }
-class CredentialsDto extends LifecycleDto { @IsIn(['RESET_LINK','FORCE_CHANGE','TEMPORARY','REVOKE']) action:'RESET_LINK'|'FORCE_CHANGE'|'TEMPORARY'|'REVOKE'; @IsOptional() @IsString() @MinLength(12) @MaxLength(72) temporary_password?:string; }
+class CredentialsDto extends LifecycleDto { @IsIn(['RESET_LINK','FORCE_CHANGE','TEMPORARY','REVOKE']) action:'RESET_LINK'|'FORCE_CHANGE'|'TEMPORARY'|'REVOKE'; @IsOptional() @IsString() @MinLength(8) @MaxLength(72) temporary_password?:string; }
 class PurgeDto extends LifecycleDto { @IsString() @MaxLength(100) confirmation:string; }
 class TenantMetadataDto extends LifecycleDto {
  @IsOptional() @IsString() @MinLength(1) @MaxLength(255) name?:string;
@@ -56,7 +58,10 @@ class ReviewDto { @IsIn(['refresh','approve','reject']) action:'refresh'|'approv
 @UseGuards(PlatformAuthGuard)
 @Controller('platform/admin')
 export class ControlPlaneController {
- constructor(private policy:AccountPolicyService,private referrals:ReferralService,private lifecycle:TenantLifecycleService,private credentials:TenantCredentialsService,private db:PrismaService,private userLifecycle:TenantUserLifecycleService){}
+ constructor(private freshStart:ShopFreshStartService,private policy:AccountPolicyService,private referrals:ReferralService,private lifecycle:TenantLifecycleService,private credentials:TenantCredentialsService,private db:PrismaService,private userLifecycle:TenantUserLifecycleService){}
+ @Get('tenants/:id/fresh-start-preview') freshPreview(@Param('id',ParseUUIDPipe) id:string){return this.freshStart.preview(id);}
+ @Post('tenants/:id/fresh-start') fresh(@Param('id',ParseUUIDPipe) id:string,@Body() dto:FreshStartDto,@Req() req:any){return this.freshStart.start(id,dto.company_id,dto.confirmation,dto.password,dto.reason,req.platformUser.id);}
+ @Post('tenants/:id/fresh-start-restore') freshRestore(@Param('id',ParseUUIDPipe) id:string,@Body() dto:FreshStartDto,@Req() req:any){return this.freshStart.restore(id,dto.company_id,dto.password,dto.reason,req.platformUser.id);}
  @Get('tenants/:id/users/:userId/deletion-preview') userPreview(@Param('id',ParseUUIDPipe) id:string,@Param('userId',ParseUUIDPipe) userId:string){return this.userLifecycle.preview(id,userId);}
  @Post('tenants/:id/users/:userId/delete') userDelete(@Param('id',ParseUUIDPipe) id:string,@Param('userId',ParseUUIDPipe) userId:string,@Body() dto:PurgeDto,@Req() req:any){return this.userLifecycle.remove(id,userId,dto.confirmation,dto.reason,req.platformUser.id);}
  @Get('tenants/:id/roles') roles(@Param('id',ParseUUIDPipe) id:string){return this.db.role.findMany({where:{organization_id:id,NOT:{name:{in:['SUPER_ADMIN','PLATFORM_ADMIN']}}},select:{id:true,name:true}});}

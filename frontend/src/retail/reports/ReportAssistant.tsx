@@ -1,3 +1,5 @@
+import DateInput from '../../shared/components/DateInput';
+import { formatDateTime } from '../../shared/dateFormat';
 import { ui, useUiLanguage } from "../../i18n";
 import { MobileSelect } from "../components/MobileControls";
 import { useEffect, useState } from "react";
@@ -79,7 +81,7 @@ export default function ReportAssistant() {
       <p lang={r.language}>{r.text}</p>
       <p className="r-caption">
         {r.definition} · Generated{" "}
-        {new Date(r.generated_at).toLocaleString("en-IN")}
+        {formatDateTime(r.generated_at)}
       </p>
       <details>
         <summary>View exact totals and details</summary>
@@ -146,11 +148,11 @@ export default function ReportAssistant() {
           </label>
           <label>
             Business date
-            <input
+            <DateInput
               type="date"
               required
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => setDate(e.target.value)} lang="en-GB"
             />
           </label>
           <div>

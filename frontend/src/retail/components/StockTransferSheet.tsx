@@ -124,7 +124,7 @@ export default function StockTransferSheet({
             step="any"
             required
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) => setQuantity(e.target.value)} inputMode="decimal"
           />
           <label htmlFor="transfer-note">Note (optional)</label>
           <textarea

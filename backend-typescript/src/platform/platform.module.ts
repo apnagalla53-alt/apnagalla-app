@@ -1,3 +1,4 @@
+import { ShopFreshStartService } from './shop-fresh-start.service';
 import { Module } from '@nestjs/common';
 import { PublicAppController, PlatformPublishingController } from './publishing.controller';
 import { PlatformAdminController } from './tenants/platform-admin.controller';
@@ -21,6 +22,6 @@ import { ActivationCampaignController } from './activation-campaign.controller';
     AttachmentsModule
   ],
   controllers: [PlatformAdminController, PublicAppController, PlatformPublishingController, ControlPlaneController, OwnerReferralController, ActivationCampaignController],
-  providers: [PlatformService, BackupProvider, PlatformBackupService, TenantLifecycleService, TenantCredentialsService, TenantUserLifecycleService],
+  providers: [ShopFreshStartService,PlatformService, BackupProvider, PlatformBackupService, TenantLifecycleService, TenantCredentialsService, TenantUserLifecycleService],
 })
 export class PlatformModule {}

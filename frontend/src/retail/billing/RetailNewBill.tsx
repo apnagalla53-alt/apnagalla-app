@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import { trackExperience } from '../experience/experienceEvents';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
@@ -22,6 +23,7 @@ import BillTaxSummary from './BillTaxSummary';
 import {stockWarning} from './stockWarning';
 import QuickCreateItemSheet from '../experience/QuickCreateItemSheet';
 import api from '../../shared/api';
+import { useAuthStore } from '../../shared/store/authStore';
 import { AttachmentPicker } from "../../shared/components/AttachmentPicker";
 import {
   itemApi,
@@ -44,6 +46,8 @@ import {
 const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
   useUiLanguage();
   const navigate = useNavigate();
+  const user=useAuthStore(state=>state.user);
+  const canReadCatalog=['OWNER','ADMIN','TENANT_ADMIN'].includes(user?.role||'')||!!user?.permissions.includes('inventory.read');
   const billingPrefs = useBillingPreferences();
   const enterLock = useRef(false);
   useEffect(() => { if (!useBillStore.getState().savedSale) useSaleCompleteStore.getState().clearCompletedSale(); }, []);
@@ -274,40 +278,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
     ? billItems.find((i) => i.item_id === showItemEdit)
     : null;
 
-  if (savedSale) return <Navigate to="/retail/payment" replace />;
-
-  return (
-    <div className="r-stitch-bill-layout" style={{paddingBottom:140}}>
-      {/* Header */}
-      <StitchHeader className="r-page-header">
-        <h1>{ui(gstRequested ? 'New GST Bill' : quick ? 'Quick Bill' : 'New Bill')}</h1>
-        <div className="r-page-header-action">
-          {billItems.length > 0 && (
-            <button
-              className="r-btn r-btn--ghost r-btn--sm"
-              onClick={async () => {
-                try {
-                  if(billItems.some(i=>i.new_item)){navigate("/retail/home");return;}
-                  await posApi.holdBill("default-branch", billItems, {
-                    customer_id: customer?.id,
-                    bill_discount: billDiscount,
-                    note: details.note,
-                  });
-                  clearBill();
-                  navigate("/retail/home");
-                } catch (e) {
-                  // The shared API banner displays the request failure without logging tokens.
-                  alert("Failed to hold bill");
-                }
-              }}
-              id="hold-bill-btn"
-            >
-              <Pause size={16} />{ui(billItems.some(i=>i.new_item)?'Save device draft':'Hold')}</button>
-          )}
-        </div>
-      </StitchHeader>
-      {gstRequested && <p className="r-caption">{ui('Use items with the correct GST rate and HSN/SAC configured in Items. Tax comes from those settings; it cannot be added to a saved bill later.')}</p>}
-      {/* Customer Selector */}
+  const customerSelector = (<>      {/* Customer Selector */}
       <div className="r-section">
         {customerPrefillLoading && <p role="status">{ui("Loading customer…")}</p>}
         {customerPrefillError && <div className="r-card" role="alert"><p>{customerPrefillError}</p><button className="r-btn r-btn--outline" onClick={() => setCustomerPrefillRetry(value => value + 1)}>{ui("Retry Customer")}</button></div>}
@@ -350,32 +321,69 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
           <ChevronRight size={18} style={{ color: "var(--r-text-hint)" }} />
         </button>
       </div>
+</>);
+  const [manualKey,setManualKey]=useState(0),[manualName,setManualName]=useState(''),[quickAmount,setQuickAmount]=useState('');
+  const resetManual=()=>{setManualName('');setManualKey(n=>n+1);};
+
+  if (quick&&!canReadCatalog) return <Navigate to="/retail/amount-sale" replace />;
+  if (savedSale) return <Navigate to="/retail/payment" replace />;
+
+  return (
+    <div className="r-stitch-bill-layout" style={{paddingBottom:140}}>
+      {/* Header */}
+      <StitchHeader className="r-page-header">
+        <h1>{ui(gstRequested ? 'New GST Bill' : quick ? 'Quick Bill' : 'New Bill')}</h1>
+        <div className="r-page-header-action">
+          {billItems.length > 0 && (
+            <button
+              className="r-btn r-btn--ghost r-btn--sm"
+              onClick={async () => {
+                try {
+                  if(billItems.some(i=>i.new_item)){navigate("/retail/home");return;}
+                  await posApi.holdBill("default-branch", billItems, {
+                    customer_id: customer?.id,
+                    bill_discount: billDiscount,
+                    note: details.note,
+                  });
+                  clearBill();
+                  navigate("/retail/home");
+                } catch (e) {
+                  // The shared API banner displays the request failure without logging tokens.
+                  alert("Failed to hold bill");
+                }
+              }}
+              id="hold-bill-btn"
+            >
+              <Pause size={16} />{ui(billItems.some(i=>i.new_item)?'Save device draft':'Hold')}</button>
+          )}
+        </div>
+      </StitchHeader>
+      {gstRequested && <p className="r-caption">{ui('Use items with the correct GST rate and HSN/SAC configured in Items. Tax comes from those settings; it cannot be added to a saved bill later.')}</p>}
+      {!quick && customerSelector}
       <div className="r-section r-search-filter">
+        <div className="r-search-bar r-bill-search">
+        <span className="r-search-icon" aria-hidden="true"><Search size={20} /></span>
         <input
           ref={searchRef}
           id="item-search-input"
           className="r-input"
           type="search"
-          aria-label="Search bill items"
-          placeholder={billingPrefs.enabled ? "Search item / barcode" : "Search item name or SKU"}
+          aria-label={ui("Search bill items")}
+          placeholder={ui(billingPrefs.enabled ? "Search item / barcode" : "Search item name or SKU")}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void enterSearch(); } }}
           value={searchQuery}
+          onFocus={() => {
+            setItemOffset(0);
+            setShowSearchResults(true);
+          }}
           onChange={(e) => {
             setUnknownBarcode(undefined);setSearchQuery(e.target.value);
             setItemOffset(0);
             setShowSearchResults(true);
           }}
         />
-        <button
-          className="r-btn r-btn--outline"
-          onClick={() => {
-            setItemOffset(0);
-            setShowSearchResults(true);
-          }}
-        >
-          <Search size={21} />
-          Browse
-        </button>
+        <button type="button" className="r-browse-inline" aria-label={ui('Browse items')} onClick={()=>{setSearchQuery('');setItemOffset(0);setShowSearchResults(true);}}>{ui('Browse')}</button>
+        </div>
       </div>
       {showSearchResults && <section className={'r-card r-inline-item-picker'+(!searchLoading&&!searchError&&!searchResults.length&&searchQuery.trim()&&!unknownBarcode?' r-inline-item-picker--new':'')} aria-label="Choose Item">
         <div className="r-section-heading"><h2>Choose Item</h2><button type="button" className="r-btn" onClick={()=>setShowSearchResults(false)}>Close</button></div>
@@ -426,7 +434,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
         {!searchLoading && !searchError && !searchResults.length && (
           <div className={searchQuery.trim()&&!unknownBarcode?'r-new-bill-item':'r-empty'}>
             {(!searchQuery.trim()||unknownBarcode)&&<><h3>No items found</h3><p>Enter quantity, unit and price below. Stock setup can wait.</p></>}
-            {searchQuery.trim() && !unknownBarcode && <QuickBillCandidate key={searchQuery.trim()} name={searchQuery.trim()} onAdded={()=>{setSearchQuery('');setShowSearchResults(false);}}/>}
+            {searchQuery.trim() && !unknownBarcode && (quick ? <button type="button" className="r-btn r-btn--primary" onClick={()=>{setManualName(searchQuery.trim());setManualKey(n=>n+1);setSearchQuery('');setShowSearchResults(false);}}>{ui('Use this item name')}</button> : <QuickBillCandidate key={searchQuery.trim()} name={searchQuery.trim()} onAdded={()=>{setSearchQuery('');setShowSearchResults(false);}}/>)}
             {searchQuery.trim() && unknownBarcode && <button className="r-btn r-btn--primary" onClick={()=>{setShowSearchResults(false);setQuickItem(true);}}>+ Add & Sell</button>}
             <button
               className="r-btn"
@@ -451,7 +459,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
       </section>}
       {quickItem&&<QuickCreateItemSheet name={unknownBarcode?'':searchQuery.trim()} barcode={unknownBarcode} onClose={()=>setQuickItem(false)} onCreated={({item,quantity})=>{handleAddItem(item,quantity);setQuickItem(false);setUnknownBarcode(undefined);}}/>}
       {editingCandidate&&<Sheet open onClose={()=>setEditingCandidate(null)} title="Edit bill item"><QuickBillCandidate name={editingCandidate.name} existing={editingCandidate} onAdded={()=>setEditingCandidate(null)}/></Sheet>}
-      {quick&&<button type="button" className="r-btn r-btn--outline" onClick={()=>navigate("/retail/amount-sale")}>Amount-only sale</button>}
+      {quick&&<div className="r-section r-quick-entry-section"><QuickBillCandidate key={manualKey} name={manualName} compact onAdded={resetManual} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);resetManual();}}/><details className="r-card r-quick-amount"><summary>{ui('Amount-only sale')}</summary><label htmlFor="quick-amount">{ui('Amount (₹)')}</label><input id="quick-amount" className="r-input" type="number" inputMode="decimal" min=".01" step=".01" value={quickAmount} onChange={e=>setQuickAmount(e.target.value)}/><div className="r-amount-shortcuts">{[50,100,200,500].map(value=><button type="button" key={value} onClick={()=>setQuickAmount(String((Number(quickAmount)||0)+value))}>+₹{value}</button>)}</div><button type="button" className="r-btn r-btn--outline r-w-full" disabled={!Number.isFinite(Number(quickAmount))||Number(quickAmount)<=0} onClick={()=>navigate('/retail/amount-sale?amount='+encodeURIComponent(quickAmount))}>{ui('Continue to payment')}</button></details></div>}
       {/* Bill Items */}
 
       <div className="r-section">
@@ -485,6 +493,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                     item.new_item ? setEditingCandidate(item) : setConfigure({ itemId: item.item_id, rowId: item.row_id })
                   }
                 >{ui("Edit line")}</button>
+                <button type="button" className="r-btn r-btn--icon" data-tone="danger" aria-label={ui('Remove')+' '+item.name} onClick={()=>removeItem(item.row_id||item.item_id)}><Trash2 size={18} aria-hidden="true"/></button>
                 <div className="r-bill-item-price">
                   ₹{item.rate} × {item.quantity} {item.unit}
                   {item.discount_amount > 0 && (
@@ -532,32 +541,32 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
           ))
         )}
       </div>
-<div className="r-section r-stitch-bill-totals"><BillTaxSummary onQuote={setDraftQuote}/></div>
+<div className="r-section"><details className="r-card r-bill-more-settings"><summary>{ui('More Settings')}{customer?' · '+customer.name:''}</summary>{quick&&customerSelector}<BillTaxSummary onQuote={setDraftQuote}/>
 <div className="r-section">
         <details className="r-card">
           <summary>{ui("Bill details & photo")}</summary>
           <div className="r-form-grid">
             <div>
               <label htmlFor="invoice-bill-date">{ui("Bill Date")}</label>
-              <input
+              <DateInput
                 id="invoice-bill-date"
                 className="r-input"
                 type="date"
                 value={details.date}
                 required
-                onChange={(event) => setDetails({ date: event.target.value })}
+                onChange={(event) => setDetails({ date: event.target.value })} lang="en-GB"
               />
             </div>
             <div>
               <label htmlFor="invoice-due-date">Due Date (optional)</label>
-              <input
+              <DateInput
                 id="invoice-due-date"
                 className="r-input"
                 type="date"
                 value={details.due_date}
                 onChange={(event) =>
                   setDetails({ due_date: event.target.value })
-                }
+                } lang="en-GB"
               />
             </div>
           </div>
@@ -572,7 +581,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                   .value as typeof details.sales_channel,
               })
             }
-            presentation="segments"
+            presentation="sheet"
           >
             {["COUNTER", "PHONE", "WHATSAPP", "ONLINE", "OTHER"].map(
               (value) => (
@@ -593,6 +602,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
           <AttachmentPicker onFileSelect={setAttachment} />
         </details>
       </div>
+      </details></div>
       {/* Sticky Billing Summary + PAY button */}
       <div className="r-sticky-footer" id="billing-footer">
         <div className="r-counter-total"><small>{ui("Total")} ({billItems.length} {ui("lines")} · {itemCount} {ui("units")})</small><strong>₹{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></div>
@@ -759,7 +769,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                   placeholder="Enter mobile number"
                   value={newCustomerMobile}
                   onChange={(e) => setNewCustomerMobile(e.target.value)}
-                  id="new-customer-mobile"
+                  id="new-customer-mobile" inputMode="tel"
                 />
               </div>
               <button
@@ -839,7 +849,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                   useBillStore
                     .getState()
                     .updateDiscount(editingItem.item_id, disc);
-                }}
+                }} inputMode="decimal"
               />
             </div>
 

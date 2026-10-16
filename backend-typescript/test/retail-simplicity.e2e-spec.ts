@@ -5,7 +5,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import request from 'supertest';
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
+import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { TenantProvisioningService } from '../src/platform/provisioning/tenant-provisioning.service';
@@ -21,6 +22,7 @@ describe('Zero-setup simplicity: actual HTTP and authoritative journals', () => 
     item: any,
     customer: any,
     bill: any;
+  let maintenance: PrismaClient, originalUrl: string, runtimeRole: string;
   const password = 'DisposableSimplicity!' + randomUUID(),
     date = businessDate();
   const call = (method: string, path: string, shop = A, t = token) =>
@@ -31,12 +33,26 @@ describe('Zero-setup simplicity: actual HTTP and authoritative journals', () => 
       .set('X-Branch-Id', shop.branch.id)
       .set('X-Financial-Year-Id', shop.financialYear.id);
   beforeAll(async () => {
-    const url = new URL(process.env.DATABASE_URL!);
+    originalUrl = process.env.DATABASE_URL!;
+    const url = new URL(originalUrl);
     if (
       !['localhost', '127.0.0.1'].includes(url.hostname) ||
       !url.pathname.endsWith('_test')
     )
       throw Error('Dedicated disposable database required');
+    // Exercise the same tenant policies as the real API, rather than bypassing
+    // row security with the disposable migration owner's privileges.
+    maintenance = new PrismaClient({ datasources: { db: { url: originalUrl } } });
+    runtimeRole = 'evx_bulk_' + randomUUID().replace(/-/g, '');
+    const runtimePassword = randomBytes(32).toString('hex');
+    await maintenance.$executeRawUnsafe(`CREATE ROLE "${runtimeRole}" LOGIN PASSWORD '${runtimePassword}' NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE`);
+    await maintenance.$executeRawUnsafe(`GRANT "${runtimeRole}" TO CURRENT_USER WITH INHERIT TRUE`);
+    await maintenance.$executeRawUnsafe(`GRANT USAGE ON SCHEMA public TO "${runtimeRole}"`);
+    await maintenance.$executeRawUnsafe(`GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO "${runtimeRole}"`);
+    await maintenance.$executeRawUnsafe(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO "${runtimeRole}"`);
+    url.username = runtimeRole;
+    url.password = runtimePassword;
+    process.env.DATABASE_URL = url.toString();
     app = (
       await Test.createTestingModule({ imports: [AppModule] }).compile()
     ).createNestApplication({ logger: false });
@@ -85,6 +101,14 @@ describe('Zero-setup simplicity: actual HTTP and authoritative journals', () => 
   }, 60000);
   afterAll(async () => {
     await app?.close();
+    process.env.DATABASE_URL = originalUrl;
+    if (maintenance) {
+      if (runtimeRole) {
+        await maintenance.$executeRawUnsafe(`DROP OWNED BY "${runtimeRole}"`);
+        await maintenance.$executeRawUnsafe(`DROP ROLE "${runtimeRole}"`);
+      }
+      await maintenance.$disconnect();
+    }
   });
   it('starts with no ordinary items or parties and returns the saved business preset', async () => {
     expect((await call('get', 'retail/items').expect(200)).body).toEqual([]);
@@ -281,6 +305,38 @@ describe('Zero-setup simplicity: actual HTTP and authoritative journals', () => 
     ).body;
     expect(repeated).toEqual(first);
     expect(first.count).toBe(2);
+  });
+  it('saves the bulk editor payload with price-only items and unknown-cost opening stock', async () => {
+    const response = await call('post', 'retail/items/bulk')
+      .set('Idempotency-Key', randomUUID())
+      .send({ items: [
+        { name: 'Bulk uncounted item', selling_price: 12, unit_code: 'PCS', unit_name: 'Pieces', selling_mode: 'PIECE', inventory_tracking: false },
+        { name: 'Bulk counted item', selling_price: 25, unit_code: 'PCS', unit_name: 'Pieces', selling_mode: 'PIECE', inventory_tracking: true, opening_stock: 4, skip_opening_cost: true },
+      ] })
+      .expect(201);
+    expect(response.body.count).toBe(2);
+    const [uncounted, counted] = response.body.items;
+    expect(uncounted.inventory_tracking).toBe(false);
+    expect(counted.current_stock).toBe(4);
+    const cost = await db.inventoryCostState.findFirstOrThrow({ where: { company_id: A.company.id, item_id: counted.id } });
+    expect(Number(cost.unknown_quantity)).toBe(4);
+    expect(Number(cost.known_value)).toBe(0);
+    const options = (await call('get', 'retail/items/' + counted.id + '/options').expect(200)).body;
+    expect(options.primary_unit.code).toBe('PCS');
+  });
+  it('rejects overflowing bulk numbers as helpful validation errors without saving any rows', async () => {
+    const before = await db.item.count({ where: { company_id: A.company.id } });
+    for (const field of ['opening_stock', 'selling_price', 'opening_cost', 'purchase_price', 'mrp', 'low_stock_threshold']) {
+      const response = await call('post', 'retail/items/bulk')
+        .set('Idempotency-Key', randomUUID())
+        .send({ items: [
+          { name: 'Must not be partially saved', selling_price: 10, inventory_tracking: false },
+          { name: 'Correct the large number', selling_price: 20, opening_stock: 1, [field]: 1_000_000_000 },
+        ] })
+        .expect(400);
+      expect(response.body.message.join(' ')).toContain('too large');
+      expect(await db.item.count({ where: { company_id: A.company.id } })).toBe(before);
+    }
   });
   it('creates purchase packs explicitly and posts their actual cost and supplier due', async () => {
     await call('post', 'retail/account/features/MULTI_UNIT')

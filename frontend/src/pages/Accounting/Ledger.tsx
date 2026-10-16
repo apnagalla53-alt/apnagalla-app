@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../shared/api';
@@ -92,7 +93,7 @@ export default function Ledger() {
                 lines.map(line => (
                   <tr key={line.id}>
                     <td className="text-sm text-gray-400">
-                      {new Date(line.voucher.voucher_date).toLocaleDateString()}
+                      {formatDate(line.voucher.voucher_date)}
                     </td>
                     <td className="font-mono text-sm text-blue-400">
                       {line.voucher.document_number}

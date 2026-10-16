@@ -6,22 +6,41 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { TenantProvisioningService } from '../src/platform/provisioning/tenant-provisioning.service';
 import { businessDate } from '../src/common/business-date';
+import { businessTypeCatalog } from '../src/auth/business-types';
+import { JwtService } from '@nestjs/jwt';
 
 describe('Business-aware Quick Bill: isolated authoritative acceptance',()=>{
- let app:any,db:PrismaService,shops:any[]=[];
- const cases=[['GROCERY','Local Chips','PKT','PIECE',2,20],['PHARMACY','Crocin tablet','PCS','PIECE',2,12],['HARDWARE','PVC Pipe','MTR','LENGTH',2,80],['CLOTHING','Cotton Kurta','PCS','PIECE',1,650],['FOOTWEAR','Sports Shoe','PAIR','PIECE',1,1299],['STATIONERY','Blue Pen','PCS','PIECE',3,10],['ELECTRONICS','USB Charger','PCS','PIECE',1,499],['RESTAURANT','Masala Tea','CUP','PIECE',2,20]] as const;
+ let app:any,db:PrismaService,shops:any[]=[],planId:string;
+ const cases=[['GROCERY','Local Chips','PKT','PIECE',2,20],['PHARMACY','Crocin tablet','TABLET','PIECE',2,12],['HARDWARE','PVC Pipe','MTR','LENGTH',2,80],['CLOTHING','Cotton Kurta','PCS','PIECE',1,650],['FOOTWEAR','Sports Shoe','PAIR','PIECE',1,1299],['STATIONERY','Blue Pen','PCS','PIECE',3,10],['ELECTRONICS','USB Charger','PCS','PIECE',1,499],['RESTAURANT','Masala Tea','GLASS','PIECE',2,20]] as const;
  const call=(method:string,path:string,row:any)=>(request(app.getHttpServer()) as any)[method]('/api/v1/'+path).set('Authorization','Bearer '+row.token).set('X-Company-Id',row.shop.company.id).set('X-Branch-Id',row.shop.branch.id).set('X-Financial-Year-Id',row.shop.financialYear.id);
  const draft=(name:string,unit:string,mode:string,qty:number,rate:number)=>({items:[{new_item:{client_id:randomUUID(),name,unit_code:unit,selling_mode:mode},quantity:qty,rate}],payment_splits:[{method:'CASH',amount:qty*rate}],date:businessDate()});
  beforeAll(async()=>{
   const url=new URL(process.env.DATABASE_URL!);if(!['localhost','127.0.0.1'].includes(url.hostname)||!url.pathname.endsWith('_test'))throw Error('Dedicated local _test database required');
   app=(await Test.createTestingModule({imports:[AppModule]}).compile()).createNestApplication({logger:false});
   app.setGlobalPrefix('api/v1',{exclude:[{path:'api/v1/{*path}',method:RequestMethod.ALL}]});app.useGlobalPipes(new ValidationPipe({whitelist:true,transform:true,forbidNonWhitelisted:true}));await app.init();db=app.get(PrismaService);
-  const planId=(await db.plan.findUniqueOrThrow({where:{code:'PRO'}})).id;
+  planId=(await db.plan.findUniqueOrThrow({where:{code:'PRO'}})).id;
   for(const [type]of cases){const password='DisposableQuick!'+randomUUID(),shop=await app.get(TenantProvisioningService).provisionTenant({planId,organizationName:'Quick acceptance '+type+' '+randomUUID(),businessType:type,adminName:'Synthetic Owner',adminEmail:randomUUID()+'@test.invalid',adminPassword:password});
    const token=(await request(app.getHttpServer()).post('/api/v1/auth/login').send({username:shop.user.username,password}).expect(200)).body.access_token;shops.push({shop,token,type});
   }
  },90000);
  afterAll(async()=>{await app?.close();});
+ it.each(businessTypeCatalog().filter(info=>!cases.some(row=>row[0]===info.code)))('$code: existing business type retains zero-setup billing, catalog search and safe cost semantics',async(info)=>{
+  const password='DisposableAllTypes!'+randomUUID(),shop=await app.get(TenantProvisioningService).provisionTenant({planId,organizationName:'All-types '+info.code+' '+randomUUID(),businessType:info.code,adminName:'Synthetic type owner',adminEmail:randomUUID()+'@test.invalid',adminPassword:password});
+  // Setup-only sessions avoid simulating 59 logins from one IP and tripping
+  // the real abuse limiter. Every business operation still passes AuthGuard.
+  const session=await db.session.create({data:{user_id:shop.user.id,expires_at:new Date(Date.now()+3600000)}});
+  const token=app.get(JwtService).sign({sub:shop.user.id,sid:session.id,is_platform:false}),row={shop,token};
+  const account=(await call('get','retail/account/subscription',row).expect(200)).body;
+  expect(account.business_preset.key).toBe(info.code);
+  const unit=info.preset.unitSuggestions.find(choice=>choice.selling_mode==='PIECE')||{code:'PCS',selling_mode:'PIECE'};
+  const name='Simple sample '+info.code,body=draft(name,unit.code,unit.selling_mode,1,25),key=randomUUID();
+  const saved=(await call('post','retail/bills',row).set('Idempotency-Key',key).send(body).expect(201)).body;
+  expect(Number(saved.grand_total)).toBe(25);expect(Number(saved.paid_amount)).toBe(25);expect(saved.lines.every((line:any)=>line.cost_status!=='KNOWN')).toBe(true);
+  const replay=(await call('post','retail/bills',row).set('Idempotency-Key',key).send(body).expect(201)).body;expect(replay.id).toBe(saved.id);
+  const found=(await call('get','retail/items?search='+encodeURIComponent(name),row).expect(200)).body;
+  expect(found).toHaveLength(1);expect(found[0].inventory_tracking).toBe(false);expect(found[0].unit).toBe(unit.code);
+  expect(await db.stockMovement.count({where:{company_id:shop.company.id}})).toBe(0);
+ },30000);
  it.each(cases)('%s: drafts and quotes create nothing; concurrent retry commits exactly one item and sale',async(type,name,unit,mode,quantity,rate)=>{
   const row=shops.find(s=>s.type===type),body=draft(name,unit,mode,quantity,rate),scope={company_id:row.shop.company.id};
   expect(await db.item.count({where:{...scope,is_system:false}})).toBe(0);

@@ -34,7 +34,7 @@ export default function MigrationWelcome() {
       active = false;
     };
   }, [user?.id, tenant?.company_id]);
-  async function choose(choice: string,path='/retail/bill') {
+  async function choose(choice: string,path='/retail/quick-sale') {
     setBusy(true);
     setError("");
     try {
@@ -60,10 +60,7 @@ export default function MigrationWelcome() {
       <button autoFocus className="r-btn r-btn--primary r-btn--full" disabled={busy} onClick={()=>choose('FRESH')}>{ui('Make First Bill')}</button>
       <button className="r-btn r-btn--outline r-btn--full" disabled={busy} onClick={()=>choose('IMPORT')}>{ui('Import existing data')}</button>
       <button className="r-btn r-btn--outline r-btn--full" disabled={busy} onClick={()=>choose('FRESH','/retail/items/bulk')}>{ui('Set up my items')}</button>
-      <p className="r-caption">
-        Start fresh continues into your shop; it does not delete any records.
-        Import stays available in More.
-      </p>
+      <p className="r-caption">{ui('You can import your list later from Settings & Help.')}</p>
     </Sheet>
   );
 }

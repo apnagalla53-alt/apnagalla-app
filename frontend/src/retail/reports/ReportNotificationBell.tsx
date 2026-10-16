@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -53,7 +54,7 @@ export default function ReportNotificationBell() {
     if(!user||!tenant?.company_id||!tenant.branch_id)return;
     let active=true,first=true,inFlight=false,timer:number|undefined;
     const load=async()=>{
-      if(inFlight)return;inFlight=true;
+      if(inFlight||document.visibilityState==='hidden')return;inFlight=true;
       try {
         const result=await api.get('/retail/account/notifications');if(!active)return;
         const alerts:Alert[]=result.data.rows;setRows(alerts);setError('');
@@ -79,8 +80,8 @@ export default function ReportNotificationBell() {
     const changed=()=>{if(timer)clearTimeout(timer);timer=window.setTimeout(()=>void load(),500);};
     const focused=()=>void load();
     const poll=window.setInterval(()=>void load(),30000);
-    window.addEventListener('evolix-data-changed',changed);window.addEventListener('focus',focused);
-    return()=>{active=false;clearInterval(poll);clearTimeout(timer);window.removeEventListener('evolix-data-changed',changed);window.removeEventListener('focus',focused);};
+    window.addEventListener('evolix-data-changed',changed);window.addEventListener('focus',focused);document.addEventListener('visibilitychange',focused);
+    return()=>{active=false;clearInterval(poll);clearTimeout(timer);window.removeEventListener('evolix-data-changed',changed);window.removeEventListener('focus',focused);document.removeEventListener('visibilitychange',focused);};
   },[key,user?.id,tenant?.company_id,tenant?.branch_id]);
   useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(null),6000);return()=>clearTimeout(timer);},[toast]);
   useEffect(()=>()=>{void audio.current?.close();},[]);
@@ -96,7 +97,7 @@ export default function ReportNotificationBell() {
   const toastTone=toast?notificationTone(toast):'info',ToastIcon=toneIcons[toastTone];
   const visit=(row:Alert)=>{save({...preferences.current,read:[...new Set([...preferences.current.read,row.id])].slice(-500)});setOpen(false);setToast(null);navigate(row.path);};
   return <>
-    <button className="r-btn r-btn--icon" aria-label={`Shop notifications${unread?' · '+unread+' unread':''}`} onClick={()=>setOpen(true)}><Bell size={22}/>{unread>0&&<span className="r-status-badge">{unread}</span>}</button>
+    <button className="r-btn r-btn--icon r-notification-trigger" aria-label={`Shop notifications${unread?' · '+unread+' unread':''}`} onClick={()=>setOpen(true)}><Bell size={28}/>{unread>0&&<span className="r-notification-count" aria-hidden="true">{Math.min(unread,99)}</span>}</button>
     {layer&&createPortal(<>
     {!prefs.dismissed&&tenant?.company_id&&location.pathname==='/retail/home'&&<aside className="r-notification-prompt" aria-label="Enable shop alerts"><span>Stay updated on bills, Udhar and shop activity.</span><button type="button" className="r-btn r-btn--primary" onClick={()=>void enable()}>Enable alerts & sound</button><button type="button" className="r-btn" onClick={()=>save({...prefs,dismissed:true})}>Later</button></aside>}
     {toast&&<div className="r-shop-update-toast" role="status" data-tone={toastTone}><ToastIcon size={20} aria-hidden="true"/><button type="button" onClick={()=>visit(toast)}>{toast.title}<small>{toast.id.startsWith('update:')?toast.body:'Open update'}</small></button><button type="button" className="r-btn" aria-label="Dismiss update" onClick={()=>setToast(null)}>×</button></div>}
@@ -109,7 +110,7 @@ export default function ReportNotificationBell() {
       <button type="button" className="r-btn r-btn--outline" onClick={()=>save({...prefs,read:[...new Set([...prefs.read,...rows.map(r=>r.id)])].slice(-500)})}><CheckCheck size={18}/>Mark all read</button>
       {loading&&<p role="status">Loading shop updates…</p>}{error&&<p role="alert">{error}</p>}
       {!loading&&!error&&!rows.length&&<p>No shop updates yet. Your next saved bill or payment will appear here.</p>}
-      {rows.map(row=>{const tone=notificationTone(row),Icon=toneIcons[tone];return <button key={row.id} type="button" data-tone={tone} className={'r-notification-row'+(!prefs.read.includes(row.id)?' is-unread':'')} onClick={()=>visit(row)}><strong><Icon size={17} aria-hidden="true"/> {row.title}</strong><span>{row.body}</span><small>{new Date(row.at).toLocaleString('en-IN')}</small></button>;})}
+      {rows.map(row=>{const tone=notificationTone(row),Icon=toneIcons[tone];return <button key={row.id} type="button" data-tone={tone} className={'r-notification-row'+(!prefs.read.includes(row.id)?' is-unread':'')} onClick={()=>visit(row)}><strong><Icon size={17} aria-hidden="true"/> {row.title}</strong><span>{row.body}</span><small>{formatDateTime(row.at)}</small></button>;})}
     </Sheet>
     </>,layer)}
   </>;

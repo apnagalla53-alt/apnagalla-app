@@ -44,7 +44,7 @@ export class BrowserSessionInterceptor implements NestInterceptor {
             secure = process.env.NODE_ENV === 'production';
           const maxAge = Math.max(
             0,
-            Math.min(platform ? 86400_000 : 30 * 86400_000, payload.exp * 1000 - Date.now()),
+            Math.min(platform ? 86400_000 : 365 * 86400_000, payload.exp * 1000 - Date.now()),
           );
           res.cookie(sessionCookie(platform), body.access_token, {
             domain: retailerCookieDomain(platform),

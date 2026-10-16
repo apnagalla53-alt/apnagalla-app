@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Download, LockKeyhole } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function RetailDataExports(){
     <h2>{ui('Data Export')}</h2><p className="r-caption">{ui('Manual exports depend on your plan. CSV exports are separate from configured database backups.')}</p>
     <label className="r-field">{ui('Export format')}<select className="r-input" disabled={busy} value={kind} onChange={e=>setKind(e.target.value)}>{formats.map(([code,label])=><option value={code} key={code}>{ui(label)}</option>)}</select></label>
     {feature?.plan_entitled?<>
-      {['SALES','PURCHASES','EXPENSES','GST','PROFIT','KHATA'].includes(kind)&&<div className="r-export-dates"><label className="r-field">{ui('From date')}<input className="r-input" disabled={busy} type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label className="r-field">{ui('To date')}<input className="r-input" disabled={busy} type="date" value={to} min={from||undefined} onChange={e=>setTo(e.target.value)}/></label></div>}
+      {['SALES','PURCHASES','EXPENSES','GST','PROFIT','KHATA'].includes(kind)&&<div className="r-export-dates"><label className="r-field">{ui('From date')}<DateInput className="r-input" disabled={busy} type="date" value={from} onChange={e=>setFrom(e.target.value)} lang="en-GB"/></label><label className="r-field">{ui('To date')}<DateInput className="r-input" disabled={busy} type="date" value={to} min={from||undefined} onChange={e=>setTo(e.target.value)} lang="en-GB"/></label></div>}
       {kind==='KHATA'&&<><label className="r-field">{ui('Account type')}<select className="r-input" disabled={busy} value={partyType} onChange={e=>{setPartyType(e.target.value);setParty(null);}}><option value="CUSTOMER">{ui('Customer')}</option><option value="SUPPLIER">{ui('Supplier')}</option></select></label><button className="r-btn r-btn--outline r-btn--full" disabled={busy} onClick={()=>setPicker(true)}>{party?.name||ui('Choose account')}</button></>}
       {kind==='DOCUMENTS'&&<p className="r-plan-notice">{ui('This export contains document details. Attachment files and a complete document archive are not included.')}</p>}
       <button className="r-btn r-btn--outline r-btn--full" onClick={()=>void download()} disabled={busy||!feature.enabled||(kind==='KHATA'&&!party)}><Download size={18}/>{ui(busy?'Preparing data…':'Download CSV')}</button>

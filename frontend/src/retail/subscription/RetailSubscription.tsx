@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, CircleUserRound, CreditCard, ShieldCheck, Wallet, ChevronRight } from 'lucide-react';
@@ -36,7 +37,7 @@ export default function RetailSubscription(){
         <section className="r-card r-current-plan" aria-label={ui('Current Plan')}>
           <div className="r-plan-eyebrow"><span>{ui('Current Plan')}</span><span className="r-status-badge">{ui(statusLabels[data.current?.status||'NOT_CONFIGURED']||data.current?.status||'No subscription assigned')}</span></div>
           <h2>{current?planName(currentCode):ui('No plan assigned')}</h2>{launchPlanCodes.includes(currentCode||'')&&<p className="r-plan-price">{money(currentPrice)}<span> / {ui('month')}</span></p>}
-          {data.current?.expires_at&&<p className="r-caption">{ui(expired?'Access ended':'Plan active until')} {new Date(data.current.expires_at).toLocaleDateString()}</p>}
+          {data.current?.expires_at&&<p className="r-caption">{ui(expired?'Access ended':'Plan active until')} {formatDate(data.current.expires_at)}</p>}
           {expired&&<p className="r-plan-notice">{ui('Your plan has ended. Your business records are safe. Renew to continue protected features.')}</p>}
           {!expired&&data.current?.expires_at&&new Date(data.current.expires_at).getTime()-Date.now()<7*86400000&&<p className="r-caption">{ui('Renewal due soon')}</p>}
           <ul className="r-plan-benefits">{(planHighlights[currentCode||'']||[]).slice(0,4).map(label=><li key={label}><Check size={16}/>{ui(label)}</li>)}</ul>
@@ -65,7 +66,7 @@ export default function RetailSubscription(){
     <Sheet open={sheet==='billing'||sheet==='unavailable'} onClose={()=>setSheet(null)} title={ui(sheet==='billing'?'Billing & Payments':'Plan change')}>
       <p>{ui(sheet==='billing'?'Online subscription payments are not available yet.':'Online upgrades are not available yet.')}</p><p>{ui('Please contact support for plan changes or renewal.')}</p><Link className="r-btn r-btn--primary r-btn--full" to="/support">{ui('Contact Support')}</Link>
       {data&&launchPlanCodes.includes(currentCode||'')&&<p className="r-caption">{planName(currentCode)} · {money(currentPrice)} / {ui('month')}</p>}
-      {data?.payments.length?<><h3>{ui('Recorded payments')}</h3>{data.payments.map(payment=><div className="r-payment-history" key={payment.id}><strong>{payment.plan_name} · {money(Number(payment.amount)+Number(payment.tax)-Number(payment.discount))}</strong><span>{new Date(payment.paid_at).toLocaleDateString()} · {ui(payment.status)} · {payment.method}</span><small>{payment.reference}</small></div>)}</>:<p className="r-caption">{ui('No subscription payments recorded.')}</p>}
+      {data?.payments.length?<><h3>{ui('Recorded payments')}</h3>{data.payments.map(payment=><div className="r-payment-history" key={payment.id}><strong>{payment.plan_name} · {money(Number(payment.amount)+Number(payment.tax)-Number(payment.discount))}</strong><span>{formatDate(payment.paid_at)} · {ui(payment.status)} · {payment.method}</span><small>{payment.reference}</small></div>)}</>:<p className="r-caption">{ui('No subscription payments recorded.')}</p>}
     </Sheet>
     <Sheet open={sheet==='change'} onClose={()=>setSheet(null)} title={ui(downgrade?'Confirm plan downgrade':'Upgrade your plan')} footer={<button className="r-btn r-btn--primary r-btn--full" disabled={!access.canManage||(downgrade&&!confirmed)} onClick={continueChange}>{ui('Continue')}</button>}>
       {target&&<><h3>{planName(target.code)}</h3><div className="r-plan-change-prices"><p>{ui('Current')}<strong>{money(currentPrice)} / {ui('month')}</strong></p><p>{ui('New plan')}<strong>{money(target.monthly_price)} / {ui('month')}</strong></p></div>

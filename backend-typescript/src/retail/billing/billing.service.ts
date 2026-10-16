@@ -71,7 +71,7 @@ export class BillingService {
     return this.posService.postPosSale(companyId, userId, {
       branch_id: branchId, document_date: dto.date || businessDate(), party_id: dto.customer_id,
       due_date: dto.due_date, note: dto.note, sales_channel: dto.sales_channel, bill_discount:dto.bill_discount, lines,
-      payments: dto.payment_splits.map(p => ({ amount: p.amount, payment_method: p.method as any })),
+      payments: dto.payment_splits.map(p => ({ amount: p.amount, payment_method: p.method as any, receiving_profile_id:p.receiving_profile_id, received_on_mobile:p.received_on_mobile, receipt_confirmed:p.receipt_confirmed })),
     });
     });
   }
@@ -107,7 +107,7 @@ export class BillingService {
       return service;
     });
     return this.createBill(companyId, branchId, userId, { items: [{ item_id: item.id, quantity: 1, rate: dto.amount }],
-      customer_id: dto.customer_id, payment_splits: dto.payment_method === 'UDHAR' ? [] : [{ method: dto.payment_method, amount: dto.amount }],
+      customer_id: dto.customer_id, payment_splits: dto.payment_method === 'UDHAR' ? [] : [{ method: dto.payment_method, amount: dto.amount,receiving_profile_id:dto.receiving_profile_id,received_on_mobile:dto.received_on_mobile,receipt_confirmed:dto.receipt_confirmed }],
       date: dto.date, due_date: dto.due_date, note: dto.note, sales_channel: dto.sales_channel || 'QUICK' });
   }
 

@@ -11,6 +11,7 @@ export class PlatformPasswordService {
     await throttleSensitiveAuth('platform-password:' + userId, 10);
     validatePassword(password);
     if (password.length < 16) throw new BadRequestException('Platform administrator passwords need at least 16 characters.');
+    if (!/[a-z]/.test(password)||!/[A-Z]/.test(password)||!/[0-9]/.test(password)||! /[^a-zA-Z0-9]/.test(password)) throw new BadRequestException('Platform administrator passwords need uppercase, lowercase, a number and a symbol.');
     return this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM platform_users WHERE id=${userId}::uuid FOR UPDATE`;
       const user = await tx.platformUser.findUnique({ where: { id: userId } });

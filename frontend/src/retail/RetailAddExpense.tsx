@@ -1,3 +1,5 @@
+import DateInput from '../shared/components/DateInput';
+import { readWorkflowDraft,useWorkflowDraft } from './experience/workflowDraft';
 import StitchHeader from './design/StitchHeader';
 import { ui, useUiLanguage } from "../i18n";
 import { MobileSelect } from './components/MobileControls';
@@ -15,11 +17,12 @@ import PaymentChoices from './components/PaymentChoices';
 const RetailAddExpense = () => {
   useUiLanguage();
   const navigate = useNavigate(); const [params]=useSearchParams();
+  const [seed]=useState(()=>readWorkflowDraft<any>('expense'));
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string,string>>(seed?.formData||{
     type: params.get('type')==='OWNER_WITHDRAWAL'?'OWNER_WITHDRAWAL':'BUSINESS_EXPENSE',
     category_id: '',
     amount: '',
@@ -31,9 +34,9 @@ const RetailAddExpense = () => {
 
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const photoUpload = useOptionalPhotoUpload();
-  const [savedId,setSavedId]=useState('');
-  const [error,setError]=useState('');
+  const photoUpload = useOptionalPhotoUpload('expense');
+  const [savedId,setSavedId]=useState(seed?.savedId||'');
+  const [error,setError]=useState('');const draft=useWorkflowDraft('expense',{formData,savedId});
 
   useEffect(() => {
     fetchCategories();
@@ -92,6 +95,7 @@ const RetailAddExpense = () => {
         amount: Number(formData.amount)
       }); id=saved.data.id;setSavedId(id); }
       await photoUpload.upload('EXPENSE', id, 'EXPENSE_BILL');
+      draft.clear();
       navigate('/retail/expenses');
     } catch (err: any) {
       setError(getApiErrorMessage(err));
@@ -128,7 +132,7 @@ const RetailAddExpense = () => {
             <div className="r-stitch-amount-shortcuts">{[100,200,500,1000].map(v=><button key={v} type="button" className="r-btn r-btn--outline" onClick={()=>setFormData({...formData,amount:String(Number(formData.amount||0)+v)})}>+₹{v.toLocaleString('en-IN')}</button>)}</div>
           </RetailFormSection>
           <RetailFormSection title={ui('Date')} Icon={CalendarDays}>
-            <div className="r-form-group"><label className="r-label r-visually-hidden" htmlFor="expense-date">{ui("Date")}</label><input id="expense-date" className="r-input" type="date" value={formData.date} onChange={e=>setFormData({...formData,date:e.target.value})}/></div>
+            <div className="r-form-group"><label className="r-label r-visually-hidden" htmlFor="expense-date">{ui("Date")}</label><DateInput id="expense-date" className="r-input" type="date" value={formData.date} onChange={e=>setFormData({...formData,date:e.target.value})} lang="en-GB"/></div>
           </RetailFormSection>
           <RetailFormSection title={ui("Payment")} description="Select how the money was paid out." Icon={Wallet}>
             <PaymentChoices id="expense-payment-method" value={formData.payment_method} onChange={value=>setFormData({...formData,payment_method:value})}/>
@@ -141,7 +145,7 @@ const RetailAddExpense = () => {
           </details>
         </fieldset>
         <p className="r-caption r-stitch-ledger-note">{ui('Shop expenses and owner withdrawals stay separate. Saving updates the recorded money movement.')}</p>
-        {photoUpload.failed&&<button className="r-btn" onClick={()=>navigate('/retail/expenses')}>Continue without photo</button>}
+        {photoUpload.failed&&<button className="r-btn" onClick={()=>{photoUpload.select(null);draft.clear();navigate('/retail/expenses');}}>Continue without photo</button>}
       </div>
       <div className="r-bottom-action"><button className="r-btn r-btn--primary r-btn--full" onClick={handleSubmit} disabled={loading}>{loading?'Saving...':photoUpload.failed?ui("Retry Photo Upload"):ui("Save Expense")}</button></div>
     </div>

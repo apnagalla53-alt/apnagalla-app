@@ -1,6 +1,8 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpiProfileDto, CashCountDto } from './counter.dto';
+import { randomUUID } from 'crypto';
+import { receivingProfiles, receivingView } from './upi-profiles';
 function day(value:string) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new BadRequestException('Choose a valid date');
   const start=new Date(value+'T00:00:00.000Z');
@@ -36,18 +38,41 @@ export class CounterService {
   }
   async upi(companyId:string) {
     const config=await this.db.companyConfiguration.findUnique({where:{company_id:companyId}});
-    const profile:any=config?.payment_configuration;
-    return profile?.upi_id ? {...profile,configured:true,bank_verified:false,automatic_confirmation:false} : {configured:false,bank_verified:false,automatic_confirmation:false};
+    return receivingView(config?.payment_configuration);
   }
   async saveUpi(companyId:string,branchId:string,userId:string,dto:UpiProfileDto) {
     return this.db.$transaction(async tx=>{
-      await tx.companyConfiguration.upsert({where:{company_id:companyId},create:{company_id:companyId,payment_configuration:{...dto}},update:{payment_configuration:{...dto}}});
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${companyId+':upi'},0))::text`;
+      const config:any=(await tx.companyConfiguration.findUnique({where:{company_id:companyId}}))?.payment_configuration||{};
+      const profiles=receivingProfiles(config),id=dto.id||(!dto.add_new&&profiles.length?profiles[0].id:randomUUID());
+      if(dto.id&&!profiles.some(p=>p.id===id))throw new BadRequestException('Receiving account not found.');
+      if(profiles.some(p=>p.id!==id&&p.upi_id.toLowerCase()===dto.upi_id.trim().toLowerCase()))throw new BadRequestException('This UPI address is already saved.');
+      const entry={id,label:dto.label?.trim()||'Receiving account',upi_id:dto.upi_id.trim(),payee_name:dto.payee_name.trim(),...(dto.mobile?{mobile:dto.mobile.trim()}:{}),show_on_invoice:dto.show_on_invoice};
+      const updated=[...profiles.filter(p=>p.id!==id),entry];if(updated.length>10)throw new BadRequestException('You can save up to 10 receiving accounts.');
+      const defaultId=dto.make_default||!profiles.length?id:config.default_profile_id||profiles[0].id;
+      const primary=updated.find(p=>p.id===defaultId)||updated[0];
+      const payment_configuration={...config,...primary,profiles:updated,default_profile_id:primary.id};
+      await tx.companyConfiguration.upsert({where:{company_id:companyId},create:{company_id:companyId,payment_configuration},update:{payment_configuration}});
       await tx.auditLog.create({data:{company_id:companyId,branch_id:branchId,user_id:userId,action:'UPI_PROFILE_UPDATED',details:'Primary receiving profile and invoice preference updated'}});
-      return {...dto,configured:true,bank_verified:false,automatic_confirmation:false};
+      return receivingView(payment_configuration);
     });
   }
-  async qr(companyId:string,amount?:number) {
-    const profile:any=await this.upi(companyId);
+  async removeUpi(companyId:string,branchId:string,userId:string,id:string){
+    return this.db.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${companyId+':upi'},0))::text`;
+      const existing=await tx.companyConfiguration.findUnique({where:{company_id:companyId}}),config:any=existing?.payment_configuration||{};
+      const profiles=receivingProfiles(config);if(!profiles.some(p=>p.id===id))throw new NotFoundException('Receiving account not found.');
+      const remaining=profiles.filter(p=>p.id!==id),primary=remaining.find(p=>p.id===config.default_profile_id)||remaining[0];
+      const {upi_id,payee_name,mobile,show_on_invoice,label,id:oldId,...other}=config;
+      const payment_configuration={...other,...primary,profiles:remaining,default_profile_id:primary?.id||null};
+      await tx.companyConfiguration.update({where:{company_id:companyId},data:{payment_configuration}});
+      await tx.auditLog.create({data:{company_id:companyId,branch_id:branchId,user_id:userId,action:'UPI_PROFILE_REMOVED',details:JSON.stringify({profile_id:id})}});
+      return receivingView(payment_configuration);
+    });
+  }
+  async qr(companyId:string,amount?:number,profileId?:string) {
+    const config=await this.db.companyConfiguration.findUnique({where:{company_id:companyId},select:{payment_configuration:true}});
+    const profile:any=receivingView(config?.payment_configuration,profileId);
     if(!profile.configured) throw new NotFoundException('Set up the shop receiving UPI profile first');
     if(amount!==undefined && (!Number.isFinite(amount)||amount<=0||amount>999999999)) throw new BadRequestException('Enter a positive payment amount');
     const params=new URLSearchParams({pa:profile.upi_id,pn:profile.payee_name,cu:'INR'});
@@ -71,7 +96,7 @@ export class CounterService {
       const incoming=lines.filter(isCash).reduce((s,l)=>s+Number(l.debit),0);
       const outgoing=lines.filter(isCash).reduce((s,l)=>s+Number(l.credit),0);
       cashIn+=incoming;cashOut+=outgoing;
-      if(v.source_document_type==='POS_RECEIPT')cashSales+=incoming;
+      if(['POS_RECEIPT','POS_RECEIPT_CANCEL'].includes(v.source_document_type||''))cashSales+=incoming-outgoing;
       if(v.voucher_type==='RECEIPT'&&v.source_document_type!=='POS_RECEIPT'&&lines.some(l=>l.party?.party_type==='CUSTOMER')) {
         oldDueCash+=incoming;oldDues+=lines.filter(l=>l.party?.party_type==='CUSTOMER').reduce((s,l)=>s+Number(l.credit),0);
       }

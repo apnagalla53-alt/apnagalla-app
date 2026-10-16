@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDateString, IsDefined, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
 
 export class GstBillsQueryDto {
@@ -14,7 +14,8 @@ export class GstProfileDto {
   @IsOptional() @IsString() @MaxLength(255) trade_name?: string;
   @IsString() @MinLength(5) @MaxLength(1000) address: string;
   @IsString() @Matches(/^\d{2}$/) state_code: string;
-  @IsString() @Matches(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/) gstin: string;
+  @Transform(({value})=>typeof value==='string'?value.trim().toUpperCase():value)
+  @IsString() @Matches(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/, {message:'Enter the complete 15-character GSTIN from your registration certificate.'}) gstin: string;
   @IsOptional() @IsString() @MaxLength(50) phone?: string;
   @IsOptional() @IsEmail() @MaxLength(255) email?: string;
   @IsString() @Matches(/^[A-Z0-9]{1,4}$/) invoice_prefix: string;

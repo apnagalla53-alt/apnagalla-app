@@ -47,10 +47,10 @@ export default function RetailHome() {
  const ask=(q:string)=>navigate('/retail/assistant'+(q?'?q='+encodeURIComponent(q):''));
  const canAsk=access.isFeatureEffective('ASSISTANT_TEXT');
  const assistantFeature=access.data?.entitlements.features.find(f=>/ASSISTANT/.test(f.code)&&f.enabled);
- const makeBill=()=>navigate('/retail/bill');
+ const makeBill=()=>navigate('/retail/quick-sale');
  const actions=<>
    <section aria-label={ui('Shop actions')} className="xp-action-grid">
-    {data?.can.sell&&<PrimaryActionCard id="qa-new-bill" title={isNew?'Make First Bill':'Make Bill'} description={isNew?'Start billing in seconds. No setup needed.':'Choose items, then collect payment.'} Icon={Receipt} onClick={makeBill}/>}
+    {data?.can.sell&&<PrimaryActionCard id="qa-new-bill" title={isNew?'Make First Bill':'Quick Bill'} description={isNew?'Start billing in seconds. No setup needed.':'Choose items, then collect payment.'} Icon={Receipt} onClick={makeBill}/>}
     {data?.can.buy&&<PrimaryActionCard id="qa-add-purchase" title="Buy Stock" description="Add a purchase and manage stock." Icon={ShoppingCart} tone="warning" onClick={()=>navigate('/retail/purchases/new')}/>}
     {isNew&&data?.can.manageItems&&<PrimaryActionCard title="Add Many Items" description="Add items together or import a list." Icon={PackagePlus} tone="info" onClick={()=>navigate('/retail/items/bulk')}/>}
     {isNew&&data?.can.receive&&<PrimaryActionCard title={data?.activity.customers?'Add Customer':'Add First Customer'} description="Save details for faster billing." Icon={UserPlus} tone="special" onClick={()=>navigate('/retail/customers/add')}/>}

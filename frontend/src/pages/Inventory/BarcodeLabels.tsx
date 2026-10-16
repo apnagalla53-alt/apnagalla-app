@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import { useState, useEffect } from 'react';
 import { Search, Plus, Printer, RefreshCw, Check, Trash2, Tag, Layers, FileText } from 'lucide-react';
 import api from '../../shared/api';
@@ -461,7 +462,7 @@ export default function BarcodeLabels() {
                 max="1000"
                 className="form-control"
                 value={printQuantity}
-                onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))} inputMode="decimal"
               />
             </div>
 
@@ -563,7 +564,7 @@ export default function BarcodeLabels() {
               <option value="">-- Choose GRN --</option>
               {grns.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.document_number} - {g.party?.name || 'Supplier'} ({new Date(g.document_date).toLocaleDateString()})
+                  {g.document_number} - {g.party?.name || 'Supplier'} ({formatDate(g.document_date)})
                 </option>
               ))}
             </select>
@@ -587,7 +588,7 @@ export default function BarcodeLabels() {
                       <td className="font-semibold">{line.item?.name || 'Item'}</td>
                       <td>{Number(line.received_quantity)}</td>
                       <td>{line.batch_number || '-'}</td>
-                      <td>{line.expiry_date ? new Date(line.expiry_date).toLocaleDateString() : '-'}</td>
+                      <td>{line.expiry_date ? formatDate(line.expiry_date) : '-'}</td>
                       <td>
                         <input
                           type="number"
@@ -603,7 +604,7 @@ export default function BarcodeLabels() {
                                 Math.max(0, parseInt(e.target.value) || 0)
                               ),
                             })
-                          }
+                          } inputMode="decimal"
                         />
                       </td>
                     </tr>

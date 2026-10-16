@@ -1,3 +1,4 @@
+import { formatDateTime } from '../shared/dateFormat';
 import { useEffect,useRef,useState } from 'react';
 import { Link,Navigate,useNavigate } from 'react-router-dom';
 import { ArrowLeft,ArrowRight,Check,ChevronDown,FileUp,MapPin,RefreshCw,ShieldCheck,Store,Wallet,Layers } from 'lucide-react';
@@ -19,12 +20,13 @@ export default function Onboarding(){
  const user=useAuthStore(s=>s.user),navigate=useNavigate();
  const [data,setData]=useState<any>(null),[profile,setProfile]=useState<Profile>(emptyProfile),[view,setView]=useState(''),[error,setError]=useState(''),[errorCode,setErrorCode]=useState(''),[busy,setBusy]=useState(false),[sheet,setSheet]=useState(false),[gps,setGps]=useState<{latitude:number;longitude:number}|null>(null),[locationStatus,setLocationStatus]=useState(''),[locating,setLocating]=useState(false);
  const loaded=useRef(false),mounted=useRef(true);
- const [activationCode,setActivationCode]=useState(''),[codeMessage,setCodeMessage]=useState('');
+ const [activationCode,setActivationCode]=useState(()=>sessionStorage.getItem('evolix-referral')||''),[codeMessage,setCodeMessage]=useState('');
  const step=view||data?.state;
  async function install(result:any,hydrate=false){
   if(result.state==='PLAN_REQUIRED'){
    await install((await api.post('/auth/account/onboarding/activation-request')).data,hydrate);return;
   }
+  if(result.code_result)sessionStorage.removeItem('evolix-referral');
   if(result.code_result)setCodeMessage(result.code_result.kind==='TRIAL'?'Your campaign trial is activated. Choose how to start below.':'Referral saved. Your trial activation is still awaiting administrator approval.');
   if(result.session_mode==='cookie'||result.access_token){useAuthStore.getState().login(result.access_token,result.user,result.csrf_token);if(result.tenant_context)useAuthStore.getState().setTenantContext(result.tenant_context);navigate(startPath.current||result.next,{replace:true});return;}
   if(result.state==='READY'){
@@ -55,6 +57,7 @@ export default function Onboarding(){
  if(user?.is_platform)return <Navigate to="/platform/dashboard" replace/>;
  const profileStep=['OWNER_PROFILE_REQUIRED','BUSINESS_PROFILE_REQUIRED'].includes(step),planStep=step==='PLAN_REQUIRED',migrationStep=step==='MIGRATION_OFFERED',pendingStep=step==='ACCESS_PENDING';
  const category=data?.business_types.find((t:any)=>t.code===profile.business_type);
+ const activationForm=<form className="ob-activation-code" onSubmit={e=>{e.preventDefault();setCodeMessage('');void save('activation-code',{code:activationCode.trim()});}}><label htmlFor="ob-activation-code">Have a referral or campaign code?</label><p className="ob-field-note">An eligible campaign code activates your trial instantly. A shop referral code records your invitation while approval is pending.</p><input id="ob-activation-code" value={activationCode} onChange={e=>setActivationCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" spellCheck={false} minLength={3} maxLength={40} required placeholder="Enter your code"/><button type="submit" className="ob-primary" disabled={busy||activationCode.trim().length<3}>{busy?'Checking code…':'Apply code'}</button></form>;
  const stepNumber=profileStep?1:planStep||pendingStep?2:3;
  return <main className="ob-page" data-theme={theme}>
   <header className="ob-brand"><span aria-hidden="true"><img src="/brand/apna-galla-app-192.png" width="40" height="40" alt=""/></span><strong>Apna Galla</strong><small>{ui('Dukaan ka hisaab. Bas poochho.')}</small></header>
@@ -86,6 +89,7 @@ export default function Onboarding(){
      <ul>{onboardingPlanBenefits[plan.code]?.map(benefit=><li key={benefit}><Check size={17}/>{benefit}</li>)}</ul>{plan.code==='SMART'&&<p className="ob-field-note">For ₹45/month more than Starter, add photos, GST, profit, insights, advanced inventory and 2 staff.</p>}
      <button type="button" disabled={busy||data.access_active} onClick={()=>void save('plan',{choice:'REQUEST',plan_code:plan.code})}>Choose {plan.code[0]+plan.code.slice(1).toLowerCase()}</button>
     </article>)}</div>
+    {!data.access_active&&activationForm}
     <p className="ob-provider-note"><ShieldCheck size={19}/>Online payments are not connected. Choosing a plan saves your request; support must confirm activation.</p>
    </>}
    {migrationStep&&<><div className="ob-intro-icon"><Layers size={27}/></div><h1>How would you like to start?</h1><p className="ob-subtitle">Make a bill straight away. Adding or importing items can wait.</p>
@@ -95,8 +99,8 @@ export default function Onboarding(){
     <p className="ob-field-note">Items, customers, suppliers, opening stock and opening dues. Upload → map → validate → preview → import. Supported formats: {data.import_formats.join(', ')}. Source guides help you prepare exports; a direct connection to other apps is not provided.</p>
    </>}
    {pendingStep&&<><div className="ob-intro-icon"><ShieldCheck size={27}/></div><h1>Your demo request is sent</h1><p className="ob-subtitle">Your shop details are saved and your activation request has been sent automatically. Our administrator will choose your trial plan and duration, usually 30 or 60 days. No payment is needed for a free trial.</p>
-    <div className="ob-pending-summary"><strong>{data.business?.name}</strong><span>{profile.mobile?'+91 '+profile.mobile:''}</span><span>Activation: awaiting administrator approval</span><span>Requested plan: {data.data?.requested_plan_code||'SMART'}</span>{data.data?.activation_requested_at&&<span>Request sent: {new Date(data.data.activation_requested_at).toLocaleString()}</span>}</div>
-    <form className="ob-activation-code" onSubmit={e=>{e.preventDefault();setCodeMessage('');void save('activation-code',{code:activationCode.trim()});}}><label htmlFor="ob-activation-code">Have a referral or campaign code?</label><p className="ob-field-note">An eligible campaign code activates your trial instantly. A shop referral code records your invitation while approval is pending.</p><input id="ob-activation-code" value={activationCode} onChange={e=>setActivationCode(e.target.value.toUpperCase())} autoComplete="off" autoCapitalize="characters" spellCheck={false} minLength={3} maxLength={40} required placeholder="Enter your code"/><button type="submit" className="ob-primary" disabled={busy||activationCode.trim().length<3}>{busy?'Checking code…':'Apply code'}</button></form>
+    <div className="ob-pending-summary"><strong>{data.business?.name}</strong><span>{profile.mobile?'+91 '+profile.mobile:''}</span><span>Activation: awaiting administrator approval</span><span>Requested plan: {data.data?.requested_plan_code||'SMART'}</span>{data.data?.activation_requested_at&&<span>Request sent: {formatDateTime(data.data.activation_requested_at)}</span>}</div>
+    {activationForm}
     <p className="ob-field-note">This screen checks approval automatically every 30 seconds while it is open.</p><button type="button" className="ob-primary" disabled={busy} onClick={()=>void reload()}><RefreshCw size={19}/>Check activation status</button><button type="button" className="ob-back" onClick={()=>setView('PLAN_REQUIRED')}>Review or change requested plan</button><button type="button" className="ob-back" onClick={()=>setView('BUSINESS_PROFILE_REQUIRED')}>Edit business profile</button><Link className="ob-support" to="/support">Contact Support</Link></>}
    {data&&!profileStep&&!planStep&&!migrationStep&&!pendingStep&&<div role="alert"><p>We couldn’t find your next setup step. Your records are safe.</p><button type="button" onClick={()=>void reload()}>Reload setup</button><Link to="/support">Contact Support</Link></div>}
   </section>

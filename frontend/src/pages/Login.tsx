@@ -58,7 +58,7 @@ export default function Login({ platform = false }: { platform?: boolean }) {
       <p>The sign-in request expires after five minutes. A used code cannot be submitted again.</p>
       {error&&<p role="alert" className="login-error">{error}</p>}<button type="submit" disabled={loading}>{loading?'Verifying…':'Verify and sign in'}</button><button type="button" disabled={loading} onClick={()=>{setMfa(null);setCode('');setError('');}}>Back to sign in</button>
     </form>:<form onSubmit={submit}>
-      <label>{platform ? ui('Username or email') : 'Staff phone number or owner email'}<input autoComplete="username" placeholder={platform ? ui('Enter your username or email') : 'Staff mobile number or owner email'} required maxLength={255} value={username} onChange={e => setUsername(e.target.value)} /></label>
+      <label>{platform ? ui('Username or email') : 'Username'}<input autoComplete="username" placeholder={platform ? ui('Enter your username or email') : 'Enter your username or mobile number'} required maxLength={255} value={username} onChange={e => setUsername(e.target.value)} /></label>
       <label>{ui("Password")}<input type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder={ui("Enter your password")} required maxLength={255} value={password} onChange={e => setPassword(e.target.value)} /></label>
       <label className="login-checkbox"><input type="checkbox" checked={showPassword} onChange={e => setShowPassword(e.target.checked)} />{ui("Show password")}</label>
       {error && <p role="alert" className="login-error">{error}</p>}

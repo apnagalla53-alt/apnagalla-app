@@ -51,7 +51,7 @@ const generic: Definition = {
 };
 const definitions: Record<string, Definition> = {
   GROCERY: {
-    units: ['PCS', 'PKT', 'BOX', 'KG', 'GM', 'LTR', 'ML', 'BOTTLE'],
+    units: ['PCS', 'PKT', 'BOX', 'KG', 'GM', 'LTR', 'ML', 'BOTTLE', 'SACK'],
     categories: [
       c('Rice / Grains', ['KG', 'GM', 'SACK']),
       c('Biscuits / Packaged Food', ['PKT', 'BOX', 'PCS']),

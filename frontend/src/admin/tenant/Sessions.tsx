@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import { useEffect, useState } from 'react';
 import api from '../../shared/api';
 import { Trash } from 'lucide-react';
@@ -90,7 +91,7 @@ const Sessions = () => {
                     </td>
                     <td>{s.ip_address}</td>
                     <td title={s.user_agent}>{parseUserAgent(s.user_agent)}</td>
-                    <td>{new Date(s.expires_at).toLocaleString()}</td>
+                    <td>{formatDateTime(s.expires_at)}</td>
                     <td>
                       <button className="btn btn-danger btn-icon" onClick={() => handleRevoke(s.id)} aria-label={isCurrent ? "Sign out this device" : "Sign out device"} title={isCurrent ? "Revoke Own Session" : "Revoke Session"}>
                         <Trash size={16}/>

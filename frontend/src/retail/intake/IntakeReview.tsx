@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import { trackExperience } from "../experience/experienceEvents";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ChevronRight, TriangleAlert } from "lucide-react";
@@ -258,7 +259,7 @@ export default function IntakeReview({
             min="0"
             step=".01"
             value={invoiceTotal}
-            onChange={(e) => setInvoiceTotal(e.target.value)}
+            onChange={(e) => setInvoiceTotal(e.target.value)} inputMode="decimal"
           />
           <label htmlFor="intake-supplier">{ui("Supplier")} *</label>
           <RemotePartySelect
@@ -296,12 +297,12 @@ export default function IntakeReview({
             onChange={(e) => setInvoice(e.target.value)}
           />
           <label htmlFor="intake-date">{ui("Invoice date")} *</label>
-          <input
+          <DateInput
             id="intake-date"
             className="r-input"
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => setDate(e.target.value)} lang="en-GB"
           />
         </section>
       )}
@@ -430,7 +431,7 @@ export default function IntakeReview({
                     min="0"
                     step=".01"
                     value={paid}
-                    onChange={(e) => setPaid(e.target.value)}
+                    onChange={(e) => setPaid(e.target.value)} inputMode="decimal"
                   />
                 </>
               )}

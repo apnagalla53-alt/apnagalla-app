@@ -150,7 +150,7 @@ const RetailReturn = () => {
                   // DOM value can change between updater invocations.
                   const quantity=Math.min(Number(line.remaining_quantity),Math.max(0,Number(e.currentTarget.value)));
                   setReturnItems(previous=>({...previous,[line.id]:quantity}));
-                }} />
+                }} inputMode="decimal" />
                 <button 
                   className="r-btn r-btn--icon r-btn--ghost" 
                   disabled={saving || posted || !!line.serial_allocations?.length || (returnItems[line.id]||0)>=Number(line.remaining_quantity)}

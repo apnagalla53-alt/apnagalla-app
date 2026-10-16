@@ -14,7 +14,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
   intercept(context:ExecutionContext,next:CallHandler) {
     const req=context.switchToHttp().getRequest();
     const path=req.path;
-    const financial=/\/retail\/(bills(?:\/amount-sale|\/return)?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(path)
+    const financial=/\/retail\/(bills(?:\/amount-sale|\/return|\/[a-f0-9-]+\/(?:edit|cancel))?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(path)
       || /\/erp\/pos\/(sale|return)$/.test(path);
     const intakeConfirm=/\/retail\/account\/intake\/[0-9a-f-]+\/confirm$/.test(path);
     const entityCreate=/\/retail\/(?:items(?:\/inline|\/bulk)?|customers|suppliers)$/.test(path);

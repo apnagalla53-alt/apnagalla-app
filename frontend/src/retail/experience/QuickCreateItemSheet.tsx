@@ -147,7 +147,7 @@ export default function QuickCreateItemSheet({
                 step="0.01"
                 required
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => setPrice(e.target.value)} inputMode="decimal"
               />
             </div>
             <div>
@@ -160,7 +160,7 @@ export default function QuickCreateItemSheet({
                 min={mode === "PIECE" ? "1" : "0.000001"}
                 step={mode === "PIECE" ? "1" : "0.000001"}
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onChange={(e) => setQuantity(e.target.value)} inputMode="decimal"
               />
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function QuickCreateItemSheet({
                 min="0"
                 step="0.01"
                 value={cost}
-                onChange={(e) => setCost(e.target.value)}
+                onChange={(e) => setCost(e.target.value)} inputMode="decimal"
               />
               <details>
                 <summary>{ui(preset.itemPrompts.multiUnit)}</summary>
@@ -219,7 +219,7 @@ export default function QuickCreateItemSheet({
                           step={mode === "PIECE" ? "1" : "0.000001"}
                           required
                           value={factor}
-                          onChange={(e) => setFactor(e.target.value)}
+                          onChange={(e) => setFactor(e.target.value)} inputMode="decimal"
                         />
                         <p>
                           1 {buyUnit.code} = {factor || "…"} {unit.code}

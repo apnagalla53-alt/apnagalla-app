@@ -171,6 +171,15 @@ export class AuthService implements OnModuleInit {
     return this.prisma.runSystem(()=>this.issueVerifiedUserSession(userId,context,verifiedPasswordHash));
   }
   /** Rehydrate a verified existing session after website -> app navigation; never issues another session/token. */
+  async restoreDeviceSession(userId:string,sessionId:string){
+    return this.prisma.runSystem(async()=>{
+      const profile=await this.sessionProfile(userId),now=new Date();
+      if(profile.user.must_change_password)return profile;
+      const valid=await this.prisma.session.updateMany({where:{id:sessionId,user_id:userId,revoked_at:null,expires_at:{gt:now}},data:{expires_at:new Date(now.getTime()+365*86400_000)}});
+      if(!valid.count)throw new UnauthorizedException('This device session was revoked. Sign in again.');
+      return {...profile,access_token:await this.jwtService.signAsync({sub:userId,username:profile.user.username,sid:sessionId,is_platform:false},{expiresIn:365*86400})};
+    });
+  }
   async sessionProfile(userId:string) {
     return this.prisma.runSystem(async()=>{
       const user=await this.prisma.user.findUnique({where:{id:userId},include:{roles:{include:{role:{include:{role_permissions:{include:{permission:true}}}}}}}});
@@ -180,7 +189,7 @@ export class AuthService implements OnModuleInit {
       const branch=membership?.branch_id?await this.prisma.branch.findUnique({where:{id:membership.branch_id}}):null;
       if(company&&(!company.organization.is_active||['SUSPENDED','CANCELLED','ARCHIVED'].includes(company.organization.status)))throw new UnauthorizedException('This shop is inactive. Contact the owner.');
       const now=new Date(),year=company?await this.prisma.financialYear.findFirst({where:{company_id:company.id,is_closed:false,start_date:{lte:now},end_date:{gte:now}},orderBy:{is_active:'desc'}}):null;
-      return {user:{id:user.id,username:user.username,display_name:user.display_name,email:user.email,phone:user.phone,organization_id:user.organization_id,role:role?.name||'USER',permissions:role?.role_permissions.map(p=>p.permission.code)||[],password_min_length:isStaffAccount(user)?8:12,must_change_password:user.must_change_password,onboarding_state:user.onboarding_state,is_platform:false},tenant_context:company&&branch?{organization_id:company.organization_id,organization_name:company.organization.name,company_id:company.id,company_name:company.trade_name||company.legal_name,branch_id:branch.id,branch_name:branch.name,financial_year_id:year?.id,financial_year_label:year?.label}:null};
+      return {user:{id:user.id,username:user.username,display_name:user.display_name,email:user.email,phone:user.phone,organization_id:user.organization_id,role:role?.name||'USER',permissions:role?.role_permissions.map(p=>p.permission.code)||[],password_min_length:8,must_change_password:user.must_change_password,onboarding_state:user.onboarding_state,is_platform:false},tenant_context:company&&branch?{organization_id:company.organization_id,organization_name:company.organization.name,company_id:company.id,company_name:company.trade_name||company.legal_name,branch_id:branch.id,branch_name:branch.name,financial_year_id:year?.id,financial_year_label:year?.label}:null};
     });
   }
   private async issueVerifiedUserSession(userId: string, context: { ip?: string; userAgent?: string; deviceId?: string } = {},verifiedPasswordHash?:string) {
@@ -212,7 +221,7 @@ export class AuthService implements OnModuleInit {
     if (company && (!company.organization.is_active || ['SUSPENDED', 'CANCELLED'].includes(company.organization.status))) {
       throw new UnauthorizedException('This shop is suspended or inactive. Contact the owner.');
     }
-    const sessionDays = isStaffAccount(user) && !user.must_change_password ? 30 : 1;
+    const sessionDays = user.must_change_password ? 1 : 365;
     const session = await this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM users WHERE id=${user.id}::uuid FOR UPDATE`;
       const current=await tx.user.findUniqueOrThrow({where:{id:user.id}});
@@ -247,7 +256,7 @@ export class AuthService implements OnModuleInit {
         role: activeRole?.name || 'USER',
         permissions: permissions,
         must_change_password: user.must_change_password,
-        password_min_length: isStaffAccount(user) ? 8 : 12,
+        password_min_length: 8,
         onboarding_state: user.onboarding_state,
         organization_id: user.organization_id,
         email:user.email,

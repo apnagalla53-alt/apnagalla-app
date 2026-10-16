@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { MobileSelect, Sheet } from "../components/MobileControls";
@@ -308,7 +309,7 @@ export default function RetailAssistant({ embedded = false }: { embedded?: boole
                   <p>{m.reply.result.definition}</p>
                   <p>
                     Generated{" "}
-                    {new Date(m.reply.generated_at).toLocaleString("en-IN")}
+                    {formatDateTime(m.reply.generated_at)}
                   </p>
                 </details>
                 {m.reply.result.link && (

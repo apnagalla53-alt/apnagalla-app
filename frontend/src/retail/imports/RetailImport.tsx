@@ -1,3 +1,4 @@
+import DateInput from '../../shared/components/DateInput';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { MobileSelect } from "../components/MobileControls";
@@ -244,14 +245,14 @@ export default function RetailImport() {
                 </label>
                 <label>
                   Cutover date
-                  <input
+                  <DateInput
                     type="date"
                     value={date}
                     disabled={busy}
                     onChange={(e) => {
                       setDate(e.target.value);
                       setJob(null);
-                    }}
+                    }} lang="en-GB"
                   />
                 </label>
                 <label>
@@ -295,7 +296,7 @@ export default function RetailImport() {
                       onChange={(e) => {
                         setHeader(Number(e.target.value));
                         setJob(null);
-                      }}
+                      }} inputMode="decimal"
                     />
                   </label>
                 </details>

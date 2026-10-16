@@ -25,7 +25,7 @@ export default function RetailItemUnitsVariants({ item, features, reload }: { it
         <label htmlFor="variant-size">Size / option</label><input id="variant-size" className="r-input" maxLength={100} value={size} onChange={e => setSize(e.target.value)} placeholder="e.g. Large" />
         <label htmlFor="variant-colour">Colour (optional)</label><input id="variant-colour" className="r-input" maxLength={100} value={colour} onChange={e => setColour(e.target.value)} placeholder="e.g. Blue" />
         <label htmlFor="variant-sku">Variant SKU (optional)</label><input id="variant-sku" className="r-input" maxLength={100} value={sku} onChange={e => setSku(e.target.value)} />
-        <label htmlFor="variant-price">Selling price (optional, ₹)</label><input id="variant-price" className="r-input" type="number" min="0" step=".01" value={price} onChange={e => setPrice(e.target.value)} />
+        <label htmlFor="variant-price">Selling price (optional, ₹)</label><input id="variant-price" className="r-input" type="number" min="0" step=".01" value={price} onChange={e => setPrice(e.target.value)} inputMode="decimal" />
         <button className="r-btn r-btn--primary" disabled={busy || !size.trim() && !colour.trim()}>Add Variant</button>
       </form>}
     </details>}

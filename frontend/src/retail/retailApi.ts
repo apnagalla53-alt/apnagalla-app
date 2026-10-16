@@ -102,14 +102,14 @@ export const posApi = {
   postSale: async (payload: {
     items: Array<{ item_id?: string; new_item?: import('./retailStore').BillLineItem['new_item']; variant_id?: string; batch_id?: string; unit_id?: string; dimensions?: any; serial_ids?: string[]; modifier_option_ids?: string[]; quantity: number; rate: number; discount_amount: number }>;
     customer_id?: string;
-    payment_splits: Array<{ method: string; amount: number }>;
+    payment_splits: Array<{ method: string; amount: number; receiving_profile_id?:string; received_on_mobile?:string; receipt_confirmed?:boolean }>;
     total_amount: number;
     discount: number;
     bill_discount?: number;
     date?: string; due_date?: string; sales_channel?: string; note?: string;
-  }) => {
-    // Maps to: POST /api/v1/retail/bills
-    return api.post('/retail/bills', payload);
+    },idempotencyKey?:string) => {
+      // Keep one identity for the whole bill, including a response-lost retry.
+      return api.post('/retail/bills', payload,idempotencyKey?{headers:{'Idempotency-Key':idempotencyKey}}:undefined);
   },
   
   holdBill: async (_branchId: string, items: any[], extra?: {customer_id?:string; reference_name?:string; note?:string; bill_discount?:number}) => {

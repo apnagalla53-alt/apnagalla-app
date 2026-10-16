@@ -82,7 +82,7 @@ export class TenantProvisioningService {
     if(dto.subscriptionStatus==='TRIAL'&&!dto.reason)throw new BadRequestException('Record a reason for this trial/demo.');
     const expiryDate = dto.expiryDate ? new Date(dto.expiryDate) : new Date(startDate.getTime() + (dto.subscriptionStatus==='TRIAL'?trialPolicy.trial_days:30) * 86400_000);
     if (expiryDate <= startDate) throw new ConflictException('Subscription expiry must be after start');
-    if(!verifiedOwnerId&&process.env.NODE_ENV==='production'&&(dto.adminPassword.length<12||!/[a-z]/.test(dto.adminPassword)||!/[A-Z]/.test(dto.adminPassword)||!/[0-9]/.test(dto.adminPassword)||! /[^a-zA-Z0-9]/.test(dto.adminPassword)))throw new BadRequestException('Owner password must contain at least 12 characters, uppercase, lowercase, a number and a symbol');
+    if(!verifiedOwnerId&&(dto.adminPassword.length<8||Buffer.byteLength(dto.adminPassword,'utf8')>72))throw new BadRequestException('Use at least 8 characters, up to 72 bytes.');
     const passwordHash = verifiedOwner?.password_hash || await bcrypt.hash(dto.adminPassword, 12);
 
     try {

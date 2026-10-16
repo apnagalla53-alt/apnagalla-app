@@ -1,3 +1,4 @@
+import { requestCorrectionIdentity } from './correctionIdentity';
 import axios from 'axios';
 import { createUuid, sha256Hex } from './browserCrypto';
 import { useAuthStore } from './store/authStore';
@@ -17,7 +18,11 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   if (config.data instanceof FormData) config.headers.delete('Content-Type');
   const state = useAuthStore.getState();
-  const financial=config.method==='post'&&/\/retail\/(bills(?:\/amount-sale|\/return)?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(config.url||'');
+  const postEdit=config.method==='post'&&/\/retail\/(items|customers|suppliers|purchases|expenses|needs)\/[a-f0-9-]{36}(?:\/(?:remove|archive|delete|update))?\/?$/i.test(config.url||'');
+  if(window.location.pathname.startsWith('/retail/')&&(['patch','put','delete'].includes(config.method||'')||postEdit)&&/\/retail\/(items|customers|suppliers|purchases|expenses|needs)\/[a-f0-9-]{36}(?:\/|$)/i.test(config.url||'')&&!config.headers['X-Correction-Name']){
+    const identity=await requestCorrectionIdentity();config.headers['X-Correction-Name']=identity.name;config.headers['X-Correction-Reason']=identity.reason;
+  }
+  const financial=config.method==='post'&&/\/retail\/(bills(?:\/amount-sale|\/return|\/[a-f0-9-]+\/(?:edit|cancel))?|purchases|expenses|(?:customers|suppliers)\/[0-9a-f-]+\/payments)$/.test(config.url||'');
   const entityCreate=config.method==='post'&&/\/retail\/(?:items(?:\/inline|\/bulk)?|customers|suppliers)$/.test(config.url||'');
   const intakeConfirm=config.method==='post'&&/\/retail\/account\/intake\/[0-9a-f-]+\/confirm$/.test(config.url||'');
   if((financial||entityCreate||intakeConfirm)&&!config.headers['Idempotency-Key']) {
@@ -48,6 +53,7 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => { if((response.config as any).experienceEvent)return response;clearPending(response.config);if(['post','patch','put','delete'].includes(response.config.method||'')&&!/\/(?:quote|query)$/.test(response.config.url||''))window.dispatchEvent(new Event('evolix-data-changed'));window.dispatchEvent(new CustomEvent('evolix-api-recovered',{detail:response.config.url}));return response; },
   (error) => {
+    if(error.code==='USER_CANCELLED')return Promise.reject(error);
     if(error.config?.experienceEvent)return Promise.reject(error);
     if(error.response?.status>=400&&error.response?.status<500&&error.response?.status!==408)clearPending(error.config);
     if (import.meta.env.DEV) console.error('API request failed', error.config?.method, error.config?.url, error.response?.status || 'NETWORK');
@@ -73,6 +79,7 @@ function clearPending(config:any) {
 }
 
 export function getApiErrorMessage(error: any): string {
+  if(error.code==='USER_CANCELLED')return 'Change cancelled.';
   const status = error.response?.status;
   const message = error.response?.data?.message;
   if (status === 401) return 'Your session expired. Please sign in again.';

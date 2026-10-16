@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, ValidateNested, IsNumber, IsDateString, IsEnum, Min, IsIn, IsUUID, ArrayMaxSize } from 'class-validator';
+import { Matches, IsBoolean, IsString, IsOptional, IsArray, ValidateNested, IsNumber, IsDateString, IsEnum, Min, IsIn, IsUUID, ArrayMaxSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreatePosSaleLineDto {
@@ -43,6 +43,9 @@ export class CreatePosSaleLineDto {
 }
 
 export class CreatePosPaymentDto {
+  @IsOptional() @IsString() @Matches(/^(primary|[a-f0-9-]{36})$/) receiving_profile_id?:string;
+  @IsOptional() @IsString() @Matches(/^[6-9]\d{9}$/) received_on_mobile?:string;
+  @IsOptional() @IsBoolean() receipt_confirmed?:boolean;
   @IsNumber()
   amount: number;
 

@@ -1,3 +1,4 @@
+import { RetailAuditController } from './audit.controller';
 import { AttachmentsModule } from '../attachments/attachments.module';
 import { RetailIntakeController } from './intake/intake.controller';
 import { RetailIntakeService } from './intake/intake.service';
@@ -31,7 +32,7 @@ import { RetailExperienceService } from './experience/retail-experience.service'
 
 @Module({
   imports: [RetailCatalogModule,AttachmentsModule,AccountingModule, InventoryModule, PurchaseModule, ExpensesModule, BillingModule, ReportsModule,ItemCompositionModule],
-  controllers: [RetailIntakeController,RetailController, CounterController, RetailAccountController, RetailExportController, RetailCalendarController, RetailImportController, RetailGstController, RetailNotificationsController, RetailExperienceController],
+  controllers: [RetailAuditController,RetailIntakeController,RetailController, CounterController, RetailAccountController, RetailExportController, RetailCalendarController, RetailImportController, RetailGstController, RetailNotificationsController, RetailExperienceController],
   providers: [RetailIntakeService, ItemRemovalService, PrismaService, CounterService, EntitlementService, RetailImportService, OpeningStockService, RetailGstService, RetailExperienceService],
   exports:[RetailCatalogModule,CounterService],
 })

@@ -1,0 +1,16 @@
+.r-notification-trigger{position:relative;isolation:isolate}
+.r-notification-count{position:absolute;top:50%;left:50%;transform:translate(-50%,-48%);width:17px;height:12px;border-radius:4px;background:#b42318;color:#fff;font:700 9px/12px system-ui,sans-serif;font-variant-numeric:tabular-nums;text-align:center;pointer-events:none;white-space:nowrap}
+.r-item-entry-modes{display:flex;gap:8px;margin:0 0 16px}.r-item-entry-modes>a{flex:1;text-align:center}.r-item-entry-modes>a.active{background:var(--r-primary,#08734b);color:white}
+.r-quick-action-list{display:grid;gap:10px}
+.retail-app[data-keyboard=open] #billing-footer,.retail-app:has([data-item-editor=true]) #billing-footer{display:none!important}
+.retail-app[data-keyboard=open] .r-bottom-nav{display:none!important}
+.retail-app[data-keyboard=open] .workflow-banner,.retail-app:has([data-item-editor=true]) .workflow-banner{display:none!important}
+.retail-app:has(#line-quantity) #billing-footer,.retail-app:has(#line-quantity) .workflow-banner{display:none!important}
+.r-stitch-header{flex-wrap:nowrap}.r-stitch-header h1{min-width:0;flex:1}.r-stitch-header>.r-btn{flex-shrink:0}
+.r-stitch-header>div:empty{display:none}
+.r-receipt-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}.r-receipt-controls .r-btn{min-height:44px}
+.r-upi-profiles{display:grid;gap:12px}.r-upi-profile{border:1px solid var(--r-border,#dbe5df);border-radius:16px;padding:16px}.r-upi-profile p{overflow-wrap:anywhere}
+.r-upi-confirmation{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #98cab4;background:#edf9f2;border-radius:14px}.r-upi-confirmation input{width:22px;height:22px;flex-shrink:0;accent-color:#08734b}.r-upi-confirmation span{display:grid;gap:4px}
+.retail-app[data-theme=dark] .r-upi-confirmation{background:#12372c;color:#e2f5eb;border-color:#3c8266}
+@media(max-width:480px){.retail-app.retail-stitch .r-retail-toolbar{padding-inline:10px;gap:4px}.r-toolbar-brand .xp-brand-mark{width:30px;height:30px}.r-toolbar-brand .xp-brand small{display:none!important}.r-toolbar-brand .xp-brand strong{font-size:15px}.retail-app.retail-stitch .r-retail-toolbar>.r-btn{flex-shrink:0}.r-toolbar-brand .xp-brand{gap:5px}}
+@media(max-width:360px){.retail-app.retail-stitch .r-toolbar-profile{display:none}}

@@ -1,3 +1,4 @@
+import { formatDate } from '../../shared/dateFormat';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import {downloadTenantExport} from '../subscription/downloadTenantExport';
@@ -87,7 +88,7 @@ const RetailSalesReport = () => {
                   <div key={bill.id} className="r-card" style={{ padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontWeight: 600 }}>{bill.customer_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{bill.document_number} • {new Date(bill.document_date).toLocaleDateString()}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--r-text-muted)' }}>{bill.document_number} • {formatDate(bill.document_date)}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 600 }}>₹{bill.grand_total.toLocaleString('en-IN')}</div>
