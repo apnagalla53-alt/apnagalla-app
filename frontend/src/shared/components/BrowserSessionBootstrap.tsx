@@ -2,12 +2,14 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from '../store/authStore';
+import { preloadInitialRoute } from '../initialRoute';
 
 const base=(import.meta.env.VITE_API_URL||import.meta.env.VITE_API_BASE_URL||'').replace(/\/+$/,'').replace(/(?:\/api\/v1)+$/,'')+'/api/v1';
 export default function BrowserSessionBootstrap({children}:{children:ReactNode}) {
   const skip=Capacitor.isNativePlatform()||window.location.pathname.startsWith('/platform')||(window.location.pathname!=='/auth/continue'&&!!useAuthStore.getState().user?.is_platform);
   const [ready,setReady]=useState(skip),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   useEffect(()=>{
+    preloadInitialRoute(window.location.pathname);
     if(skip)return;
     let current=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),70000);
     (async()=>{

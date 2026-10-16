@@ -1,5 +1,3 @@
-import { sha256 } from '@noble/hashes/sha2.js';
-
 const hex = (bytes: Uint8Array) => Array.from(bytes, byte=>byte.toString(16).padStart(2,'0')).join('');
 
 /** LAN HTTP browsers expose getRandomValues even when randomUUID is unavailable. */
@@ -18,5 +16,6 @@ export function createUuid(): string {
 export async function sha256Hex(value: string): Promise<string> {
   const bytes = new TextEncoder().encode(value);
   if (globalThis.crypto?.subtle) return hex(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', bytes)));
+  const { sha256 } = await import('@noble/hashes/sha2.js');
   return hex(sha256(bytes));
 }

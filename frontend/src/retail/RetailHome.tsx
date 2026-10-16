@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen, Eye, EyeOff, PackagePlus, Receipt, ShoppingCart, 
 import { ui, useUiLanguage } from '../i18n';
 import { useAuthStore } from '../shared/store/authStore';
 import { getApiErrorMessage } from '../shared/api';
+import { preloadInitialRoute } from '../shared/initialRoute';
 import { reportsApi } from './retailApi';
 import { readReport } from './reports/reportReads';
 import { useRetailEntitlements } from './subscription/useRetailEntitlements';
@@ -24,6 +25,15 @@ export default function RetailHome() {
  const [dashboard,setDashboard]=useState<any>(null),[galla,setGalla]=useState<any>(null),[error,setError]=useState(''),[loading,setLoading]=useState(false);
  const owner=['OWNER','ADMIN','TENANT_ADMIN'].includes(user?.role||''),can=(p:string)=>owner||!!user?.permissions?.includes(p);
  const canMoney=can('accounting.read'),canSummary=can('reports.read');
+ useEffect(()=>{
+  if(!data?.can.sell||loading||(!isNew&&canSummary&&!dashboard))return;
+  const connection=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string}}).connection;
+  if(connection?.saveData||['slow-2g','2g'].includes(connection?.effectiveType||''))return;
+  // Warm only billing code after Home is usable. No item, price or account reads.
+  const warm=()=>preloadInitialRoute('/retail/quick-sale');
+  if('requestIdleCallback' in window){const id=window.requestIdleCallback(warm,{timeout:1500});return()=>window.cancelIdleCallback(id);}
+  const id=globalThis.setTimeout(warm,1000);return()=>globalThis.clearTimeout(id);
+ },[data?.can.sell,isNew,canSummary,!!dashboard,loading]);
  useEffect(()=>{let alive=true;setDashboard(null);setGalla(null);setError('');setLoading(false);
   if(!data||data.maturity==='NEW')return()=>{alive=false;};
   const date=shopDate();setLoading(true);

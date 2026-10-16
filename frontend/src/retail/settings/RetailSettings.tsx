@@ -10,6 +10,11 @@ import {useAuthStore} from '../../shared/store/authStore';
 export default function RetailSettings({ invoice = false }: { invoice?: boolean }) {
   const navigate = useNavigate();
   const language = useUiLanguage();
+  const [languageError,setLanguageError]=useState('');
+  const changeLanguage=async(next:'en'|'hi')=>{
+    setLanguageError('');
+    try{await setUiLanguage(next);}catch{setLanguageError('Could not load this language. Check your connection and try again.');}
+  };
   const prefs=useBillingPreferences(),user=useAuthStore(s=>s.user);
   const [savingBarcode,setSavingBarcode]=useState(false),[barcodeError,setBarcodeError]=useState('');
   const [theme, setTheme] = useState(localStorage.getItem('evolix-theme') || 'light');
@@ -30,7 +35,7 @@ export default function RetailSettings({ invoice = false }: { invoice?: boolean 
     <main className="r-section r-account-page">
       {invoice ? <><div className="r-card"><h2>Print a bill</h2><p>Open a bill from Bill History and choose Print invoice. Your browser or Android print service shows the available printers.</p><Link className="r-btn r-btn--primary r-btn--full" to="/retail/bills"><Printer size={20} />Open Bill History</Link><p className="r-caption">Direct Bluetooth printer pairing is not connected. Use your device's supported print service.</p></div><div className="r-card"><h2>UPI QR on invoices</h2><p>Add your shop UPI ID and choose whether to show the QR on printed invoices.</p><Link className="r-btn r-btn--outline r-btn--full" to="/retail/more/payments"><QrCode size={20} />Configure Invoice QR</Link></div></> : <>
         <div className="r-card"><h2>{ui("Make EVOLIX comfortable")}</h2><p className="r-caption">{ui("These display choices apply on this device.")}</p>
-          <section id="language"><h3>{ui('App language')}</h3><p className="r-caption">{ui('Choose English or Hindi. Your shop data stays as entered.')}</p><div className="r-segmented" role="group" aria-label={ui('App language')}><button type="button" id="language-en" aria-pressed={language==='en'} className={language==='en'?'active':''} onClick={()=>void setUiLanguage('en')}>{ui("English")}</button><button type="button" id="language-hi" aria-pressed={language==='hi'} className={language==='hi'?'active':''} onClick={()=>void setUiLanguage('hi')}>हिन्दी</button></div></section>
+          <section id="language"><h3>{ui('App language')}</h3><p className="r-caption">{ui('Choose English or Hindi. Your shop data stays as entered.')}</p><div className="r-segmented" role="group" aria-label={ui('App language')}><button type="button" id="language-en" aria-pressed={language==='en'} className={language==='en'?'active':''} onClick={()=>void changeLanguage('en')}>{ui("English")}</button><button type="button" id="language-hi" aria-pressed={language==='hi'} className={language==='hi'?'active':''} onClick={()=>void changeLanguage('hi')}>हिन्दी</button></div>{languageError&&<p role="alert">{ui(languageError)}</p>}</section>
           <p className="r-label">{ui("Appearance")}</p><div className="r-segmented" role="group" aria-label={ui("App appearance")}>{[['light', 'Light', Sun], ['dark', 'Dark', Moon]].map(([value, label, Icon]) => <button key={String(value)} className={theme === value ? 'active' : ''} aria-pressed={theme === value} onClick={() => { setTheme(String(value)); save('evolix-theme', String(value)); }}>{typeof Icon !== 'string' && <Icon size={20} />} {String(label)}</button>)}</div>
           <p className="r-label"><Type size={20} aria-hidden="true" />{ui("Text size")}</p><div className="r-segmented" role="group" aria-label={ui("Text size")}>{[['comfortable', 'Comfortable'], ['large', 'Larger text']].map(([value, label]) => <button key={value} className={textSize === value ? 'active' : ''} aria-pressed={textSize === value} onClick={() => { setTextSize(value); save('evolix-text-size', value); }}>{ui(label)}</button>)}</div>
         </div>

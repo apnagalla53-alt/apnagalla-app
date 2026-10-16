@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import api, { getApiErrorMessage } from "../../shared/api";
+import { getApiErrorMessage } from "../../shared/api";
+import { readReport } from '../reports/reportReads';
 import { useAuthStore } from "../../shared/store/authStore";
 import type { ExperienceTone } from "./ExperienceCard";
 export type HomeSuggestion = {
@@ -50,10 +51,7 @@ export function useHomeExperience(retry: number) {
     const dismissed = Object.keys(hidden)
       .filter((id) => Number(hidden[id]) > Date.now())
       .slice(0, 100);
-    api
-      .get<HomeExperience>("/retail/account/experience", {
-        params: { dismissed: dismissed.join(",") },
-      })
+    readReport<HomeExperience>("/retail/account/experience", { dismissed: dismissed.join(",") })
       .then((r) => {
         if (alive) setData(r.data);
       })

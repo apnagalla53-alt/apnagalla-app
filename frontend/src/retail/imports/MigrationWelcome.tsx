@@ -2,6 +2,7 @@ import { ui, useUiLanguage } from "../../i18n";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api, { getApiErrorMessage } from "../../shared/api";
+import { readReport } from '../reports/reportReads';
 import { useAuthStore } from "../../shared/store/authStore";
 import { Sheet } from "../components/MobileControls";
 
@@ -21,8 +22,7 @@ export default function MigrationWelcome() {
       tenant?.company_id &&
       ["OWNER", "ADMIN", "TENANT_ADMIN"].includes(user?.role || "")
     ) {
-      api
-        .get("/retail/account/migration")
+      readReport("/retail/account/migration")
         .then((r) => {
           if (active) setOpen(!r.data);
         })

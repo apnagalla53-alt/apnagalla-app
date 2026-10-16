@@ -9,10 +9,11 @@ export function clearReportReads(){generation++;cache.clear();pending.clear();}
 window.addEventListener('evolix-data-changed',clearReportReads);
 useAuthStore.subscribe((next,previous)=>{if(next.authEpoch!==previous.authEpoch||JSON.stringify(next.tenantContext)!==JSON.stringify(previous.tenantContext))clearReportReads();});
 
-/** Short, session-and-shop-scoped reuse for read-only reports. Financial writes clear it. */
+const homeReads = new Set(['/retail/account/experience', '/retail/account/migration', '/retail/calendar']);
+/** Ten-second, session-and-shop-scoped reuse for reports and Home reads. Every write clears it. */
 export async function readReport<T=any>(path:string,params:Record<string,unknown>={}):Promise<AxiosResponse<T>>{
-  if(!path.startsWith('/retail/reports/')&&path!=='/retail/galla')throw Error('Only read-only reports may be reused');
-  const state=useAuthStore.getState(),key=JSON.stringify([state.authEpoch,state.user?.id,state.tenantContext,path,Object.entries(params).filter(([,value])=>value!==undefined).sort(([a],[b])=>a.localeCompare(b))]);
+  if(!path.startsWith('/retail/reports/')&&path!=='/retail/galla'&&!homeReads.has(path))throw Error('Only approved read-only views may be reused');
+  const state=useAuthStore.getState(),readGeneration=generation,key=JSON.stringify([state.authEpoch,state.user?.id,state.tenantContext,path,Object.entries(params).filter(([,value])=>value!==undefined).sort(([a],[b])=>a.localeCompare(b))]);
   const hit=cache.get(key);
   if(hit&&hit.until>Date.now())return {...hit.response,data:structuredClone(hit.response.data)};
   let request=pending.get(key);
@@ -40,5 +41,6 @@ export async function readReport<T=any>(path:string,params:Record<string,unknown
   const response=await request;
   const latest=useAuthStore.getState();
   if(latest.authEpoch!==state.authEpoch||JSON.stringify(latest.tenantContext)!==JSON.stringify(state.tenantContext))throw Error('The shop changed while the report was loading. Refresh the report.');
+  if(readGeneration!==generation)throw Error('Your shop data changed while this view was loading. Refresh the view.');
   return {...response,data:structuredClone(response.data)};
 }
