@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsEmail, IsBoolean, IsInt, Min, Max, MinLength, MaxLength, IsIn, IsUUID } from 'class-validator';
+import { Matches, IsString, IsOptional, IsNumber, IsDateString, IsEmail, IsBoolean, IsInt, Min, Max, MinLength, MaxLength, IsIn, IsUUID } from 'class-validator';
 
 export class CreateRetailCustomerDto {
   @IsString()
@@ -53,6 +53,9 @@ export class UpdateRetailCustomerDto extends CreateRetailCustomerDto {
 }
 
 export class ReceivePaymentDto {
+  @IsOptional() @IsString() @Matches(/^(primary|[a-f0-9-]{36})$/) receiving_profile_id?:string;
+  @IsOptional() @IsString() @Matches(/^[6-9]\d{9}$/) received_on_mobile?:string;
+  @IsOptional() @IsBoolean() receipt_confirmed?:boolean;
   @IsNumber()
   @Min(0.01)
   amount: number;

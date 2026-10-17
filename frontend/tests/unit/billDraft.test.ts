@@ -17,3 +17,17 @@ it('clears a confirmed bill so returning cannot resubmit the saved draft',async(
  const {useBillStore}=await import('../../src/retail/retailStore');useBillStore.getState().putLine({item_id:'one',name:'One',quantity:1,rate:10,unit:'PCS',discount_amount:0,total:0});useBillStore.getState().setSavedSale({invoice:{id:'saved'},mode:'Cash'});useBillStore.getState().clearBill();
  vi.resetModules();expect((await import('../../src/retail/retailStore')).useBillStore.getState().items).toHaveLength(0);
 });
+
+it('recovers calculator and charge in the same bill, then resets calculator, GST and discount for a new bill',async()=>{
+ const {useBillStore,billLinePayload,billOptionsPayload}=await import('../../src/retail/retailStore');
+ useBillStore.getState().addItem({id:'one',name:'Known item',sku:'one',selling_price:100,purchase_price:0,inventory_tracking:false,current_stock:0,unit:'PCS',tax_rate:18,active:true});
+ expect(billLinePayload(useBillStore.getState().items[0]).gst_rate).toBe(0);
+ useBillStore.getState().setCalculator({expression:'40',history:[{expression:'400*10%',result:'40'}]});
+ useBillStore.getState().setServiceCharge({name:'Packing',amount:20,gst_rate:0});useBillStore.getState().setCustomerName('Test new customer');useBillStore.getState().setDiscountMode('PERCENT');useBillStore.getState().setBillDiscount(10);
+ expect(billOptionsPayload()).toMatchObject({bill_discount_percent:10,service_charge:{amount:20},customer_name:'Test new customer'});
+ useBillStore.getState().setServiceCharge({name:'Packing',amount:20,gst_rate:0,auto_apply:true} as any);
+ expect(billOptionsPayload().service_charge).not.toHaveProperty('auto_apply');
+ vi.resetModules();const restored=(await import('../../src/retail/retailStore')).useBillStore;
+ expect(restored.getState().calculator.history).toHaveLength(1);expect(restored.getState().serviceCharge?.amount).toBe(20);
+ restored.getState().clearBill();expect(restored.getState().calculator.history).toHaveLength(0);expect(restored.getState().calculator.expression).toBe('');expect(restored.getState().discount).toBe(0);expect(restored.getState().customerName).toBe('');
+});

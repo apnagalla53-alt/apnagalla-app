@@ -1,3 +1,4 @@
+import UpiAccountBreakdown from './payments/UpiAccountBreakdown';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Eye, EyeOff, PackagePlus, Receipt, ShoppingCart, Sparkles, UserPlus, Users, Wallet } from 'lucide-react';
@@ -56,6 +57,7 @@ export default function RetailHome() {
     {isNew&&data?.can.receive&&<PrimaryActionCard title={data?.activity.customers?'Add Customer':'Add First Customer'} description="Save details for faster billing." Icon={UserPlus} tone="special" onClick={()=>navigate('/retail/customers/add')}/>}
 
    </section>
+   {data?.can.sell&&<button id="qa-amount-sale" className="r-btn r-btn--outline" onClick={()=>navigate('/retail/amount-sale')}>Amount-only Sale<ArrowRight size={18}/></button>}
    {data?.can.sell&&<button id="qa-quick-sale" className="r-btn r-btn--outline" onClick={()=>navigate('/retail/quick-sale')}>{ui('Quick Bill')} · {ui('Add items as you sell')}<ArrowRight size={18}/></button>}
  </>;
  return <div className="xp-home">
@@ -76,6 +78,7 @@ export default function RetailHome() {
      {dashboard&&can('purchase.read')&&<MetricCard label="Supplier Due" value={money(dashboard.supplier_due)} context="Money to pay" Icon={BookOpen} tone="info" onClick={()=>navigate('/retail/suppliers')}/>}
     </div>
    </section>}
+   {!isNew&&dashboard&&<UpiAccountBreakdown rows={dashboard.upi_accounts} hidden={hidden}/>}
    {!isNew&&actions}
    {!!data.suggestions.length&&<section><div className="xp-section-title"><h2>{ui("Today's Suggestions")}</h2></div><div className="xp-stack">{data.suggestions.map(r=><SuggestionCard key={r.id} suggestion={r} onSnooze={experience.snooze}/>)}</div></section>}
    {!isNew&&<section><div className="xp-section-title"><h2>{ui('Quick Access')}</h2>{quick.canEdit&&<button onClick={()=>setEditing(true)}>{ui('Edit Quick Access')}</button>}</div><div className="xp-quick-grid" id="quick-actions">{quick.home.map(a=><button id={'qa-'+a.id} key={a.id} onClick={()=>navigate(a.route)}><a.icon size={22} aria-hidden="true"/>{ui(a.label)}</button>)}</div></section>}

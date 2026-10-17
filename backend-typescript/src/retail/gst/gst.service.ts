@@ -53,7 +53,7 @@ export class RetailGstService {
     const bill=await this.db.salesInvoice.findFirst({
       where:{id,company_id:company,branch_id:branch},
       include:{party:true,lines:{orderBy:{id:'asc'},include:{
-        item:{select:{name:true,item_type:true,is_system:true,hsn_sac:true}},
+        item:{select:{name:true,sku:true,item_type:true,is_system:true,hsn_sac:true}},
         unit:true,entered_unit:true,variant:{select:{attributes:true}},
         serial_allocations:{include:{serial:{select:{serial_number:true}}}},
       }}},
@@ -92,7 +92,7 @@ export class RetailGstService {
     if(dto.reverse_charge)throw new BadRequestException('This template supports forward-charge domestic sales. Reverse-charge invoices require a separate tax workflow.');
     if(bill.status!=='POSTED')throw new BadRequestException('Only a posted bill can have a GST invoice');
     if(bill.lines.length>200)throw new BadRequestException('This GST invoice supports up to 200 item lines');
-    if(bill.lines.some(line=>line.item.is_system))throw new BadRequestException('Amount-only quick sales need an itemized bill with descriptions, HSN/SAC and GST. Tax is not added to a past bill.');
+    if(bill.lines.some(line=>line.item.is_system && !line.item.sku?.startsWith('RETAIL-SERVICE-')))throw new BadRequestException('Amount-only quick sales need an itemized bill with descriptions, HSN/SAC and GST. Tax is not added to a past bill.');
     if(bill.tax_amount.lte(0))throw new BadRequestException('This bill has no GST charged. Use its existing receipt / applicable bill of supply. Tax is not added retrospectively.');
     const metadata=new Map(dto.lines.map(line=>[line.line_id,line]));
     if(metadata.size!==dto.lines.length||metadata.size!==bill.lines.length||bill.lines.some(line=>!metadata.has(line.id)))throw new BadRequestException('Item details must exactly match this bill');

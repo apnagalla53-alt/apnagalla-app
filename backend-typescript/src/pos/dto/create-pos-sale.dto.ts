@@ -1,7 +1,8 @@
-import { Matches, IsBoolean, IsString, IsOptional, IsArray, ValidateNested, IsNumber, IsDateString, IsEnum, Min, IsIn, IsUUID, ArrayMaxSize } from 'class-validator';
+import { Matches, IsBoolean, IsString, IsOptional, IsArray, ValidateNested, IsNumber, IsDateString, IsEnum, Min, Max, IsIn, IsUUID, ArrayMaxSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreatePosSaleLineDto {
+  @IsOptional() @IsNumber() @Min(0) @Max(100) gst_rate?:number;
   @IsString()
   item_id: string;
 
@@ -55,6 +56,7 @@ export class CreatePosPaymentDto {
 }
 
 export class CreatePosSaleDto {
+  @IsOptional() @IsNumber() @Min(0) @Max(100) bill_discount_percent?:number;
   @IsOptional() @IsNumber() @Min(0) bill_discount?:number;
   @IsString()
   branch_id: string;

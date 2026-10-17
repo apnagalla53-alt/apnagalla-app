@@ -1,3 +1,4 @@
+import UpiAccountBreakdown from '../payments/UpiAccountBreakdown';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
 import { useEffect, useState } from 'react';
@@ -53,6 +54,7 @@ export default function RetailReports() {
     {loading && <div className="r-state-message" role="status">Loading business summary…</div>}
     {error && <div className="r-state-message" role="alert"><p>{error}</p><button className="r-btn r-btn--outline" onClick={() => setRetry(value => value + 1)}>{ui("Try Again")}</button></div>}
     {summary && <div className="r-counter-grid">{[['Net Sales', summary.net_sales], ['Purchases', summary.purchases], ['Cash & UPI Received', summary.cash_received==null||summary.upi_received==null?null:Number(summary.cash_received) + Number(summary.upi_received)], ['Business Expenses', summary.business_expenses]].map(([label, value]) => <div className="r-card" key={String(label)}><span>{ui(label)}</span><strong>{value==null?ui('Unavailable'):'₹'+Number(value).toLocaleString('en-IN')}</strong></div>)}</div>}
+    {summary&&<><div className="r-counter-grid"><div className="r-card"><span>Amount-only sales</span><strong>₹{Number(summary.amount_only_sales||0).toFixed(2)}</strong><small>Billed before returns · item costs unknown</small></div><div className="r-card"><span>Service charges</span><strong>₹{Number(summary.service_charges||0).toFixed(2)}</strong><small>Included in sales · billed before returns</small></div></div><UpiAccountBreakdown rows={summary.upi_accounts}/></>}
     <div className="r-section-heading"><h2>Business reports</h2></div>
     <div className="r-report-discovery">{reports.map(({ name, Icon, path, desc }) => <button key={path} className="r-card r-report-link" onClick={() => navigate(path)}><span className="r-menu-icon"><Icon size={24} /></span><span className="r-menu-text"><span>{name}</span><small>{ui(desc)}</small></span><ChevronRight size={20} /></button>)}</div>
     <p className="r-caption">Download CSV from an individual report to keep or share your records.</p>

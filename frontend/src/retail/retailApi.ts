@@ -19,6 +19,7 @@ const envelope = async <T>(request: Promise<{ data: T }>) => {
 
 // ── TYPES ─────────────────────────────────────────────────────────
 export interface RetailItem {
+  gst_rate?:number;
   has_unit_conversions?: boolean;
   image?: { id: string } | null;
   inventory_tracking?: boolean;
@@ -100,8 +101,11 @@ export const posApi = {
   },
 
   postSale: async (payload: {
-    items: Array<{ item_id?: string; new_item?: import('./retailStore').BillLineItem['new_item']; variant_id?: string; batch_id?: string; unit_id?: string; dimensions?: any; serial_ids?: string[]; modifier_option_ids?: string[]; quantity: number; rate: number; discount_amount: number }>;
+    items: Array<{ item_id?: string; new_item?: import('./retailStore').BillLineItem['new_item']; variant_id?: string; batch_id?: string; unit_id?: string; dimensions?: any; serial_ids?: string[]; modifier_option_ids?: string[]; quantity: number; rate: number; discount_amount: number; gst_rate?:number }>;
     customer_id?: string;
+    customer_name?:string;
+    service_charge?:import('./retailStore').ServiceCharge;
+    bill_discount_percent?:number;
     payment_splits: Array<{ method: string; amount: number; receiving_profile_id?:string; received_on_mobile?:string; receipt_confirmed?:boolean }>;
     total_amount: number;
     discount: number;
@@ -189,7 +193,7 @@ export const khataApi = {
     return envelope(api.post<RetailCustomer>('/retail/customers', payload));
   },
 
-  receivePayment: async (partyId: string, payload: { amount: number; payment_method: string; note?: string; date?: string }) => {
+  receivePayment: async (partyId: string, payload: { amount: number; payment_method: string; receiving_profile_id?:string; received_on_mobile?:string; receipt_confirmed?:boolean; note?: string; date?: string }) => {
     // Maps to: POST /api/v1/retail/customers/:id/payments
     return api.post(`/retail/customers/${partyId}/payments`, payload);
   },
@@ -214,7 +218,7 @@ export const supplierApi = {
     return envelope(api.post<RetailSupplier>('/retail/suppliers', payload));
   },
 
-  paySupplier: async (partyId: string, payload: { amount: number; payment_method: string; note?: string; date?: string }) => {
+  paySupplier: async (partyId: string, payload: { amount: number; payment_method: string; receiving_profile_id?:string; received_on_mobile?:string; receipt_confirmed?:boolean; note?: string; date?: string }) => {
     return api.post(`/retail/suppliers/${partyId}/payments`, payload);
   },
 

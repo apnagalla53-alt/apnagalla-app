@@ -1,3 +1,4 @@
+import { addUpiReceipt, UpiAccountRow } from './upi-breakdown';
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpiProfileDto, CashCountDto } from './counter.dto';
@@ -35,6 +36,29 @@ export class CounterService {
   async upiReceived(companyId:string,branchId:string|undefined,from:string,to:string){
     const [checkout,collections]=await Promise.all([this.salesPayments(companyId,branchId,from,to),this.db.voucherLine.aggregate({where:{ledger_account:{code:'DEFAULT_BANK'},debit:{gt:0},voucher:{company_id:companyId,branch_id:branchId,status:'POSTED',voucher_type:'RECEIPT',payment_method:'UPI',voucher_date:{gte:day(from).start,lt:day(to).end},OR:[{source_document_type:null},{source_document_type:{not:'POS_RECEIPT'}}]}},_sum:{debit:true}})]);
     return money(checkout.upi_sales+Number(collections._sum.debit||0));
+  }
+  async saleKinds(companyId:string,branchId:string|undefined,from:string,to:string){
+    const scope={company_id:companyId,...(branchId?{branch_id:branchId}:{}),status:'POSTED',document_date:{gte:day(from).start,lt:day(to).end}};
+    const sum=async(item:any)=>Number((await this.db.salesInvoiceLine.aggregate({where:{sales_invoice:scope,item},_sum:{line_total:true}}))._sum.line_total||0);
+    const [amountOnly,charges]=await Promise.all([sum({sku:'RETAIL-QUICK-SALE',is_system:true,item_type:'SERVICE'}),sum({sku:{startsWith:'RETAIL-SERVICE-'},is_system:true,item_type:'SERVICE'})]);
+    return {amount_only_sales:money(amountOnly),service_charges:money(charges)};
+  }
+  async upiAccounts(companyId:string,branchId:string|undefined,from:string,to:string){
+    const scope={company_id:companyId,...(branchId?{branch_id:branchId}:{})},start=day(from).start,end=day(to).end;
+    const rows=new Map<string,UpiAccountRow>();
+    let cursor:string|undefined;
+    do{
+      const batch=await this.db.salesInvoice.findMany({where:{...scope,status:'POSTED',document_date:{gte:start,lt:end}},select:{id:true,payment_snapshot:true},orderBy:{id:'asc'},take:200,...(cursor?{cursor:{id:cursor},skip:1}:{})});
+      for(const bill of batch)for(const payment of Array.isArray(bill.payment_snapshot)?bill.payment_snapshot:[])if((payment as any).method==='UPI')addUpiReceipt(rows,payment,Number((payment as any).amount||0),'sales_received');
+      cursor=batch.length===200?batch[batch.length-1].id:undefined;
+    }while(cursor);
+    cursor=undefined;
+    do{
+      const batch:{id:string;receiving_snapshot:unknown;lines:{debit:unknown;ledger_account:{code:string}}[]}[]=await this.db.voucher.findMany({where:{...scope,status:'POSTED',voucher_type:'RECEIPT',payment_method:'UPI',voucher_date:{gte:start,lt:end},OR:[{source_document_type:null},{source_document_type:{not:'POS_RECEIPT'}}]},select:{id:true,receiving_snapshot:true,lines:{select:{debit:true,ledger_account:{select:{code:true}}}}},orderBy:{id:'asc'},take:200,...(cursor?{cursor:{id:cursor},skip:1}:{})});
+      for(const receipt of batch)addUpiReceipt(rows,receipt.receiving_snapshot,receipt.lines.filter(l=>l.ledger_account.code==='DEFAULT_BANK').reduce((s,l)=>s+Number(l.debit),0),'dues_received');
+      cursor=batch.length===200?batch[batch.length-1].id:undefined;
+    }while(cursor);
+    return [...rows.values()].filter(row=>row.total_received>0).sort((a,b)=>b.total_received-a.total_received||a.key.localeCompare(b.key));
   }
   async upi(companyId:string) {
     const config=await this.db.companyConfiguration.findUnique({where:{company_id:companyId}});
@@ -109,7 +133,7 @@ export class CounterService {
     const ledgerOpening=Number(opening._sum.debit||0)-Number(opening._sum.credit||0);
     const openingCash=count?.opening_cash==null?ledgerOpening:Number(count.opening_cash),expected=money(openingCash+cashIn-cashOut);
     const actual=count?.actual_cash==null?null:Number(count.actual_cash),difference=actual===null?null:money(actual-expected);
-    return {date,...paymentTotals,cash_sales:money(cashSales),
+    return {date,...paymentTotals,...await this.saleKinds(companyId,branchId,date,date),upi_accounts:await this.upiAccounts(companyId,branchId,date,date),cash_sales:money(cashSales),
       old_customer_dues_received:money(oldDues),old_dues_cash:money(oldDueCash),supplier_payments:money(supplierPayments),supplier_cash:money(supplierCash),
       business_expenses:money(sum('BUSINESS_EXPENSE')),cash_expenses:money(sum('BUSINESS_EXPENSE',true)),owner_withdrawals:money(sum('OWNER_WITHDRAWAL')),cash_owner_withdrawals:money(sum('OWNER_WITHDRAWAL',true)),refunds:money(refunds),cash_refunds:money(refundCash),
       cash_received:money(cashIn),cash_paid_out:money(cashOut),other_cash_in:money(cashIn-cashSales-oldDueCash),other_cash_out:money(cashOut-supplierCash-refundCash-sum('BUSINESS_EXPENSE',true)-sum('OWNER_WITHDRAWAL',true)),

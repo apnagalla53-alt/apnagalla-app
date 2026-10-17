@@ -1,5 +1,5 @@
 import { Body, Controller, ForbiddenException, NotFoundException, BadRequestException, Get, Post, Param, Req, Res, UseGuards } from '@nestjs/common';
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, isUUID } from 'class-validator';
+import { IsBoolean, IsNumber, Min, Max, Matches, MinLength, IsIn, IsOptional, IsString, MaxLength, isUUID } from 'class-validator';
 import { Response } from 'express';
 import { PrismaService } from '../../database/prisma.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -8,6 +8,13 @@ import { throttleOperation } from '../../common/operation-throttle';
 import { featureMetadata, PLAN_ORDER } from '../../common/retail-plan-catalog';
 import { presetForBusiness } from '../../auth/business-types';
 
+class ServiceChargePreferenceDto {
+ @IsString() @MinLength(1) @MaxLength(80) name:string;
+ @IsNumber() @Min(0.01) @Max(999999999) amount:number;
+ @IsNumber() @Min(0) @Max(100) gst_rate:number;
+ @IsOptional() @IsString() @Matches(/^\d{6}$/) sac?:string;
+ @IsBoolean() auto_apply:boolean;
+}
 class PrivacyRequestDto {
   @IsIn(['DELETE_ACCOUNT','DATA_PORTABILITY']) type: string;
   @IsOptional() @IsString() @MaxLength(2000) note?: string;
@@ -30,6 +37,23 @@ export class RetailAccountController {
   }
   @Get('entitlements')
   entitlementsForShop(@Req() req:any) { return this.entitlements.resolve(req.user.organization_id,this.db,req.user.company_id); }
+  @Get('service-charge-preference')
+  async serviceChargePreference(@Req() req:any){
+    const config=await this.db.companyConfiguration.findUnique({where:{company_id:req.user.company_id}});
+    return {charge:(config?.shop_feature_settings as any)?.service_charge||null};
+  }
+  @Post('service-charge-preference')
+  async saveServiceChargePreference(@Req() req:any,@Body() dto:ServiceChargePreferenceDto){
+    this.owner(req);if(!dto.name.trim())throw new BadRequestException('Enter a charge name');
+    return this.db.$transaction(async tx=>{
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`shop-features:${req.user.company_id}`}))`;
+      const config=await tx.companyConfiguration.findUnique({where:{company_id:req.user.company_id}});
+      const charge={...dto,name:dto.name.trim()},settings={...(config?.shop_feature_settings as object||{}),service_charge:charge};
+      await tx.companyConfiguration.upsert({where:{company_id:req.user.company_id},create:{company_id:req.user.company_id,shop_feature_settings:settings},update:{shop_feature_settings:settings}});
+      await tx.auditLog.create({data:{company_id:req.user.company_id,user_id:req.user.id,action:'SERVICE_CHARGE_PREFERENCE_UPDATED',details:JSON.stringify(charge)}});
+      return {charge};
+    });
+  }
   @Get('billing-preferences')
   async billingPreferences(@Req() req:any){
     const config=await this.db.companyConfiguration.findUnique({where:{company_id:req.user.company_id}});

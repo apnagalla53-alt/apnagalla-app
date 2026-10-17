@@ -1,3 +1,4 @@
+import UpiAccountBreakdown from '../payments/UpiAccountBreakdown';
 import DateInput from '../../shared/components/DateInput';
 import StitchHeader from '../design/StitchHeader';
 import { ui, useUiLanguage } from "../../i18n";
@@ -84,6 +85,7 @@ export default function RetailGalla() {
         <h1>{ui("Daily Galla")}</h1>
         <Wallet />
       </StitchHeader>
+      {data&&<div className="r-section"><p className="r-caption">Amount-only sales: ₹{Number(data.amount_only_sales||0).toFixed(2)} · Service charges: ₹{Number(data.service_charges||0).toFixed(2)} · Billed before returns</p><UpiAccountBreakdown rows={data.upi_accounts}/></div>}
       <div className="r-section">
         <div className="r-segmented" aria-label="Galla date">
           <button

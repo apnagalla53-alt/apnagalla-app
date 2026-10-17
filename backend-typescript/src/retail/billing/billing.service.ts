@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {businessDate} from '../../common/business-date';
@@ -64,32 +65,64 @@ export class BillingService {
     return result;
   }
 
+  private async prepareRetailBill(companyId:string,dto:RetailBillDto) {
+    if(dto.items.some(line=>Number(line.gst_rate)>0)||Number(dto.service_charge?.gst_rate)>0){
+      const company=await this.prisma.company.findUniqueOrThrow({where:{id:companyId},select:{organization_id:true}});
+      const access=await this.entitlements.resolve(company.organization_id,this.prisma,companyId);
+      if(!access.features.some(f=>f.code==='GST_INVOICES'&&f.enabled))throw new ForbiddenException('Your plan does not enable GST invoices');
+      const config=await this.prisma.companyConfiguration.findUnique({where:{company_id:companyId}});
+      const profile=(config?.tax_configuration as any)?.retail_gst;
+      if(!profile?.gstin||!profile.regular_registration)throw new BadRequestException('Save regular GST registration in Business Details before charging GST');
+    }
+    if(!dto.service_charge)return dto;
+    if(dto.items.length>=200)throw new BadRequestException('A bill supports 200 lines including its service charge');
+    const charge=dto.service_charge,name=charge.name.trim();
+    if(!name||!Number.isFinite(charge.amount)||charge.amount<=0)throw new BadRequestException('Enter a service charge name and positive amount');
+    if(Number(charge.gst_rate)>0&&!/^\d{6}$/.test(charge.sac||''))throw new BadRequestException('Enter the six-digit SAC for a GST service charge');
+    const sku='RETAIL-SERVICE-'+createHash('sha256').update(name+'|'+(charge.sac||'')).digest('hex').slice(0,24);
+    await this.prisma.$queryRaw`SELECT id FROM companies WHERE id=${companyId}::uuid FOR UPDATE`;
+    let item=await this.prisma.item.findFirst({where:{company_id:companyId,sku}});
+    if(!item){
+      const unit=await this.prisma.unit.findFirst({where:{company_id:companyId},orderBy:{id:'asc'}});
+      if(!unit)throw new BadRequestException('No unit configured');
+      item=await this.prisma.item.create({data:{company_id:companyId,sku,name,item_type:'SERVICE',selling_mode:'PIECE',primary_unit_id:unit.id,is_system:true,inventory_tracking:false,default_sale_rate:charge.amount,hsn_sac:charge.sac||null}});
+    }
+    if(!item.is_system||item.item_type!=='SERVICE'||item.inventory_tracking!==false||!item.is_active)throw new BadRequestException('This service charge conflicts with an existing item. Choose another charge name.');
+    return {...dto,items:[...dto.items,{item_id:item.id,quantity:1,rate:charge.amount,gst_rate:charge.gst_rate||0}]};
+  }
+
   async createBill(companyId: string, branchId: string, userId: string, dto: RetailBillDto) {
     return this.prisma.runAtomic(async()=>{
+    dto=await this.prepareRetailBill(companyId,dto);
+    if(!dto.customer_id&&dto.customer_name?.trim()){
+      const created=await this.catalog.createCustomer(companyId,{name:dto.customer_name.trim()});
+      dto={...dto,customer_id:created.id};
+      await this.prisma.auditLog.create({data:{company_id:companyId,branch_id:branchId,user_id:userId,action:'RETAIL_CUSTOMER_CREATED',source_document_id:created.id,source_document_type:'Party'}});
+    }
     const items=await this.resolveCandidates(companyId,branchId,userId,dto);
     const lines = await this.mapLines(companyId, branchId, items);
     return this.posService.postPosSale(companyId, userId, {
       branch_id: branchId, document_date: dto.date || businessDate(), party_id: dto.customer_id,
-      due_date: dto.due_date, note: dto.note, sales_channel: dto.sales_channel, bill_discount:dto.bill_discount, lines,
+      due_date: dto.due_date, note: dto.note, sales_channel: dto.sales_channel, bill_discount:dto.bill_discount, bill_discount_percent:dto.bill_discount_percent, lines,
       payments: dto.payment_splits.map(p => ({ amount: p.amount, payment_method: p.method as any, receiving_profile_id:p.receiving_profile_id, received_on_mobile:p.received_on_mobile, receipt_confirmed:p.receipt_confirmed })),
     });
     });
   }
 
-  async quoteBill(companyId: string, branchId: string, dto: RetailBillDto, userId?: string) {
-    if(dto.items.some(l=>l.new_item)){
-      // Use canonical pricing, then roll back temporary catalog rows and audits.
-      // No quote, typing, cancellation or abandoned payment can persist an item.
-      try { await this.prisma.runAtomic(async()=>{
-        const items=await this.resolveCandidates(companyId,branchId,userId!,dto,true);
-        const lines=await this.mapLines(companyId,branchId,items);
-        const quote=await this.posService.quoteSale(companyId,{branch_id:branchId,document_date:dto.date||businessDate(),party_id:dto.customer_id,bill_discount:dto.bill_discount,lines,payments:[]});
-        throw new PreviewRollback({...quote,lines:quote.lines.map((l:any,index:number)=>({...l,draft_client_id:dto.items[index]?.new_item?.client_id}))});
-      }); }catch(e){if(e instanceof PreviewRollback)return e.quote;throw e;}
+  async quoteBill(companyId:string,branchId:string,input:RetailBillDto,userId?:string) {
+    // Quotes roll back transient catalog/service rows and never save a typed customer.
+    const quote=async(dto:RetailBillDto)=>{
+      dto=await this.prepareRetailBill(companyId,dto);
+      const items=await this.resolveCandidates(companyId,branchId,userId!,dto,true);
+      const lines=await this.mapLines(companyId,branchId,items);
+      const result=await this.posService.quoteSale(companyId,{branch_id:branchId,document_date:dto.date||businessDate(),party_id:dto.customer_id,bill_discount:dto.bill_discount,bill_discount_percent:dto.bill_discount_percent,lines,payments:[]});
+      return {...result,lines:result.lines.map((l:any,index:number)=>({...l,draft_client_id:dto.items[index]?.new_item?.client_id}))};
+    };
+    if(input.service_charge||input.items.some(l=>l.new_item)){
+      try{await this.prisma.runAtomic(async()=>{throw new PreviewRollback(await quote(input));});}
+      catch(e){if(e instanceof PreviewRollback)return e.quote;throw e;}
     }
-    if(dto.items.some(l=>!l.item_id))throw new BadRequestException('Select an item');
-    const lines = await this.mapLines(companyId, branchId, dto.items);
-    return this.posService.quoteSale(companyId, { branch_id: branchId, document_date: dto.date || new Date().toISOString(), party_id: dto.customer_id, bill_discount:dto.bill_discount, lines, payments: [] });
+    return quote(input);
   }
 
   async createAmountSale(companyId: string, branchId: string, userId: string, dto: RetailAmountSaleDto) {

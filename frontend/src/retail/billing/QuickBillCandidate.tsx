@@ -12,7 +12,7 @@ import { readWorkflowDraft, useWorkflowDraft } from '../experience/workflowDraft
 
 /** Draft data only. Catalog creation belongs to the successful server bill transaction. */
 export default function QuickBillCandidate({ name = '', existing, onAdded, compact = false, onExistingItem }: { name?: string; existing?: BillLineItem; onAdded: () => void; compact?: boolean; onExistingItem?: (item: RetailItem, quantity: number) => void }) {
-  const [seed]=useState(()=>compact&&!name?readWorkflowDraft<{name:string;quantity:string;price:string;unit:RetailUnitChoice}>('quick-manual-line'):null);
+  const [seed]=useState(()=>compact&&!name?readWorkflowDraft<{name:string;quantity:string;price:string;unit:RetailUnitChoice;gst?:string}>('quick-manual-line'):null);
   const touched=useRef(!!seed);
   const id=useId(),preset=useBusinessPreset(),access=useRetailEntitlements();
   const allowed=['PIECE',...['WEIGHT','LENGTH'].filter(mode=>access.isFeatureEffective(mode))];
@@ -21,8 +21,9 @@ export default function QuickBillCandidate({ name = '', existing, onAdded, compa
     : seed?.unit||preset.unitSuggestions.find(u=>allowed.includes(u.selling_mode))||{code:'PCS',name:'Pieces',selling_mode:'PIECE'});
   useEffect(()=>{if(!existing&&!touched.current)setUnit(preset.unitSuggestions.find(u=>allowed.includes(u.selling_mode))||{code:'PCS',name:'Pieces',selling_mode:'PIECE'});},[preset.key,preset.unitSuggestions.map(u=>u.code).join(','),access.data]);
   const [typedName,setTypedName]=useState(seed?.name||name),[matches,setMatches]=useState<RetailItem[]>([]),[lookupBusy,setLookupBusy]=useState(false),[lookupError,setLookupError]=useState(''),[retry,setRetry]=useState(0);
+  const [gst,setGst]=useState(String(existing?.gst_rate??existing?.tax_rate??seed?.gst??0));
   const [quantity,setQuantity]=useState(seed?.quantity||String(existing?.quantity||1)),[price,setPrice]=useState(seed?.price||(existing?String(existing.rate):''));
-  const draft=useWorkflowDraft('quick-manual-line',{name:typedName,quantity,price,unit},compact);
+  const draft=useWorkflowDraft('quick-manual-line',{name:typedName,quantity,price,unit,gst},compact);
   const candidateName=(compact?typedName:name).trim();
   useEffect(()=>{
     if(!compact||!candidateName){setMatches([]);setLookupBusy(false);setLookupError('');return;}
@@ -37,7 +38,7 @@ export default function QuickBillCandidate({ name = '', existing, onAdded, compa
   const validQuantity=Number.isFinite(Number(quantity))&&Number(quantity)>0&&Number(quantity)<=BULK_ITEM_NUMBER_MAX&&(!whole||Number.isInteger(Number(quantity)));
   const validPrice=price.trim()!==''&&Number.isFinite(Number(price))&&Number(price)>=0&&Number(price)<=BULK_ITEM_NUMBER_MAX;
   const available=(item:RetailItem)=>item.inventory_tracking===false||item.current_stock>0||!!item.is_bundle||item.item_type==='SERVICE';
-  const addExisting=(item:RetailItem)=>{if(validQuantity&&available(item)&&onExistingItem){draft.clear();onExistingItem(item,Number(quantity));}};
+  const addExisting=(item:RetailItem)=>{if(validQuantity&&available(item)&&onExistingItem){draft.clear();onExistingItem({...item,tax_rate:Number(gst),gst_rate:Number(gst)},Number(quantity));}};
   return <section className={'r-card xp-stack'+(compact?' r-quick-manual':'')} data-item-editor={compact?undefined:'true'} aria-label={ui('New bill item')}>
     {compact?<><h2>{ui('Quick item')}</h2><label htmlFor={id+'-name'}>{ui('Item Name')}</label><input id={id+'-name'} className="r-input" maxLength={255} value={typedName} placeholder={ui('Type an item name')} autoComplete="off" onChange={e=>{setTypedName(e.target.value);setLookupBusy(!!e.target.value.trim());setMatches([]);}}/></>:<><h3>{candidateName}</h3><p className="r-caption">{ui('Saved in Items when this bill succeeds.')}</p></>}
     {compact&&lookupError&&<p role="alert">{lookupError}<button type="button" className="r-btn" onClick={()=>setRetry(n=>n+1)}>{ui('Try Again')}</button></p>}
@@ -49,9 +50,9 @@ export default function QuickBillCandidate({ name = '', existing, onAdded, compa
     <label htmlFor={id+'-price'}>{ui('Selling Price (₹)')}</label>
     <input ref={priceRef} id={id+'-price'} className="r-input" type="number" inputMode="decimal" enterKeyHint="done" min="0" max={BULK_ITEM_NUMBER_MAX} step=".01" readOnly={!!matched} value={matched?String(matched.selling_price):price} onChange={e=>setPrice(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();submitRef.current?.click();}}}/>
     </div></div>
-    {matched?<p className="r-caption">{ui('Unit')}: {ui(matchedUnit)}</p>:<details className="r-quick-unit" open={compact?undefined:true}><summary>{ui('Unit')}: {ui(unit.name)}</summary><UnitPicker id={id+'-unit'} title="Unit" value={unit.code} allowedModes={allowed} onChange={choice=>{touched.current=true;setUnit(choice);}}/></details>}
-    <button ref={submitRef} type="button" className="r-btn r-btn--primary" disabled={!candidateName||!validQuantity||!allowed.includes(unit.selling_mode||'PIECE')||(exact.length===0&&!validPrice)||exact.length>1||exact.length===1&&!available(exact[0])||compact&&(lookupBusy||!!lookupError)}
-      onClick={()=>{if(exact.length){addExisting(exact[0]);return;}const clientId=existing?.new_item?.client_id||createUuid();useBillStore.getState().putLine({row_id:existing?.row_id,item_id:'draft:'+clientId,new_item:{client_id:clientId,name:candidateName,unit_code:unit.code,unit_name:unit.name,selling_mode:unit.selling_mode||'PIECE'},name:candidateName,rate:Number(price),quantity:Number(quantity),unit:unit.code,discount_amount:existing?.discount_amount||0,total:0});draft.clear();onAdded();}}>
+    <div className="r-quick-line-fields"><div><label htmlFor={id+'-unit'}>Unit</label>{matched?<input id={id+'-unit'} className="r-input" value={matchedUnit} readOnly/>:<UnitPicker dropdown id={id+'-unit'} title="Unit" value={unit.code} allowedModes={allowed} onChange={choice=>{touched.current=true;setUnit(choice);}}/>}</div><div><label htmlFor={id+'-gst'}>GST %</label><input id={id+'-gst'} className="r-input" type="number" inputMode="decimal" min="0" max="100" step=".01" value={gst} onChange={e=>setGst(e.target.value)}/></div></div>
+    <button ref={submitRef} type="button" className="r-btn r-btn--primary" disabled={!Number.isFinite(Number(gst))||Number(gst)<0||Number(gst)>100||!candidateName||!validQuantity||!allowed.includes(unit.selling_mode||'PIECE')||(exact.length===0&&!validPrice)||exact.length>1||exact.length===1&&!available(exact[0])||compact&&(lookupBusy||!!lookupError)}
+      onClick={()=>{if(exact.length){addExisting(exact[0]);return;}const clientId=existing?.new_item?.client_id||createUuid();useBillStore.getState().putLine({gst_rate:Number(gst),tax_rate:Number(gst),row_id:existing?.row_id,item_id:'draft:'+clientId,new_item:{client_id:clientId,name:candidateName,unit_code:unit.code,unit_name:unit.name,selling_mode:unit.selling_mode||'PIECE'},name:candidateName,rate:Number(price),quantity:Number(quantity),unit:unit.code,discount_amount:existing?.discount_amount||0,total:0});draft.clear();onAdded();}}>
       {ui(existing?'Save Line':exact.length?'Use existing item':compact?'+ Add Item':'Add to Bill')}
     </button>
   </section>;

@@ -6,8 +6,9 @@ import api, { getApiErrorMessage } from '../../shared/api';
 import { useBillStore, type BillLineItem } from '../retailStore';
 import {stockWarning} from './stockWarning';
 
-export default function RetailLineConfigurator({ itemId, existing, close,initialQuantity=1 }: { itemId: string; existing?: BillLineItem; close: () => void;initialQuantity?:number }) {
+export default function RetailLineConfigurator({ itemId, existing, close,initialQuantity=1, initialGstRate=0 }: { itemId: string; existing?: BillLineItem; close: () => void;initialGstRate?:number; initialQuantity?:number }) {
   useUiLanguage();
+  const [gst,setGst]=useState(String(existing?.gst_rate??existing?.tax_rate??initialGstRate));
   const [item, setItem] = useState<any>(null), [error, setError] = useState(''), [saving, setSaving] = useState(false);
   const [features, setFeatures] = useState<string[]>([]), [baseChoice, setBaseChoice] = useState<RetailUnitChoice | null>(null), [sellingMode, setSellingMode] = useState('PIECE');
   const [quantity, setQuantity] = useState(String(existing?.quantity || initialQuantity)), [rate, setRate] = useState(existing ? String(existing.rate) : '');
@@ -55,7 +56,7 @@ export default function RetailLineConfigurator({ itemId, existing, close,initial
         name: item.name + (variant ? ' · ' + (item.variants.find((choice: any) => choice.id === variant)?.name || 'Variant') : ''),
         rate: Number(rate), quantity: Number(quantity), discount_amount: Number(discount), unit: selectedUnit.code, unit_id: selectedUnit.id,
         variant_id: variant || undefined, batch_id: batch || undefined, serial_ids: serials.length ? serials : undefined,
-        modifier_option_ids: modifiers, modifier_unit_delta: delta, dimensions: measured ? dimensions : undefined, tax_rate: Number(item.tax_rate || 0), total: 0 });
+        modifier_option_ids: modifiers, modifier_unit_delta: delta, dimensions: measured ? dimensions : undefined, gst_rate:Number(gst),tax_rate:Number(gst), total: 0 });
       close();
     } catch (err) { setError(getApiErrorMessage(err)); } finally { setSaving(false); }
   };
@@ -84,7 +85,8 @@ export default function RetailLineConfigurator({ itemId, existing, close,initial
       <input id="line-quantity" className="r-input" type="number" enterKeyHint="done" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();event.currentTarget.form?.requestSubmit();}}} min={mode === 'PIECE' && item.item_type !== 'SERVICE' ? 1 : .000001} step={mode === 'PIECE' && item.item_type !== 'SERVICE' ? '1' : 'any'} value={quantity} onChange={event => setQuantity(event.target.value)} required inputMode="decimal" />
       {measured && <><p className="r-caption">Enter dimensions in {dimensionMeasure}. Quantity is the number of pieces.</p><div className="r-form-grid">{(mode === 'AREA' ? ['length', 'width'] : ['length', 'width', 'height']).map(key => <div key={key}><label htmlFor={'line-' + key}>{key[0].toUpperCase() + key.slice(1)}</label><input id={'line-' + key} className="r-input" type="number" min=".000001" step="any" value={dimensions[key] || ''} onChange={event => setDimensions({ ...dimensions, [key]: Number(event.target.value) })} required inputMode="decimal" /></div>)}</div></>}
       {warning&&<p role="alert" className="r-text-danger">{warning}</p>}
-      <label htmlFor="line-rate">{ui("Rate (₹ per selected unit)")}</label><input id="line-rate" className="r-input" type="number" enterKeyHint="done" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();event.currentTarget.form?.requestSubmit();}}} min="0" step="any" value={rate} onChange={event => setRate(event.target.value)} required inputMode="decimal" /><p className="r-caption">Tax Exclusive · selling price before GST{Number(item.tax_rate)>0?' ('+item.tax_rate+'%)':''}.</p>
+      <label htmlFor="line-rate">{ui("Rate (₹ per selected unit)")}</label><input id="line-rate" className="r-input" type="number" enterKeyHint="done" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();event.currentTarget.form?.requestSubmit();}}} min="0" step="any" value={rate} onChange={event => setRate(event.target.value)} required inputMode="decimal" /><p className="r-caption">Tax Exclusive · selling price before GST{Number(gst)>0?' ('+gst+'%)':''}.</p>
+      <label htmlFor="line-gst">GST %</label><input id="line-gst" className="r-input" type="number" inputMode="decimal" min="0" max="100" step=".01" value={gst} onChange={e=>setGst(e.target.value)}/>
       <label htmlFor="line-discount">{ui("Line Discount (₹)")}</label><input id="line-discount" className="r-input" type="number" min="0" step="any" value={discount} onChange={event => setDiscount(event.target.value)} inputMode="decimal" />
       {item.track_batch && <><label htmlFor="line-batch">Batch</label><MobileSelect id="line-batch" value={batch} onChange={event => setBatch(event.target.value)}><option value="">Automatic FEFO</option>{item.batches.map((choice: any) => <option key={choice.id} value={choice.id}>{choice.batch_number} {choice.expiry_date ? ' · Exp ' + choice.expiry_date.slice(0, 10) : ''}</option>)}</MobileSelect></>}
       {item.track_serial && <fieldset className="r-fieldset"><legend>Serial numbers · selected {serials.length}</legend>{item.serials.filter((serial: any) => serial.status === 'AVAILABLE' && (!variant || serial.variant_id === variant)).map((serial: any) => <label className="r-list-item" key={serial.id}><input type="checkbox" checked={serials.includes(serial.id)} onChange={event => setSerials(event.target.checked ? [...serials, serial.id] : serials.filter(id => id !== serial.id))} />{serial.serial_number}</label>)}</fieldset>}

@@ -1,4 +1,50 @@
 .retail-app.retail-stitch .r-shell { max-width:var(--r-max-width); margin:auto; }
+.retail-app .r-quick-entry-heading {display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.retail-app .r-quick-entry-heading h2 {margin:0}
+.retail-app .r-quick-manual>h2 {display:none}
+.retail-app .r-bill-customer {position:relative;padding-bottom:0!important}
+.retail-app .r-bill-customer .r-search-bar {display:flex;align-items:center}
+.retail-app .r-bill-customer .r-search-bar>input {flex:1;min-width:0}
+.retail-app .r-bill-customer .r-search-bar>button {position:absolute;right:4px;background:var(--r-surface)}
+.retail-app .r-quick-line-fields {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.retail-app .r-quick-manual {gap:10px;padding:16px!important}
+.retail-app .r-quick-manual label {display:block;margin-bottom:5px}
+.retail-app .r-bill-item {padding:12px 16px!important;gap:10px!important;min-height:86px}
+.retail-app .r-bill-item-info {min-width:0}
+.retail-app .r-bill-item-name {font-size:16px!important;line-height:1.35!important;margin-bottom:4px!important}
+.retail-app .r-bill-item .r-btn--sm {min-height:40px;padding:8px 12px!important}
+.retail-app .r-bill-item .r-qty-btn {min-width:40px;min-height:40px}
+.retail-app .r-bill-item .r-bill-item-price,.retail-app .r-bill-item .r-caption {font-size:12px!important;margin:2px 0!important}
+.retail-app .r-service-charge-chip {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--r-primary-light)}
+.retail-app .r-service-charge-chip>span {flex:1}
+.retail-app .r-table-scroll {overflow-x:auto;max-width:100%}
+.retail-app .r-bill-summary-table {width:100%;border-collapse:collapse;font-size:14px;line-height:1.5}
+.retail-app .r-bill-summary-table :is(th,td) {padding:12px 8px;text-align:right;border-bottom:1px solid var(--r-border);vertical-align:top}
+.retail-app .r-bill-summary-table :is(th,td):first-child {text-align:left;min-width:115px;overflow-wrap:anywhere}
+.retail-app .r-bill-summary-table td small {display:block;color:var(--r-text-muted);font-size:12px}
+.retail-app .r-discount-control {display:flex;align-items:center;border:1px solid var(--r-border);border-radius:12px;background:var(--r-surface);overflow:hidden}
+.retail-app .r-discount-control>.r-input {border:0!important;margin:0;min-width:0;flex:1}
+.retail-app .r-discount-control>select.r-input {max-width:178px;background:var(--r-primary-light)!important;color:var(--r-primary-text)}
+.retail-app .r-drawer-search {padding:4px 20px 12px}
+.retail-app .r-drawer-search .r-search-bar {position:relative}
+.retail-app .r-bill-calculator {position:fixed;z-index:1200;right:20px;bottom:calc(var(--r-bottom-nav-height) + 95px);width:min(338px,calc(100vw - 24px));background:var(--r-surface);border:1px solid var(--r-border);border-radius:20px;box-shadow:0 16px 60px #123a2940;padding:12px}
+.retail-app .r-bill-calculator header {display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--r-border);margin-bottom:8px}
+.retail-app .r-bill-calculator header>div {display:flex}
+.retail-app .r-bill-calculator header .r-btn {min-width:36px;min-height:40px;padding:6px;font-size:14px}
+.retail-app .r-bill-calculator.is-minimized {width:260px;padding:4px 12px}
+.retail-app .r-bill-calculator.is-minimized header {margin:0;border:0}
+.retail-app .r-calculator-history {max-height:92px;overflow-y:auto;text-align:right}
+.retail-app .r-calculator-history>button {display:block;width:100%;padding:3px 6px;background:none;border:0;color:var(--r-text-muted);font:inherit;font-size:13px;text-align:right;cursor:pointer}
+.retail-app .r-bill-calculator #bill-calculation {text-align:right;font-size:26px!important;font-variant-numeric:tabular-nums;margin:6px 0}
+.retail-app .r-calculator-keys {display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.retail-app .r-calculator-keys .r-btn {background:var(--r-bg-secondary);min-height:42px;padding:7px;font-size:18px}
+.retail-app .r-calculator-keys .r-btn--primary {background:var(--r-primary);color:var(--r-surface)}
+.retail-app .r-invoice-file-actions {margin-block:16px;padding-top:16px;border-top:1px solid var(--r-border)}
+.retail-app .r-stitch-payment-total {padding:16px!important;margin-bottom:12px!important}
+.retail-app .r-stitch-payment .r-input-group {padding-block:10px!important}
+.retail-app .r-stitch-payment-method-wrap {padding-block:8px!important}
+.retail-app .r-payment-final-summary {padding-block:8px!important}
+@media(min-width:800px){.retail-app .r-quick-entry-section,.retail-app .r-bill-customer,.retail-app .r-quick-bill-summary{max-width:940px;margin-inline:auto}.retail-app .r-bill-calculator{right:max(24px,calc((100vw - 1100px)/2))}.retail-app .r-quick-manual{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.retail-app .r-quick-manual>label,.retail-app .r-quick-manual>input,.retail-app .r-quick-manual>.r-quick-matches,.retail-app .r-quick-manual>button{grid-column:1/-1}}
 .retail-app.retail-stitch .r-page { width:100%; max-width:none; padding-bottom:calc(var(--r-bottom-nav-height) + env(safe-area-inset-bottom) + 24px); }
 .retail-app.retail-stitch :is(button,input,textarea,select) { font-family:inherit; }
 .retail-app.retail-stitch :is(h1,h2,h3,h4):not(.gst-paper *) { color:var(--r-text); letter-spacing:-.025em; }

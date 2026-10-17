@@ -79,6 +79,7 @@ export const drawerGroups: readonly DrawerNavGroup[] = [
     { id: 'assistant', label: 'Ask Apna Galla', route: '/retail/assistant', icon: MessageCircle, features: ['RETAIL_POS','ASSISTANT_TEXT'] },
   ] },
   { id: 'business', label: 'Business & Staff', icon: Building2, children: [
+    { id:'gst',label:'GST Invoices & Tax Setup',route:'/retail/gst',icon:Receipt,permissions:['sales.read'],features:['RETAIL_POS','GST_INVOICES'] },
     { id: 'business', label: 'My Business', route: '/retail/more/business', icon: Store },
     { id: 'staff', label: 'Staff', route: '/retail/more/staff', icon: UserRoundCog, permissions: ['identity.admin'], features: ['STAFF'] },
     { id: 'features', label: 'Shop Features', route: '/retail/more/features', icon: SlidersHorizontal },

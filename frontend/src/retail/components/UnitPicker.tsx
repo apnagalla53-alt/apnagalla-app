@@ -14,8 +14,8 @@ async function unitChoices(){const state=useAuthStore.getState(),key=state.user?
  if(!pending){const request=api.get<RetailUnitChoice[]>('/retail/units').then(r=>{if(cacheKey===key){cached=r.data;loadedAt=Date.now();}return r.data;}).finally(()=>{if(cacheKey===key)pending=null;});pending=request;}return pending;
 }
 
-export default function UnitPicker({ id, value, onChange, disabled = false, title = 'Unit', allowedModes, category, recommendedUnits }: {
-  id: string; value: string; onChange: (unit: RetailUnitChoice) => void; disabled?: boolean; title?: string; allowedModes?: string[];category?:string;recommendedUnits?:string[];
+export default function UnitPicker({ id, value, onChange, disabled = false, title = 'Unit', allowedModes, category, recommendedUnits, dropdown = false }: {
+  id: string; value: string; onChange: (unit: RetailUnitChoice) => void; disabled?: boolean; title?: string; allowedModes?: string[];category?:string;recommendedUnits?:string[];dropdown?:boolean;
 }) {
   useUiLanguage();
   const preset=useBusinessPreset(category),recommended=recommendedUnits||preset.recommendedUnits;
@@ -32,6 +32,7 @@ export default function UnitPicker({ id, value, onChange, disabled = false, titl
   const customMatch = units.find(unit => unit.code === code);
   const shown=choices.filter(u=>showAll||recommended.includes(u.code)||u.code===value).sort((a,b)=>{const rank=(code:string)=>{const i=recommended.indexOf(code);return i<0?1000:i;};return rank(a.code)-rank(b.code);});
   const chips=shown.filter(u=>available(u)).slice(0,6);
+  if(dropdown)return <div><select id={id} aria-label={title} className="r-input" value={value} disabled={disabled||loading} onChange={event=>{if(event.target.value==='__custom'){setCode('');setName('');setCustom(true);return;}const choice=choices.find(u=>u.code===event.target.value);if(choice&&available(choice))onChange(choice);}}>{choices.filter(available).map(choice=><option key={choice.code} value={choice.code}>{unitLabel(choice)}</option>)}</select>{error&&<p role="alert">{error}<button type="button" onClick={load}>Retry</button></p>}</div>;
   return <>
     {!!chips.length&&<div className="xp-unit-chips" role="group" aria-label={ui(title)}>{chips.map(choice=><button key={choice.code} type="button" disabled={disabled} className="xp-unit-chip" aria-pressed={value===choice.code} onClick={()=>onChange(choice)}>{ui(choice.name)}{value===choice.code&&<Check size={17} aria-hidden="true"/>}</button>)}</div>}
     {(showAll||loading||!!error||!chips.length)&&<MobileSelect id={id} title={ui(title)} value={value} disabled={disabled} loading={loading} error={error} onRetry={load}

@@ -159,6 +159,8 @@ export class ReportsService {
     const udharSales = salesInvoices.reduce((sum, inv) => sum + Number(inv.outstanding_amount || 0), 0);
 
     return {
+      upi_accounts: await this.counter.upiAccounts(companyId,filters.branch_id,fromDate.toISOString().slice(0,10),toDate.toISOString().slice(0,10)),
+      ...await this.counter.saleKinds(companyId,filters.branch_id,filters.from?.slice(0,10)||'1970-01-01',filters.to?.slice(0,10)||'9999-12-30'),
       gross_sales: grossSales,
       returns: returns,
       net_sales: netSales,
@@ -222,7 +224,9 @@ export class ReportsService {
 
     return {
       summary: {
-        gross_sales: grossSales,
+        upi_accounts: await this.counter.upiAccounts(companyId,filters.branch_id,filters.from?.slice(0,10)||'1970-01-01',filters.to?.slice(0,10)||'9999-12-30'),
+        ...await this.counter.saleKinds(companyId,filters.branch_id,filters.from?.slice(0,10)||'1970-01-01',filters.to?.slice(0,10)||'9999-12-30'),
+      gross_sales: grossSales,
         returns: returns,
         net_sales: grossSales - returns,
         bills_count: salesInvoices.length,

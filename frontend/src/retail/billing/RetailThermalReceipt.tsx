@@ -1,3 +1,4 @@
+import InvoiceFileActions from './InvoiceFileActions';
 import { formatDate, formatTime } from '../../shared/dateFormat';
 import { ui, useUiLanguage } from "../../i18n";
 import { useEffect, useState } from 'react';
@@ -31,7 +32,7 @@ const RetailThermalReceipt = () => {
 
   return (
     <div className="r-thermal-receipt" style={{ width: '80mm', padding: '5mm', margin: '0 auto', fontSize: '12px', fontFamily: 'monospace', color: '#000', background: '#fff' }}>
-      <div className="r-receipt-controls"><button type="button" className="r-btn r-btn--primary" onClick={()=>{void printInvoice().catch(()=>setMessage('Could not open printing on this device.'));}}>{ui("Print invoice")}</button><button type="button" className="r-btn" onClick={()=>void shareBill(bill).then(setMessage).catch(()=>setMessage('Sharing cancelled or unavailable.'))}>Share</button>{access.isFeatureEffective('GST_INVOICES')&&<button type="button" className="r-btn" onClick={()=>navigate('/retail/gst/bills/'+bill.id)}>GST bill</button>}<button type="button" className="r-btn" onClick={()=>navigate('/retail/home')}>Home</button><button type="button" className="r-btn" onClick={()=>navigate('/retail/quick-sale')}>New bill</button><button type="button" className="r-btn" onClick={()=>navigate('/retail/bills/'+bill.id)}>Bill details</button>{message&&<p role="status">{message}</p>}</div>
+      <div className="r-receipt-controls"><button type="button" className="r-btn r-btn--primary" onClick={()=>{void printInvoice().catch(()=>setMessage('Could not open printing on this device.'));}}>{ui("Print invoice")}</button><button type="button" className="r-btn" onClick={()=>void shareBill(bill,tenantContext?.company_name).then(setMessage).catch(()=>setMessage('Sharing cancelled or unavailable.'))}>Share</button>{access.isFeatureEffective('GST_INVOICES')&&<button type="button" className="r-btn" onClick={()=>navigate('/retail/gst/bills/'+bill.id)}>GST bill</button>}<button type="button" className="r-btn" onClick={()=>navigate('/retail/home')}>Home</button><button type="button" className="r-btn" onClick={()=>navigate('/retail/quick-sale')}>New bill</button><button type="button" className="r-btn" onClick={()=>navigate('/retail/bills/'+bill.id)}>Bill details</button><InvoiceFileActions bill={bill} shop={tenantContext?.company_name||'Apna Galla'}/>{message&&<p role="status">{message}</p>}</div>
       {/* Print-specific CSS */}
       <style>
         {`

@@ -1,3 +1,4 @@
+import { saleGstRate, billDiscountValue } from './retail-adjustments';
 import { paymentRecipient } from '../retail/counter/upi-profiles';
 import { snapshotDocumentCosts } from '../inventory/cost-snapshots';
 import { allocateBillDiscount } from './bill-discount';
@@ -145,7 +146,8 @@ export class PosService {
         const modifierSnapshot = await this.composition.modifierPricing(tx, companyId, item.id, line.modifier_option_ids, lineQty, pricingRes);
         if (item.tax_class && item.tax_class.company_id !== companyId) throw new BadRequestException('Invalid tax class');
         if (pricingRes.taxableValue.lt(0)) throw new BadRequestException('Discount exceeds the line value');
-        const lineTax = pricingRes.taxableValue.mul(item.tax_class?.tax_rate || 0).div(100).toDecimalPlaces(2);
+        const rateSnapshot = saleGstRate(line,item.tax_class?.tax_rate);
+        const lineTax = pricingRes.taxableValue.mul(rateSnapshot).div(100).toDecimalPlaces(2);
         const lineTotal = pricingRes.taxableValue.add(lineTax);
 
         taxableAmount = taxableAmount.add(pricingRes.taxableValue);
@@ -240,7 +242,7 @@ export class PosService {
           taxable_value: pricingRes.taxableValue,
           tax_amount: lineTax,
           line_total: lineTotal,
-          tax_snapshot_json: item.tax_class ? JSON.stringify({ id: item.tax_class.id, rate: item.tax_class.tax_rate.toNumber(), hsn: item.tax_class.hsn_code }) : null,
+          tax_snapshot_json: JSON.stringify({ id: item.tax_class?.id, rate: rateSnapshot.toNumber(), hsn: item.tax_class?.hsn_code || item.hsn_sac, source: line.gst_rate===undefined?'ITEM':'BILL_ENTRY' }),
           pricing_trace_json: JSON.stringify(pricingRes.pricingTrace),
           batch_allocations: batchAllocations.length > 0 ? {
             create: batchAllocations.map(a => ({
@@ -370,8 +372,9 @@ export class PosService {
       }
 
         // Attribute serial, FEFO, promotional and bundle component movements to immutable sale lines.
-      if(dto.bill_discount){
-        const allocated=allocateBillDiscount(invoiceLinesData,dto.bill_discount);
+      const resolvedBillDiscount=billDiscountValue(invoiceLinesData,dto);
+      if(resolvedBillDiscount.gt(0)){
+        const allocated=allocateBillDiscount(invoiceLinesData,resolvedBillDiscount);
         invoiceLinesData.forEach((l,index)=>{const trace=linePricingResults[index].pricingTrace;
           linePricingResults[index].pricingTrace={...trace,discountAmount:l.discount_amount.toString(),finalLineAmount:l.taxable_value.toString(),billDiscountAllocation:allocated[index].toString()};
           l.pricing_trace_json=JSON.stringify(linePricingResults[index].pricingTrace);});
@@ -737,13 +740,14 @@ export class PosService {
           await this.composition.prepareBundle(tx, companyId, item.id, line.godown_id, qty.plus(price.freeQuantity).mul(factor), dto.document_date);
         }
         if (price.taxableValue.lt(0)) throw new BadRequestException('Discount exceeds the line value');
-        const tax = price.taxableValue.mul(item.tax_class?.tax_rate || 0).div(100).toDecimalPlaces(2);
+        const tax = price.taxableValue.mul(saleGstRate(line,item.tax_class?.tax_rate)).div(100).toDecimalPlaces(2);
         const value = price.taxableValue.plus(tax);
         lines.push({ item_id: item.id, taxable_value: price.taxableValue.toNumber(), tax_amount: tax.toNumber(), line_total: value.toNumber(), free_quantity: price.freeQuantity.toNumber() });
         total = total.plus(value);
       }
-      if(dto.bill_discount){allocateBillDiscount(lines,dto.bill_discount);total=lines.reduce((s,l)=>s.plus(l.line_total),new Prisma.Decimal(0));}
-      return { grand_total: total.toDecimalPlaces(2).toNumber(), lines };
+      const discount=billDiscountValue(lines,dto);
+      if(discount.gt(0)){allocateBillDiscount(lines,discount);total=lines.reduce((s,l)=>s.plus(l.line_total),new Prisma.Decimal(0));}
+      return { grand_total: total.toDecimalPlaces(2).toNumber(), discount_amount:discount.toNumber(), taxable_amount:lines.reduce((s,l)=>s.plus(l.taxable_value),new Prisma.Decimal(0)).toNumber(), tax_amount:lines.reduce((s,l)=>s.plus(l.tax_amount),new Prisma.Decimal(0)).toNumber(), lines };
     });
   }
 

@@ -21,11 +21,27 @@
 .retail-app.retail-stitch .r-bill-history-actions { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px; }
 .retail-app.retail-stitch .r-stitch-active-bill { display:flex;justify-content:space-between;align-items:center;font-size:20px;line-height:28px;margin:0 0 16px; }
 .retail-app.retail-stitch .r-stitch-active-bill span { font-size:13px;font-weight:400;padding:8px 12px;background:var(--r-primary-light);border-radius:9999px; }
-.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item { background:var(--r-surface);border:0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:12px; }
-.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info { width:100%; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item { position:relative;background:var(--r-surface);border:1px solid var(--r-border);border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;gap:6px!important;margin-bottom:10px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info { width:100%;min-height:42px;padding-right:116px; }
 .retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-name { font-size:17px;font-weight:600; }
 .retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-price { font-size:13px;color:var(--r-text-muted); }
-.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info > button { float:right;margin:0;min-height:44px;background:var(--r-bg-secondary);border-radius:9999px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info > button { position:absolute;top:10px;right:14px;float:none;margin:0;min-height:44px;background:var(--r-bg-secondary);border-radius:12px; }
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-info > button:nth-of-type(2) {right:76px}
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item .r-qty-control {padding:2px}
+.retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item .r-qty-control button {min-height:36px;min-width:40px;width:40px;height:36px}
+.retail-app.retail-stitch .r-service-charge-editor {display:grid;gap:10px;margin-top:18px}
+.retail-app.retail-stitch .r-service-charge-editor label {margin:0;display:block}
+.retail-app.retail-stitch .r-service-charge-editor :is(input,button) {margin:0}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method {min-height:58px;padding:8px 12px}
+.retail-app.retail-stitch .r-payment-final-summary .r-billing-summary {padding:14px 16px;border-radius:16px;border:1px solid var(--r-border);background:var(--r-surface)}
+.retail-app.retail-stitch .r-payment-final-summary .r-billing-summary h2 {font-size:18px;margin:0 0 8px}
+.retail-app.retail-stitch .r-payment-final-summary .r-billing-row {min-height:30px;font-size:14px}
+.retail-app.retail-stitch .r-stitch-cash-payment {padding:14px 16px;margin-bottom:8px}
+.retail-app.retail-stitch .r-stitch-cash-payment #cash-received-input {height:52px;font-size:24px}
+.r-receipt-controls .r-invoice-file-actions {width:100%}
+.retail-app.retail-stitch .r-bill-summary-table :is(th,td):not(:first-child) {white-space:nowrap}
+@media(max-width:600px){.retail-app.retail-stitch .r-bill-summary-table {font-size:13px}.retail-app.retail-stitch .r-bill-summary-table :is(th,td){padding:10px 4px}.retail-app.retail-stitch .r-bill-summary-table :is(th,td):first-child{min-width:86px}}
+@media(max-width:600px){.retail-app .r-bill-hold-label{display:none}.retail-app #hold-bill-btn{min-width:44px}.retail-app .r-page-header-action{margin-left:auto}.retail-app .r-bill-calculator{max-height:calc(100dvh - 172px);overflow-y:auto}}
 .retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-right { display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;width:100%; }
 .retail-app.retail-stitch .r-stitch-bill-layout .r-bill-item-total { font-size:22px;font-weight:700; }
 .retail-app.retail-stitch .r-qty-control { background:var(--r-bg-secondary);border:0;border-radius:12px;padding:4px;min-height:48px;gap:8px; }
@@ -79,3 +95,26 @@
 .retail-app.retail-stitch .r-expense-form details > summary { font-size:17px;font-weight:600;min-height:32px; }
 .retail-app.retail-stitch .r-expense-form details[open] > summary { margin-bottom:20px; }
 .retail-app.retail-stitch .r-stitch-expense-summary strong { display:block;font-size:36px;margin:12px 0; }
+
+/* Keep payable, discount, method choices and the full quote in the first phone view. */
+.retail-app.retail-stitch .r-stitch-payment .r-stitch-payment-total {padding:12px 16px!important;margin:8px 20px 10px!important}
+.retail-app.retail-stitch .r-stitch-payment .r-stitch-payment-total>div:nth-child(2) {font-size:34px!important;line-height:1.25}
+.retail-app.retail-stitch .r-stitch-payment .r-stitch-payment-total>div:nth-child(2) {margin:0!important}
+.retail-app.retail-stitch .r-stitch-payment .r-stitch-payment-total>div:last-child {font-size:12px!important;margin-top:2px!important}
+.retail-app.retail-stitch .r-stitch-payment>.r-input-group {padding:8px 20px!important;margin:0}
+.retail-app.retail-stitch .r-stitch-payment .r-stitch-payment-method-wrap {padding:8px 20px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-methods {gap:8px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-methods {margin-bottom:0}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method {min-height:54px;padding:8px 12px;border:1px solid var(--r-border);border-radius:12px;box-shadow:none;font-size:15px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-method>div {width:28px!important;height:28px!important;flex:0 0 28px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary {padding:6px 20px!important}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-summary {padding:10px 14px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-summary h2 {font-size:16px;margin:0 0 4px;line-height:1.4}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-row {min-height:25px;line-height:1.5;font-size:13px}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-row {padding:2px 0}
+.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-row--total {padding-top:6px;margin-top:4px}
+@media(max-width:600px){.retail-app.retail-stitch .r-stitch-payment .r-payment-final-summary .r-billing-summary{padding-right:70px}}
+.retail-app.retail-stitch .r-quick-bill-summary .r-billing-summary {padding:12px 0 0}
+.retail-app.retail-stitch .r-quick-bill-summary .r-billing-summary>h2 {display:none}
+.retail-app .r-upi-mobile {display:none}
+@media(max-width:600px){.retail-app .r-upi-breakdown>.r-table-scroll{display:none}.retail-app .r-upi-mobile{display:grid;gap:10px}.retail-app .r-upi-account-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:12px 0;border-bottom:1px solid var(--r-border)}.retail-app .r-upi-account-card small{display:block;font-size:12px;color:var(--r-text-muted);overflow-wrap:anywhere}.retail-app .r-upi-account-card>small{grid-column:1/-1}.retail-app .r-upi-mobile .r-billing-row{display:flex;justify-content:space-between}.retail-app .r-upi-breakdown>h2{font-size:18px}}

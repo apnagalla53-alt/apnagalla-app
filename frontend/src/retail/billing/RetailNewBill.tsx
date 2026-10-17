@@ -1,3 +1,6 @@
+import BillCalculator from './BillCalculator';
+import BillCustomerInput from './BillCustomerInput';
+import ServiceChargeEditor from './ServiceChargeEditor';
 import DateInput from '../../shared/components/DateInput';
 import { trackExperience } from '../experience/experienceEvents';
 import StitchHeader from '../design/StitchHeader';
@@ -36,14 +39,12 @@ import {
   Search,
   Minus,
   Plus,
-  ChevronRight,
-  User,
   Trash2,
   Pause,
   Receipt,
 } from "lucide-react";
 
-const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
+const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
   useUiLanguage();
   const navigate = useNavigate();
   const user=useAuthStore(state=>state.user);
@@ -59,7 +60,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
   useEffect(()=>{trackExperience('first_bill_started',{workflow:'BILL'});if(useBillStore.getState().items.length)trackExperience('bill_resumed',{workflow:'BILL'});},[]);
   const [customerPrefillLoading, setCustomerPrefillLoading] = useState(false);
   const [customerPrefillError, setCustomerPrefillError] = useState('');
-  const [customerPrefillRetry, setCustomerPrefillRetry] = useState(0);
+  const customerPrefillRetry = 0;
 
   useEffect(() => {
     if (!requestedCustomer || useBillStore.getState().customer?.id === requestedCustomer) { setCustomerPrefillLoading(false); setCustomerPrefillError(''); return; }
@@ -84,7 +85,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
     details,
     setDetails,
     setAttachment,
-    discount: billDiscount,
+    discount: billDiscount, customerName,discountMode, serviceCharge,serviceChargeDismissed,setServiceCharge,draft_id,
     addItem,
     removeItem,
     updateQuantity,
@@ -120,7 +121,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
   const [configure, setConfigure] = useState<{
     itemId: string;
     rowId?: string;
-    initialQuantity?:number;
+    initialQuantity?:number; initialGstRate?:number;
   } | null>(null);
   const [stockDetails,setStockDetails]=useState<Record<string,any>>({}),[draftQuote,setDraftQuote]=useState<any>(null);
   const stockIds=[...new Set(billItems.filter(i=>!i.new_item).map(i=>i.item_id))].sort().join(',');
@@ -221,7 +222,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
       item.track_serial ||
       ["AREA", "VOLUME", "WEIGHT", "LENGTH"].includes(item.selling_mode || "")
     )
-      setConfigure({ itemId: item.id,initialQuantity:quantity });
+      setConfigure({ itemId: item.id,initialQuantity:quantity,initialGstRate:(item as any).gst_rate||0 });
     else addItem(item,quantity);
     setSearchQuery("");
     setShowSearchResults(false);
@@ -278,51 +279,10 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
     ? billItems.find((i) => i.item_id === showItemEdit)
     : null;
 
-  const customerSelector = (<>      {/* Customer Selector */}
-      <div className="r-section">
-        {customerPrefillLoading && <p role="status">{ui("Loading customer…")}</p>}
-        {customerPrefillError && <div className="r-card" role="alert"><p>{customerPrefillError}</p><button className="r-btn r-btn--outline" onClick={() => setCustomerPrefillRetry(value => value + 1)}>{ui("Retry Customer")}</button></div>}
-        <button
-          className="r-card r-card--tappable r-flex r-items-center r-gap-md r-w-full"
-          onClick={() => setShowCustomerSheet(true)}
-          id="customer-selector"
-          style={{ textAlign: "left" }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: "var(--r-bg-grey)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--r-text-muted)",
-              flexShrink: 0,
-            }}
-          >
-            <User size={18} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: "var(--r-text-base)", fontWeight: 500 }}>
-              {customer ? customer.name : ui("Walk-in Customer")}
-            </div>
-            {customer?.mobile && (
-              <div
-                style={{
-                  fontSize: "var(--r-text-sm)",
-                  color: "var(--r-text-muted)",
-                }}
-              >
-                {customer.mobile}
-              </div>
-            )}
-          </div>
-          <ChevronRight size={18} style={{ color: "var(--r-text-hint)" }} />
-        </button>
-      </div>
-</>);
-  const [manualKey,setManualKey]=useState(0),[manualName,setManualName]=useState(''),[quickAmount,setQuickAmount]=useState('');
+  const customerSelector = <BillCustomerInput/>;
+  const [moreOpen,setMoreOpen]=useState(false),[moreTab,setMoreTab]=useState<'details'|'photo'|'service'>('details');
+  useEffect(()=>{let active=true;if(serviceCharge||serviceChargeDismissed)return;api.get('/retail/account/service-charge-preference').then(({data})=>{if(active&&data.charge?.auto_apply)setServiceCharge(data.charge);}).catch(()=>{});return()=>{active=false;};},[draft_id,serviceChargeDismissed]);
+  const [manualKey,setManualKey]=useState(0),[manualName,setManualName]=useState('');
   const resetManual=()=>{setManualName('');setManualKey(n=>n+1);};
 
   if (quick&&!canReadCatalog) return <Navigate to="/retail/amount-sale" replace />;
@@ -339,7 +299,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
               className="r-btn r-btn--ghost r-btn--sm"
               onClick={async () => {
                 try {
-                  if(billItems.some(i=>i.new_item)){navigate("/retail/home");return;}
+                  if(billItems.some(i=>i.new_item||i.gst_rate!==undefined)||serviceCharge||customerName||discountMode==='PERCENT'){navigate("/retail/home");return;}
                   await posApi.holdBill("default-branch", billItems, {
                     customer_id: customer?.id,
                     bill_discount: billDiscount,
@@ -353,13 +313,15 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                 }
               }}
               id="hold-bill-btn"
+              aria-label="Save current bill draft"
             >
-              <Pause size={16} />{ui(billItems.some(i=>i.new_item)?'Save device draft':'Hold')}</button>
+              <Pause size={16} /><span className="r-bill-hold-label">{ui(billItems.some(i=>i.new_item||i.gst_rate!==undefined)||serviceCharge||customerName||discountMode==='PERCENT'?'Save draft':'Hold')}</span></button>
           )}
         </div>
       </StitchHeader>
-      {gstRequested && <p className="r-caption">{ui('Use items with the correct GST rate and HSN/SAC configured in Items. Tax comes from those settings; it cannot be added to a saved bill later.')}</p>}
-      {!quick && customerSelector}
+      {gstRequested&&<p className="r-caption">Enter the applicable GST percentage before saving. Complete Business Details and item HSN/SAC for a GST invoice.</p>}
+      {customerSelector}
+      {!quick&&<>
       <div className="r-section r-search-filter">
         <div className="r-search-bar r-bill-search">
         <span className="r-search-icon" aria-hidden="true"><Search size={20} /></span>
@@ -457,9 +419,11 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
           </button>
         )}
       </section>}
+      </>}
       {quickItem&&<QuickCreateItemSheet name={unknownBarcode?'':searchQuery.trim()} barcode={unknownBarcode} onClose={()=>setQuickItem(false)} onCreated={({item,quantity})=>{handleAddItem(item,quantity);setQuickItem(false);setUnknownBarcode(undefined);}}/>}
       {editingCandidate&&<Sheet open onClose={()=>setEditingCandidate(null)} title="Edit bill item"><QuickBillCandidate name={editingCandidate.name} existing={editingCandidate} onAdded={()=>setEditingCandidate(null)}/></Sheet>}
-      {quick&&<div className="r-section r-quick-entry-section"><QuickBillCandidate key={manualKey} name={manualName} compact onAdded={resetManual} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);resetManual();}}/><details className="r-card r-quick-amount"><summary>{ui('Amount-only sale')}</summary><label htmlFor="quick-amount">{ui('Amount (₹)')}</label><input id="quick-amount" className="r-input" type="number" inputMode="decimal" min=".01" step=".01" value={quickAmount} onChange={e=>setQuickAmount(e.target.value)}/><div className="r-amount-shortcuts">{[50,100,200,500].map(value=><button type="button" key={value} onClick={()=>setQuickAmount(String((Number(quickAmount)||0)+value))}>+₹{value}</button>)}</div><button type="button" className="r-btn r-btn--outline r-w-full" disabled={!Number.isFinite(Number(quickAmount))||Number(quickAmount)<=0} onClick={()=>navigate('/retail/amount-sale?amount='+encodeURIComponent(quickAmount))}>{ui('Continue to payment')}</button></details></div>}
+      {quick&&<div className="r-section r-quick-entry-section"><div className="r-quick-entry-heading"><h2>Quick item</h2><BillCalculator/></div><QuickBillCandidate key={manualKey} name={manualName} compact onAdded={resetManual} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);resetManual();}}/><button type="button" className="r-btn r-btn--outline r-w-full" onClick={()=>setMoreOpen(true)}>More</button>{serviceCharge&&<div className="r-service-charge-chip"><span>{serviceCharge.name} · ₹{serviceCharge.amount.toFixed(2)}{serviceCharge.gst_rate?' + GST '+serviceCharge.gst_rate+'%':''}</span><button type="button" className="r-btn" onClick={()=>{setMoreTab('service');setMoreOpen(true);}}>EDIT</button><button type="button" className="r-btn" onClick={()=>setServiceCharge(null)}>Remove</button></div>}</div>}
+
       {/* Bill Items */}
 
       <div className="r-section">
@@ -492,17 +456,17 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                   onClick={() =>
                     item.new_item ? setEditingCandidate(item) : setConfigure({ itemId: item.item_id, rowId: item.row_id })
                   }
-                >{ui("Edit line")}</button>
+                >{ui("EDIT")}</button>
                 <button type="button" className="r-btn r-btn--icon" data-tone="danger" aria-label={ui('Remove')+' '+item.name} onClick={()=>removeItem(item.row_id||item.item_id)}><Trash2 size={18} aria-hidden="true"/></button>
                 <div className="r-bill-item-price">
-                  ₹{item.rate} × {item.quantity} {item.unit}
+                  ₹{item.rate} × {item.quantity} {item.unit}{Number(item.gst_rate??item.tax_rate)>0?' · GST '+(item.gst_rate??item.tax_rate)+'%':''}
                   {item.discount_amount > 0 && (
                     <span style={{ color: "var(--r-success)", marginLeft: 4 }}>
                       (-₹{item.discount_amount})
                     </span>
                   )}
                 </div>
-                {Number(item.tax_rate)>0&&<p className="r-caption">Tax Exclusive · GST {item.tax_rate}% added</p>}
+
                 {stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))&&<p className="r-text-danger" role="alert" data-tone="warning">{stockWarning(stockDetails[item.item_id],item,billItems.filter(l=>l.item_id===item.item_id&&l.row_id!==item.row_id))}</p>}
               </div>
               <div className="r-bill-item-right">
@@ -541,11 +505,8 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
           ))
         )}
       </div>
-<div className="r-section"><details className="r-card r-bill-more-settings"><summary>{ui('More Settings')}{customer?' · '+customer.name:''}</summary>{quick&&customerSelector}<BillTaxSummary onQuote={setDraftQuote}/>
-<div className="r-section">
-        <details className="r-card">
-          <summary>{ui("Bill details & photo")}</summary>
-          <div className="r-form-grid">
+      <section className="r-section r-quick-bill-summary" aria-label="Item summary"><div className="r-card"><h2>Bill summary</h2><div className="r-table-scroll"><table className="r-bill-summary-table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>{billItems.map(i=><tr key={i.row_id||i.item_id}><td>{i.name}</td><td>{i.quantity} {i.unit}</td><td>₹{i.rate.toFixed(2)}</td><td>₹{(i.total/(1+(i.gst_rate??i.tax_rate??0)/100)).toFixed(2)}</td></tr>)}{serviceCharge&&<tr><td>{serviceCharge.name}</td><td>1</td><td>₹{serviceCharge.amount.toFixed(2)}</td><td>₹{serviceCharge.amount.toFixed(2)}</td></tr>}</tbody></table></div><BillTaxSummary onQuote={setDraftQuote}/></div></section>
+      <Sheet open={moreOpen} onClose={()=>setMoreOpen(false)} title="More options"><div className="r-mobile-segments" role="group" aria-label="More billing options">{([['details','Bill details'],['photo','Item photo'],['service','Service charge']] as const).map(([key,label])=><button type="button" key={key} className={moreTab===key?'is-selected':''} aria-pressed={moreTab===key} onClick={()=>setMoreTab(key)}>{label}</button>)}</div>{moreTab==='details'&&<div className="xp-stack">          <div className="r-form-grid">
             <div>
               <label htmlFor="invoice-bill-date">{ui("Bill Date")}</label>
               <DateInput
@@ -599,10 +560,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
             value={details.note}
             onChange={(event) => setDetails({ note: event.target.value })}
           />
-          <AttachmentPicker onFileSelect={setAttachment} />
-        </details>
-      </div>
-      </details></div>
+</div>}{moreTab==='photo'&&<><p>Attach a photo to this bill.</p><AttachmentPicker onFileSelect={setAttachment}/></>}{moreTab==='service'&&<ServiceChargeEditor close={()=>setMoreOpen(false)}/>}</Sheet>
       {/* Sticky Billing Summary + PAY button */}
       <div className="r-sticky-footer" id="billing-footer">
         <div className="r-counter-total"><small>{ui("Total")} ({billItems.length} {ui("lines")} · {itemCount} {ui("units")})</small><strong>₹{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></div>
@@ -620,7 +578,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
         <RetailLineConfigurator
           itemId={configure.itemId}
           existing={billItems.find((i) => i.row_id === configure.rowId)}
-          initialQuantity={configure.initialQuantity}
+          initialQuantity={configure.initialQuantity} initialGstRate={configure.initialGstRate}
           close={() => setConfigure(null)}
         />
       )}
@@ -688,7 +646,7 @@ const RetailNewBill = ({ quick = false }: { quick?: boolean }) => {
                 customers.length === 0 && (
                   <p>No customers yet. Add a customer below.</p>
                 )}
-              {customers.filter(c=>c.active!==false).map((c) => (
+              {customers.filter(c=>c.active!==false&&!(c as any).is_walkin).map((c) => (
                 <button
                   key={c.id}
                   className="r-list-item"

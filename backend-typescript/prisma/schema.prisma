@@ -1617,6 +1617,7 @@ model LedgerAccount {
 }
 
 model Voucher {
+  receiving_snapshot Json? @db.JsonB
   payment_method String? @db.VarChar(20)
   id                   String    @id @default(uuid()) @db.Uuid
   company_id           String    @db.Uuid

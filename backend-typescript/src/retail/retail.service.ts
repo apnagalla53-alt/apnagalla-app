@@ -1,3 +1,4 @@
+import { paymentRecipient } from './counter/upi-profiles';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateRetailItemDto, UpdateRetailItemDto } from './dto/retail-item.dto';
@@ -298,7 +299,7 @@ export class RetailService {
   }
 
   private async getParties(companyId: string, type: 'CUSTOMER' | 'SUPPLIER', search?: string,query:any={}) {
-    const parties = await this.prisma.party.findMany({ where: { company_id: companyId, party_type: type, ...(search ? {
+    const parties = await this.prisma.party.findMany({ where: { company_id: companyId, party_type: type, ...(type==='CUSTOMER'?{is_walkin:false}:{}), ...(search ? {
       OR: ['name', 'code', 'phone', 'nickname'].map(field => ({ [field]: { contains: search, mode: 'insensitive' } })),
     } : {}) }, orderBy: [{ name: 'asc' },{id:'asc'}],...page(query) });
     const allocations = await this.prisma.billAllocation.groupBy({ by: ['party_id', 'allocation_type'],
@@ -440,10 +441,16 @@ export class RetailService {
 
   private settleParty(companyId: string, branchId: string, financialYearId: string, userId: string, partyId: string,
     type: 'CUSTOMER' | 'SUPPLIER', dto: ReceivePaymentDto) {
-    return this.prisma.$transaction(tx => this.accountingPostingService.settlePartyBalance(tx, {
+    return this.prisma.$transaction(async tx => {
+      const config=type==='CUSTOMER'&&dto.payment_method==='UPI'?await tx.companyConfiguration.findUnique({where:{company_id:companyId}}):null;
+      const recipient=type==='CUSTOMER'?paymentRecipient(config?.payment_configuration,dto):{};
+      const result=await this.accountingPostingService.settlePartyBalance(tx, {
       company_id: companyId, branch_id: branchId, financial_year_id: financialYearId, user_id: userId, party_id: partyId,
       party_type: type, amount: dto.amount, payment_method: dto.payment_method, date: dto.date ? new Date(dto.date) : new Date(), note: dto.note,
-    }), { timeout: 15000 });
+    });
+      if(type==='CUSTOMER'&&dto.payment_method==='UPI')await tx.voucher.update({where:{id:result.payment_id},data:{receiving_snapshot:recipient}});
+      return result;
+    }, { timeout: 15000 });
   }
   receivePayment(companyId: string, branchId: string, financialYearId: string, userId: string, partyId: string, dto: ReceivePaymentDto) {
     return this.settleParty(companyId, branchId, financialYearId, userId, partyId, 'CUSTOMER', dto);

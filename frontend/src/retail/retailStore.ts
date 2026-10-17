@@ -36,6 +36,7 @@ export interface RetailItem {
 
 export interface BillLineItem {
   new_item?: { client_id: string; name: string; unit_code: string; unit_name?: string; selling_mode: string };
+  gst_rate?: number;
   row_id?: string; unit_id?: string; dimensions?: {length:number; width?:number; height?:number}; serial_ids?: string[]; tax_rate?: number;
   item_id: string;
   variant_id?: string;
@@ -50,6 +51,8 @@ export interface BillLineItem {
   total: number;
 }
 
+export interface ServiceCharge {name:string;amount:number;gst_rate:number;sac?:string}
+export interface CalculatorState {expression:string;history:{expression:string;result:string}[]}
 export interface Customer {
   id: string;
   name: string;
@@ -103,10 +106,14 @@ export function estimateLine(line: BillLineItem) {
 }
 /** One wire shape for drafts, tax previews and confirmed payment. Draft IDs never leave the client. */
 export function billLinePayload(i: BillLineItem) {
-  return {item_id:i.new_item?undefined:i.item_id,new_item:i.new_item,variant_id:i.variant_id,batch_id:i.batch_id,unit_id:i.unit_id,dimensions:i.dimensions,serial_ids:i.serial_ids,modifier_option_ids:i.modifier_option_ids,quantity:i.quantity,rate:i.rate,discount_amount:i.discount_amount};
+  return {item_id:i.new_item?undefined:i.item_id,new_item:i.new_item,variant_id:i.variant_id,batch_id:i.batch_id,unit_id:i.unit_id,dimensions:i.dimensions,serial_ids:i.serial_ids,modifier_option_ids:i.modifier_option_ids,quantity:i.quantity,rate:i.rate,discount_amount:i.discount_amount,gst_rate:i.gst_rate ?? i.tax_rate ?? 0};
 }
 
-interface BillState {
+export interface BillState {
+  customerName:string;setCustomerName:(name:string)=>void;
+  discountMode:'AMOUNT'|'PERCENT';setDiscountMode:(mode:'AMOUNT'|'PERCENT')=>void;
+  serviceCharge:ServiceCharge|null;serviceChargeDismissed:boolean;setServiceCharge:(charge:ServiceCharge|null)=>void;
+  calculator:CalculatorState;setCalculator:(value:CalculatorState)=>void;
   draft_id:string;
   gstWorkflow: boolean;
   setGstWorkflow: (value:boolean) => void;
@@ -133,6 +140,10 @@ interface BillState {
 }
 
 export const useBillStore = create<BillState>((set, get) => ({
+  customerName:'',setCustomerName:(customerName)=>set({customerName}),
+  discountMode:'AMOUNT',setDiscountMode:(discountMode)=>set({discountMode,discount:0}),
+  serviceCharge:null,serviceChargeDismissed:false,setServiceCharge:(serviceCharge)=>set({serviceCharge:serviceCharge?{name:serviceCharge.name,amount:serviceCharge.amount,gst_rate:serviceCharge.gst_rate,sac:serviceCharge.sac}:null,serviceChargeDismissed:!serviceCharge}),
+  calculator:{expression:'',history:[]},setCalculator:(calculator)=>set({calculator}),
   draft_id:createUuid(),
   gstWorkflow: false,
   setGstWorkflow: (gstWorkflow) => set({gstWorkflow}),
@@ -152,7 +163,7 @@ export const useBillStore = create<BillState>((set, get) => ({
   addItem: (item, qty = 1) => {
     if (item.inventory_tracking !== false && item.current_stock <= 0 && item.item_type !== 'SERVICE' && item.selling_mode !== 'SERVICE') return;
     set((state) => {
-      const existing = state.items.find((i) => i.item_id === item.id && !i.variant_id && !i.dimensions && !i.serial_ids?.length);
+      const existing = state.items.find((i) => i.item_id === item.id && (i.gst_rate??i.tax_rate??0)===(item.gst_rate||0) && !i.variant_id && !i.dimensions && !i.serial_ids?.length);
       if (existing) {
         return {
           items: state.items.map((i) =>
@@ -164,15 +175,15 @@ export const useBillStore = create<BillState>((set, get) => ({
       }
       const newItem: BillLineItem = {
         item_id: item.id,
-        row_id: item.id,
+        row_id: createUuid(),
         unit_id: item.primary_unit_id,
-        tax_rate: item.tax_rate || 0,
+        tax_rate: item.gst_rate||0, gst_rate:item.gst_rate||0,
         name: item.name,
         rate: item.selling_price,
         quantity: qty,
         discount_amount: 0,
         unit: item.unit || 'PCS',
-        total: item.selling_price * qty * (1 + (item.tax_rate || 0) / 100),
+        total: item.selling_price * qty * (1+(item.gst_rate||0)/100),
       };
       return { items: [...state.items, newItem] };
     });
@@ -215,15 +226,15 @@ export const useBillStore = create<BillState>((set, get) => ({
   },
 
   getTotal: () => {
-    const subtotal = get().items.reduce((sum, i) => sum + i.total, 0);
-    return Math.max(0, subtotal - get().discount);
+    const state=get(),subtotal=state.items.reduce((sum,i)=>sum+i.total,0)+(state.serviceCharge?state.serviceCharge.amount*(1+state.serviceCharge.gst_rate/100):0);
+    return Math.max(0, subtotal - (state.discountMode==='PERCENT'?subtotal*state.discount/100:state.discount));
   },
 
   getItemCount: () => {
     return get().items.reduce((sum, i) => sum + i.quantity, 0);
   },
 
-  clearBill: () => set({ draft_id:createUuid(),items: [], customer: null, discount: 0, details: newBillDetails(), attachment: null, savedSale: null, gstWorkflow:false }),
+  clearBill: () => set({ customerName:'',discountMode:'AMOUNT',serviceCharge:null,serviceChargeDismissed:false,calculator:{expression:'',history:[]},draft_id:createUuid(),items: [], customer: null, discount: 0, details: newBillDetails(), attachment: null, savedSale: null, gstWorkflow:false }),
 }));
 
 // ── Sale Completion Store ──────────────────────────────
@@ -242,13 +253,19 @@ export const useSaleCompleteStore = create<SaleCompleteState>((set) => ({
 
 // Recover only the unfinished UI draft, scoped to this user/company/branch/year.
 // Financial posting and retries still pass through the server's idempotency path.
-type SavedDraft=Pick<BillState,'draft_id'|'items'|'customer'|'details'|'discount'|'gstWorkflow'>;
+type SavedDraft=Pick<BillState,'draft_id'|'items'|'customer'|'details'|'discount'|'discountMode'|'customerName'|'serviceCharge'|'serviceChargeDismissed'|'calculator'|'gstWorkflow'>;
 let draftScope='',hydratingDraft=false;
 function syncBillDraft(){const scope=workflowScope();if(scope===draftScope)return;hydratingDraft=true;draftScope=scope;
  const saved=readWorkflowDraft<SavedDraft>('bill',scope);
- useBillStore.setState({draft_id:createUuid(),items:[],customer:null,details:newBillDetails(),discount:0,gstWorkflow:false,attachment:null,savedSale:null,...(saved&&Array.isArray(saved.items)&&saved.items.length<=200?saved:{})});
+ useBillStore.setState({customerName:'',discountMode:'AMOUNT',serviceCharge:null,serviceChargeDismissed:false,calculator:{expression:'',history:[]},draft_id:createUuid(),items:[],customer:null,details:newBillDetails(),discount:0,gstWorkflow:false,attachment:null,savedSale:null,...(saved&&Array.isArray(saved.items)&&saved.items.length<=200?saved:{})});
  useSaleCompleteStore.getState().clearCompletedSale();hydratingDraft=false;
 }
 useAuthStore.subscribe(syncBillDraft);
-useBillStore.subscribe(state=>{if(hydratingDraft||!draftScope)return;if(state.savedSale||!state.items.length){clearWorkflowDraft('bill',draftScope);return;}writeWorkflowDraft('bill',{draft_id:state.draft_id,items:state.items,customer:state.customer,details:state.details,discount:state.discount,gstWorkflow:state.gstWorkflow},draftScope);});
+useBillStore.subscribe(state=>{if(hydratingDraft||!draftScope)return;if(state.savedSale||!state.items.length&&!state.customerName&&!state.calculator.expression){clearWorkflowDraft('bill',draftScope);return;}writeWorkflowDraft('bill',{draft_id:state.draft_id,items:state.items,customer:state.customer,details:state.details,discount:state.discount,discountMode:state.discountMode,customerName:state.customerName,serviceCharge:state.serviceCharge,serviceChargeDismissed:state.serviceChargeDismissed,calculator:state.calculator,gstWorkflow:state.gstWorkflow},draftScope);});
 syncBillDraft();
+
+/** Shared quote/post options: percentage resolution is performed by the server. */
+export function billOptionsPayload(state=useBillStore.getState()) {
+ return {...(state.customer?{customer_id:state.customer.id}:{customer_name:state.customerName.trim()||undefined}),
+  ...(state.discountMode==='PERCENT'?{bill_discount_percent:state.discount}:{bill_discount:state.discount}),service_charge:state.serviceCharge?{name:state.serviceCharge.name,amount:state.serviceCharge.amount,gst_rate:state.serviceCharge.gst_rate,sac:state.serviceCharge.sac}:undefined};
+}

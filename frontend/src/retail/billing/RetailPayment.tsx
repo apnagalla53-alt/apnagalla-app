@@ -28,7 +28,7 @@ import {
   Check,
 } from "lucide-react";
 import {
-  billLinePayload,
+  billLinePayload, billOptionsPayload,
   useBillStore,
   useSaleCompleteStore,
   type PaymentSplit,
@@ -46,7 +46,7 @@ const RetailPayment = () => {
   const {
     draft_id,
     items,
-    discount: billDiscount,
+    discount: billDiscount, discountMode, setDiscountMode, customerName, serviceCharge,
     setBillDiscount,
     customer,
     details,
@@ -143,7 +143,7 @@ const RetailPayment = () => {
       customer_id: customer?.id,
       date: details.date,
       payment_splits: [],
-      bill_discount: billDiscount,
+      ...billOptionsPayload(),
     };
     api
       .post("/retail/bills/quote", body)
@@ -163,7 +163,7 @@ const RetailPayment = () => {
     return () => {
       active = false;
     };
-  }, [items, customer?.id, details.date, savedSale, billDiscount]);
+  }, [items, customer?.id, details.date, savedSale, billDiscount, discountMode, serviceCharge]);
 
   useEffect(() => {
     if (!showUdharCustomerSelect) return;
@@ -221,7 +221,7 @@ const RetailPayment = () => {
             payment_splits: (payments || (mode === "Udhar" ? [] : [{method:mode.toUpperCase(),amount:total}])).map(payment=>({...payment,...(payment.method==='UPI'?{receipt_confirmed:upiConfirmed,...(alternate?{received_on_mobile:receivingMobile}:receivingProfile?{receiving_profile_id:receivingProfile}:{})}:{})})),
             total_amount: total,
             discount: items.reduce((acc, i) => acc + i.discount_amount, 0),
-            bill_discount: billDiscount,
+            ...billOptionsPayload(),
             date: details.date,
             due_date: (mode === "Udhar" || (selectedMode === "SPLIT" && splitHasCredit)) ? details.due_date || undefined : undefined,
             note: details.note || undefined,
@@ -241,7 +241,7 @@ const RetailPayment = () => {
         invoice_number: res.data.document_number,
         amount: Number(res.data.grand_total),
         payment_mode: completedMode,
-        customer_name: customer?.name || "Walk-in Customer",
+        customer_name: customer?.name || customerName || "Walk-in Customer",
         items_count: itemCount,
         lines_count: items.length,
         timestamp: new Date(),
@@ -305,7 +305,7 @@ const RetailPayment = () => {
                   invoice_number: savedSale.invoice.document_number,
                   amount: Number(savedSale.invoice.grand_total),
                   payment_mode: savedSale.mode,
-                  customer_name: customer?.name || "Walk-in Customer",
+                  customer_name: customer?.name || customerName || "Walk-in Customer",
                   items_count: itemCount,
                   lines_count: items.length,
                   timestamp: new Date(),
@@ -357,7 +357,7 @@ const RetailPayment = () => {
             letterSpacing: "-0.03em",
           }}
         >
-          ₹{total.toLocaleString("en-IN")}
+          ₹{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
         </div>
         <div
           style={{
@@ -366,18 +366,15 @@ const RetailPayment = () => {
             marginTop: 4,
           }}
         >
-          {items.length} lines · {itemCount} units · {customer?.name || "Walk-in"}
+          {items.length} lines · {itemCount} units · {customer?.name || customerName || "Walk-in"}
         </div>
       </div>
 
       {/* Payment Methods */}
-      <div className="r-section"><TaxBreakdown quote={taxQuote} rates={items.map(i=>Number(i.tax_rate||0))}/></div>
+
       {!savedSale && <div className="r-section r-input-group">
         <label className="r-label" htmlFor="bill-discount">Bill discount (optional)</label>
-        <input id="bill-discount" className="r-input" type="number" min="0" step="0.01"
-          disabled={saving} value={billDiscount || ''} placeholder="₹0"
-          onChange={e => setBillDiscount(Math.max(0, Number(e.target.value) || 0))} inputMode="decimal"/>
-        <p className="r-caption">Applied across the items before tax. The bill total updates after checking prices.</p>
+        <div className="r-discount-control"><input id="bill-discount" className="r-input" type="number" min="0" max={discountMode==='PERCENT'?100:undefined} step="0.01" disabled={saving} value={billDiscount} onChange={e=>setBillDiscount(Number(e.target.value)||0)} inputMode="decimal"/><select className="r-input" aria-label="Discount type" disabled={saving} value={discountMode} onChange={e=>setDiscountMode(e.target.value as 'AMOUNT'|'PERCENT')}><option value="AMOUNT">Amount ₹</option><option value="PERCENT">Percentage %</option></select></div>
       </div>}
       {!savedSale && (
         <div className="r-stitch-payment-method-wrap">
@@ -389,7 +386,7 @@ const RetailPayment = () => {
                 aria-pressed={selectedMode===mode}
                 disabled={saving||quoteLoading||quote===null}
                 onClick={() => {
-                  if (mode === "UDHAR" && !customer) {
+                  if (mode === "UDHAR" && !customer && !customerName.trim()) {
                     setShowUdharCustomerSelect(true);
                     return;
                   }
@@ -417,6 +414,7 @@ const RetailPayment = () => {
         </div>
       )}
 
+      <div className="r-section r-payment-final-summary"><TaxBreakdown quote={taxQuote} rates={[...items.map(i=>Number(i.tax_rate||0)),...(serviceCharge?[serviceCharge.gst_rate]:[])]}/></div>
       {/* ── CASH Flow ─────────────────────────────────── */}
       {selectedMode === "UPI" && quote !== null && !alternate && (
         <div className="r-section">
@@ -533,7 +531,7 @@ const RetailPayment = () => {
               }}
             >
               <span style={{ color: "var(--r-text-secondary)" }}>{ui("Customer")}</span>
-              <span style={{ fontWeight: 600 }}>{customer?.name}</span>
+              <span style={{ fontWeight: 600 }}>{customer?.name||customerName}</span>
             </div>
             <div
               style={{
@@ -570,7 +568,7 @@ const RetailPayment = () => {
                 This Bill
               </span>
               <span style={{ fontWeight: 600 }}>
-                ₹{total.toLocaleString("en-IN")}
+                ₹{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
               </span>
             </div>
             <div
@@ -693,10 +691,10 @@ const RetailPayment = () => {
               <span className="r-label">Customer for Udhar</span>
               <button className="r-btn r-btn--outline r-w-full" id="split-customer-select"
                 disabled={saving || !!savedSale} onClick={() => setShowUdharCustomerSelect(true)}>
-                {customer?.name || ui("Select Customer")}
+                {customer?.name || customerName || ui("Select Customer")}
               </button>
               {customer ? <p className="r-caption">Existing due: ₹{customerBalance.toLocaleString("en-IN")} · After this bill: ₹{(customerBalance + splitRemaining).toLocaleString("en-IN")}</p>
-                : <p className="r-caption">Choose a customer to save the unpaid amount in Khata.</p>}
+                : <p className="r-caption">{customerName?'This new customer will be saved with the bill.':'Choose a customer to save the unpaid amount in Khata.'}</p>}
             </div>
           )}
           {!validSplitAmounts && <p className="r-caption" role="alert">Enter non-negative amounts with up to two decimal places.</p>}
@@ -774,7 +772,7 @@ const RetailPayment = () => {
               className="r-btn r-btn--primary-lg"
               onClick={() => handleCompleteSale("Udhar")}
               id="save-as-udhar"
-              disabled={saving || quoteLoading || quote === null || !customer}
+              disabled={saving || quoteLoading || quote === null || !customer && !customerName.trim()}
               style={{ background: "var(--r-warning)" }}
             >
               {saving
@@ -803,7 +801,7 @@ const RetailPayment = () => {
                 quote === null ||
                 (!savedSale &&
                   (!validSplitAmounts || splitPaidPaise > totalPaise || splitUPIAmt>0 && !upiConfirmed ||
-                    (splitRemaining > 0 && (!splitUdhar || !customer))))
+                    (splitRemaining > 0 && (!splitUdhar || !customer && !customerName.trim()))))
               }
               id="complete-sale-split"
             >

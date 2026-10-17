@@ -1,4 +1,4 @@
-import { IsBoolean, IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, MaxLength, MinLength, Matches } from 'class-validator';
+import { IsBoolean, IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested, ArrayMinSize, ArrayMaxSize, Max, MaxLength, MinLength, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PurchaseDimensionsDto } from './retail-purchase.dto';
 export class QuickBillItemDto {
@@ -8,7 +8,14 @@ export class QuickBillItemDto {
   @IsOptional() @IsString() @MinLength(1) @MaxLength(100) unit_name?: string;
   @IsIn(['PIECE','WEIGHT','LENGTH']) selling_mode: string;
 }
+export class RetailServiceChargeDto {
+  @IsString() @MinLength(1) @MaxLength(80) name: string;
+  @IsNumber() @Min(0.01) @Max(999999999) amount: number;
+  @IsOptional() @IsNumber() @Min(0) @Max(100) gst_rate?: number;
+  @IsOptional() @IsString() @Matches(/^\d{6}$/) sac?: string;
+}
 export class RetailBillLineDto {
+  @IsOptional() @IsNumber() @Min(0) @Max(100) gst_rate?: number;
   @IsOptional() @IsUUID() item_id?: string;
   @IsOptional() @ValidateNested() @Type(()=>QuickBillItemDto) new_item?: QuickBillItemDto;
   @IsNumber() @Min(0.000001) quantity: number;
@@ -30,6 +37,9 @@ export class RetailPaymentSplitDto {
   @IsNumber() @Min(0) amount: number;
 }
 export class RetailBillDto {
+  @IsOptional() @IsString() @MaxLength(255) customer_name?: string;
+  @IsOptional() @ValidateNested() @Type(() => RetailServiceChargeDto) service_charge?: RetailServiceChargeDto;
+  @IsOptional() @IsNumber() @Min(0) @Max(100) bill_discount_percent?: number;
   @IsOptional() @IsNumber() @Min(0) bill_discount?:number;
   @IsArray() @ArrayMinSize(1) @ArrayMaxSize(200) @ValidateNested({ each: true }) @Type(() => RetailBillLineDto) items: RetailBillLineDto[];
   @IsOptional() @IsUUID() customer_id?: string;
