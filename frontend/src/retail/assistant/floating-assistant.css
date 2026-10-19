@@ -1,7 +1,7 @@
 .retail-app.retail-stitch .r-assistant-fab {
   position: fixed;
   right: max(16px, calc((100vw - var(--r-max-width)) / 2 + 16px));
-  bottom: calc(var(--r-bottom-nav-height) + max(80px, 6rem) + 16px + env(safe-area-inset-bottom));
+  bottom: calc(var(--r-bottom-nav-height) + 12px + env(safe-area-inset-bottom));
   z-index: 95;
   display: grid;
   place-items: center;
@@ -16,6 +16,16 @@
   cursor: pointer;
 }
 .r-assistant-fab:focus-visible { outline: 3px solid var(--ag-info); outline-offset: 3px; }
+/* Keep the launcher low; action bars make a slot beside their controls instead of lifting it. */
+.retail-app.retail-stitch :is(.r-sticky-footer,.r-sticky-bar,.r-bottom-action,.r-sticky-bottom,.bottom-sticky-bar,.r-mobile-sticky) { padding-inline-end:88px; }
+@media(max-width:600px) {
+  .retail-app.retail-stitch .r-stitch-bill-layout #billing-footer { gap:8px; }
+  .retail-app.retail-stitch #billing-footer .r-counter-total { min-width:0;overflow-wrap:anywhere; }
+  .retail-app.retail-stitch .r-stitch-bill-layout #pay-btn { min-width:0;flex:1.2;padding-inline:8px;font-size:14px;overflow-wrap:anywhere; }
+}
+.retail-app.retail-stitch[data-keyboard='open'] .r-assistant-fab { bottom:calc(12px + env(safe-area-inset-bottom)); }
+.retail-app.retail-stitch[data-keyboard='open'] .r-entry-footer { bottom:0; }
+@media print { .retail-app.retail-stitch :is(.r-assistant-fab,.r-assistant-panel) { display:none; } }
 .retail-app.retail-stitch .r-assistant-panel {
   position: fixed;
   inset: auto max(12px, calc((100vw - var(--r-max-width)) / 2 + 12px)) calc(90px + env(safe-area-inset-bottom)) auto;

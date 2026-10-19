@@ -1012,5 +1012,13 @@
   "Search an item or type a new one. Setup can wait.": "सामान खोजें या नया नाम लिखें। बाकी जानकारी बाद में जोड़ें।",
   "Search bill items": "बिल के लिए सामान खोजें",
   "Search item name or SKU": "सामान का नाम या कोड खोजें",
-  "Search item / barcode": "सामान या बारकोड खोजें"
+  "Search item / barcode": "सामान या बारकोड खोजें",
+  "Choose contact": "संपर्क चुनें",
+  "Opening contacts…": "संपर्क खुल रहे हैं…",
+  "Choose mobile number": "मोबाइल नंबर चुनें",
+  "Select a number": "एक नंबर चुनें",
+  "No phone number was shared. Enter it manually.": "कोई फ़ोन नंबर साझा नहीं हुआ। नंबर खुद भरें।",
+  "Could not open contacts. You can enter the number manually.": "संपर्क नहीं खुल सके। नंबर खुद भर सकते हैं।",
+  "More details (optional)": "अन्य जानकारी (वैकल्पिक)",
+  "Old udhaar before using Apna Galla": "Apna Galla शुरू करने से पहले का बकाया उधार"
 }
