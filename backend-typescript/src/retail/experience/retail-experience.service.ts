@@ -60,7 +60,7 @@ export class RetailExperienceService {
     ] = await Promise.all([
       this.db.organization.findUniqueOrThrow({
         where: { id: user.organization_id },
-        select: { business_type: true },
+        select: { business_type: true, additional_business_types: true },
       }),
       this.entitlements.resolve(user.organization_id, this.db, user.company_id),
       can('sales.read')
@@ -91,7 +91,7 @@ export class RetailExperienceService {
           })
         : Promise.resolve(null),
     ]);
-    const preset = presetForBusiness(organization.business_type),
+    const preset = presetForBusiness(organization.business_type,organization.additional_business_types),
       feature = (code: string) =>
         effective.features.some((f) => f.code === code && f.enabled),
       maturity =

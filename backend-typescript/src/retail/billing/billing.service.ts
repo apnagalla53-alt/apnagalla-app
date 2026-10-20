@@ -39,25 +39,26 @@ export class BillingService {
     for(const line of dto.items){
       if(!!line.item_id===!!line.new_item)throw new BadRequestException('Each line needs one existing item or one new item candidate');
       if(!line.new_item){result.push(line);continue;}
-      const candidate=line.new_item, preset=RETAIL_UNITS.find(u=>u.code===candidate.unit_code),mode=preset?.selling_mode||candidate.selling_mode;
+      const candidate=line.new_item,service=candidate.item_type==='SERVICE', preset=RETAIL_UNITS.find(u=>u.code===candidate.unit_code),mode=preset?.selling_mode||candidate.selling_mode;
       if(!['PIECE','WEIGHT','LENGTH'].includes(mode)||mode!==candidate.selling_mode)throw new BadRequestException('Choose a compatible selling unit');
-      if(!candidate.name.trim()||mode==='PIECE'&&!Number.isInteger(line.quantity))throw new BadRequestException('Enter an item name and valid quantity');
+      if(service&&mode!=='PIECE')throw new BadRequestException('Service lines use job, hour or another count unit');
+      if(!candidate.name.trim()||!service&&mode==='PIECE'&&!Number.isInteger(line.quantity))throw new BadRequestException('Enter an item name and valid quantity');
       if(line.unit_id||line.variant_id||line.batch_id||line.serial_ids?.length||line.modifier_option_ids?.length||line.dimensions)throw new BadRequestException('New bill items cannot contain configured item options');
       const company=await this.prisma.company.findUniqueOrThrow({where:{id:companyId},select:{organization_id:true}});
       if(mode!=='PIECE'){
         const access=await this.entitlements.resolve(company.organization_id,this.prisma,companyId);
         if(!access.features.some(f=>f.code===mode&&f.enabled))throw new ForbiddenException('Your plan does not enable '+mode.toLowerCase()+' selling');
       }
-      const fingerprint=JSON.stringify([candidate.name.trim(),candidate.unit_code,mode,line.rate]),previous=resolved.get(candidate.client_id);
+      const fingerprint=JSON.stringify([candidate.name.trim(),candidate.unit_code,mode,line.rate,service]),previous=resolved.get(candidate.client_id);
       if(previous&&previous.fingerprint!==fingerprint)throw new BadRequestException('A draft item has conflicting details');
       let item=previous?.item;
       if(!item){
         const sku='QBI-'+candidate.client_id;
         const saved=await this.prisma.item.findFirst({where:{company_id:companyId,sku},include:{primary_unit:true}});
         if(saved){
-          if(!preview||saved.name!==candidate.name.trim()||saved.primary_unit.code!==candidate.unit_code||Number(saved.default_sale_rate)!==line.rate||saved.has_variants||saved.track_batch||saved.track_serial||saved.is_bundle)throw new BadRequestException('This draft item was already saved. Search for it or retry the original bill.');
+          if(!preview||(saved.item_type==='SERVICE')!==service||saved.name!==candidate.name.trim()||saved.primary_unit.code!==candidate.unit_code||Number(saved.default_sale_rate)!==line.rate||saved.has_variants||saved.track_batch||saved.track_serial||saved.is_bundle)throw new BadRequestException('This draft item was already saved. Search for it or retry the original bill.');
           item=saved; // A response-lost payment can quote again, then replay its original idempotent bill request.
-        } else item=await this.catalog.createItem(companyId,userId,'',branchId,{name:candidate.name.trim(),sku,selling_price:line.rate,unit_code:candidate.unit_code,unit_name:candidate.unit_name,selling_mode:mode,inventory_tracking:false});
+        } else item=await this.catalog.createItem(companyId,userId,'',branchId,{name:candidate.name.trim(),sku,selling_price:line.rate,unit_code:candidate.unit_code,unit_name:candidate.unit_name,selling_mode:service?'SERVICE':mode,inventory_tracking:false});
         resolved.set(candidate.client_id,{fingerprint,item});
       }
       const {new_item,...rest}=line;result.push({...rest,item_id:item.id,unit_id:item.primary_unit_id});

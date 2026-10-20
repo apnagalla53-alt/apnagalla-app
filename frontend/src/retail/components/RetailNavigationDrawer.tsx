@@ -27,8 +27,8 @@ export default function RetailNavigationDrawer() {
   const location = useLocation();
   const BrandTitle = location.pathname === '/retail/home' ? 'h1' : 'div';
   const features = access.data ? new Set(access.data.entitlements.features.filter(feature=>feature.enabled).map(feature=>feature.code)) : null;
-  const navigation = visibleSimpleDrawer({ user, features });
-  const full=visibleDrawerNavigation({user,features});
+  const navigation = visibleSimpleDrawer({ user, features,serviceCalculator:access.data?.business_preset?.serviceCalculator });
+  const full=visibleDrawerNavigation({user,features,serviceCalculator:access.data?.business_preset?.serviceCalculator});
   const synonyms:Record<string,string>={upi:'qr bank payment receiving account',galla:'hisaab hisab cash daily',customers:'khata udhar hisaab hisab customer',receive:'jama vasooli payment received',printer:'invoice bill print receipt',business:'shop gst registration',language:'hindi english bhasha',security:'password login'};
   const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const found=[...new Map([...navigation,...full.quick,...full.groups.flatMap(g=>g.children)].map(i=>[i.route,i])).values()].filter(i=>terms.every(t=>(i.label+' '+i.route+' '+(synonyms[i.id]||'')).toLowerCase().includes(t)));

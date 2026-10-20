@@ -20,6 +20,7 @@ export interface DrawerNavItem {
   features?: readonly string[];
   anyFeature?: readonly string[];
   ownerOnly?: boolean;
+  businessCapability?: 'serviceCalculator';
   activePattern?: RegExp;
   elementId?: string;
 }
@@ -32,6 +33,7 @@ export interface DrawerNavGroup {
 export interface DrawerAccess {
   user: User | null;
   features: ReadonlySet<string> | null;
+  serviceCalculator?: boolean;
 }
 const retail = ['RETAIL_POS'] as const;
 const inventory = ['RETAIL_POS', 'INVENTORY'] as const;
@@ -52,6 +54,7 @@ export const drawerQuickLinks: readonly DrawerNavItem[] = [
 
 export const drawerGroups: readonly DrawerNavGroup[] = [
   { id: 'sell', label: 'Sell & Billing', icon: Receipt, children: [
+    { id: 'service-calculator', label: 'Service Calculator', route: '/retail/service-calculator', icon: Calculator, permissions: ['sales.write','inventory.read'], features: inventory, businessCapability: 'serviceCalculator' },
     { id: 'quick-sale', label: 'Quick Bill', route: '/retail/quick-sale', icon: Zap, permissions: ['sales.write'], features: retail },
     { id: 'udhar', label: 'Udhar Sale', route: '/retail/udhar', icon: Wallet, permissions: ['sales.write', 'accounting.read'], features: khata, elementId: 'qa-udhar' },
     { id: 'bills', label: 'Bill History', route: '/retail/bills', icon: History, permissions: ['sales.read'], features: retail },
@@ -109,6 +112,7 @@ export const drawerGroups: readonly DrawerNavGroup[] = [
 
 export function canShowDrawerItem(item: DrawerNavItem, access: DrawerAccess): boolean {
   if (!access.user || access.user.is_platform) return false;
+  if(item.businessCapability==='serviceCalculator'&&!access.serviceCalculator)return false;
   const owner = ['ADMIN', 'OWNER', 'TENANT_ADMIN'].includes(access.user.role || '');
   if (item.ownerOnly && !owner) return false;
   if (!owner && item.permissions?.some(permission => !access.user?.permissions?.includes(permission))) return false;
@@ -129,7 +133,7 @@ export function visibleDrawerNavigation(access: DrawerAccess) {
 // retained for permission-filtered settings pages and saved quick shortcuts.
 const findTool = (id: string) => [...drawerQuickLinks, ...drawerGroups.flatMap(group => group.children)].find(item => item.id === id)!;
 export const simpleDrawerItems: readonly DrawerNavItem[] = [
-  findTool('home'), findTool('quick-sale'), findTool('galla'),
+  findTool('home'), findTool('quick-sale'), findTool('service-calculator'), findTool('galla'),
   { ...findTool('bills'), label: 'Bills / Sales' },
   { ...findTool('purchases'), label: 'Purchases / Buy Stock' },
   { ...findTool('items'), id: 'inventory', label: 'Inventory' },

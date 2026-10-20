@@ -274,6 +274,7 @@ function App() {
           <Route path="receive-payment" element={<RetailReceivePayment />} />
           <Route path="pay-supplier" element={<RetailPaySupplier />} />
           <Route path="quick-sale" element={<RetailNewBill quick />} />
+          <Route path="service-calculator" element={<RetailNewBill quick service />} />
           <Route path="amount-sale" element={<RetailAmountSale />} />
           <Route path="udhar" element={<RetailAmountSale udhar />} />
           <Route path="more" element={<RetailMore />} />

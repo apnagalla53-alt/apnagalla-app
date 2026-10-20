@@ -2,6 +2,7 @@ import { IsBoolean, IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString,
 import { Type } from 'class-transformer';
 import { PurchaseDimensionsDto } from './retail-purchase.dto';
 export class QuickBillItemDto {
+  @IsOptional() @IsIn(['STOCK_ITEM','SERVICE']) item_type?: 'STOCK_ITEM'|'SERVICE';
   @IsUUID() client_id: string;
   @IsString() @MinLength(1) @MaxLength(255) name: string;
   @IsString() @Matches(/^[A-Z][A-Z0-9_]{0,19}$/) unit_code: string;

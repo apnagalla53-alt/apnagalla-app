@@ -742,7 +742,7 @@ export class PosService {
         if (price.taxableValue.lt(0)) throw new BadRequestException('Discount exceeds the line value');
         const tax = price.taxableValue.mul(saleGstRate(line,item.tax_class?.tax_rate)).div(100).toDecimalPlaces(2);
         const value = price.taxableValue.plus(tax);
-        lines.push({ item_id: item.id, taxable_value: price.taxableValue.toNumber(), tax_amount: tax.toNumber(), line_total: value.toNumber(), free_quantity: price.freeQuantity.toNumber() });
+        lines.push({ item_id: item.id, before_bill_discount: price.taxableValue.toNumber(), taxable_value: price.taxableValue.toNumber(), tax_amount: tax.toNumber(), line_total: value.toNumber(), free_quantity: price.freeQuantity.toNumber() });
         total = total.plus(value);
       }
       const discount=billDiscountValue(lines,dto);

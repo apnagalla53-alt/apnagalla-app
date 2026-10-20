@@ -44,7 +44,7 @@ const RetailShell = () => {
   const user = useAuthStore((s) => s.user);
   const access=useRetailEntitlements();
   const features=access.data?new Set(access.data.entitlements.features.filter(f=>f.enabled).map(f=>f.code)):null;
-  const allowedNav=new Set(visibleSimpleDrawer({user,features}).map(item=>item.id));
+  const allowedNav=new Set(visibleSimpleDrawer({user,features,serviceCalculator:access.data?.business_preset?.serviceCalculator}).map(item=>item.id));
   const canItems=allowedNav.has('inventory'),canBill=allowedNav.has('quick-sale'),canKhata=allowedNav.has('khata');
   const tenant = useAuthStore((s) => s.tenantContext);
   const location = useLocation();

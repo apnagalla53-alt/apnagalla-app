@@ -4,6 +4,7 @@ export type CategoryPreset = {
   name: string;
   units: string[];
   capabilities?: string[];
+  family?: string;
 };
 export type BusinessPreset = {
   family: string;
@@ -25,6 +26,9 @@ export type BusinessPreset = {
   terminology: { item: string; supplier: string };
   homePriority: string[];
   recommendationPriority: string[];
+  serviceCalculator?: boolean;
+  serviceSuggestions?: string[];
+  additionalBusinessTypes?: string[];
 };
 type Definition = {
   units: string[];
@@ -164,7 +168,7 @@ const definitions: Record<string, Definition> = {
   FOOTWEAR: {
     units: ['PAIR', 'PCS', 'BOX'],
     categories: [
-      c('Footwear', ['PAIR', 'BOX'], ['VARIANTS']),
+      c('Footwear', ['PAIR', 'PCS', 'BOX'], ['VARIANTS']),
       c('Shoe care', ['PCS', 'BOTTLE']),
     ],
     variants: 'Does this item have different sizes?',
@@ -204,6 +208,12 @@ const definitions: Record<string, Definition> = {
       c('Oil & Maintenance', ['LTR', 'BOTTLE', 'PCS']),
     ],
   },
+  AUTOMOTIVE: {
+    units: ['PCS', 'BOTTLE', 'PACK', 'SET', 'PAIR', 'LTR', 'ML', 'BOX', 'JOB', 'HOUR'],
+    categories: [c('Spare parts', ['PCS', 'SET', 'PAIR']), c('Oil & Maintenance', ['LTR', 'BOTTLE', 'PCS']), c('Services', ['JOB', 'HOUR'], ['SERVICES'])],
+    actions: ['service-calculator', 'quick-sale', 'purchases', 'khata', 'galla'],
+    priority: ['LOW_STOCK', 'SUPPLIER_DUE', 'CUSTOMER_DUE', 'NEED_LIST_PENDING'],
+  },
   OTHER: generic,
 };
 const aliases: Record<string, string> = {
@@ -238,7 +248,12 @@ const aliases: Record<string, string> = {
   AUTO_SPARES: 'AUTO_PARTS',
   TWO_WHEELER_PARTS: 'AUTO_PARTS',
   CAR_ACCESSORIES: 'AUTO_PARTS',
-  AUTOMOTIVE: 'AUTO_PARTS',
+  AUTOMOBILE_REPAIR: 'AUTOMOTIVE',
+  BIKE_SERVICE: 'AUTOMOTIVE',
+  AUTO_REPAIR: 'AUTOMOTIVE',
+  AUTO_TWO_WHEELER_REPAIR: 'AUTOMOTIVE',
+  AUTOMOBILE_REPAIR_BIKE_SERVICE: 'AUTOMOTIVE',
+  SPARE_PARTS: 'AUTO_PARTS',
   MEAT: 'PRODUCE',
 };
 export function businessPreset(
@@ -246,11 +261,13 @@ export function businessPreset(
   displayName?: string,
   capabilities: readonly string[] = [],
 ): BusinessPreset {
-  const stable = (code || 'OTHER').trim().toUpperCase(),
+  const stable = (code || 'OTHER').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'_').replace(/^_|_$/g,''),
     key = aliases[stable] || stable,
     d = definitions[key] || generic;
   return {
     family: key,
+    serviceCalculator: key === 'AUTOMOTIVE',
+    serviceSuggestions: key === 'AUTOMOTIVE' ? ['General Service', 'Oil Change Labour', 'Washing', 'Chain Adjustment', 'Brake Work', 'Clutch Adjustment', 'Other Service'] : [],
     intakeOrder:
       key === 'CLOTHING' || key === 'FOOTWEAR'
         ? ['EXCEL', 'SUPPLIER_BILL_IMAGE', 'SHARED_DOCUMENT', 'VOICE']

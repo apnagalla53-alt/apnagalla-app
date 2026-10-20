@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ReferralService } from './referral.service';
 import { BUSINESS_TYPES,businessTypeCatalog } from './business-types';
 import { normalizeIndianPhone } from './phone';
+import { businessSelection } from './business-selection';
 
 @Injectable()
 export class OnboardingService {
@@ -36,7 +37,7 @@ export class OnboardingService {
       return company&&branch?{organization_id:org.id,organization_name:org.name,company_id:company.id,company_name:company.trade_name||org.name,branch_id:branch.id,branch_name:branch.name,financial_year_id:fy?.id,financial_year_label:fy?.label}:null;
     }):null;
     return { state:user.onboarding_state, owner_name:user.display_name==='New shop owner'?'':user.display_name,phone:contact,mobile_verified:!!user.phone_verified_at&&contact===user.phone_e164,email:user.email,data:user.onboarding_data,
-      business:org?{id:org.id,name:org.name,company_id:org.companies[0]?.id,business_type:org.business_type,address:org.companies[0]?.address,city:org.companies[0]?.city,state:org.companies[0]?.state,postal_code:org.companies[0]?.postal_code}:null,
+      business:org?{id:org.id,name:org.name,company_id:org.companies[0]?.id,business_type:org.business_type,additional_business_types:org.additional_business_types,address:org.companies[0]?.address,city:org.companies[0]?.city,state:org.companies[0]?.state,postal_code:org.companies[0]?.postal_code}:null,
       subscription:org?.subscription||null,tenant_context:tenantContext,access_active:accessActive,plans:plans.sort((a,b)=>['STARTER','SMART','PRO'].indexOf(a.code)-['STARTER','SMART','PRO'].indexOf(b.code)),trial:{trial_enabled:policy.trial_enabled,trial_days:policy.trial_days,trial_plan:policy.trial_plan},business_types:businessTypeCatalog(),payment_provider:{configured:false},import_formats:['CSV','TSV','XLSX','XLS','ODS','JSON','XML']};
   }
   async owner(userId: string, name: string) {
@@ -55,7 +56,8 @@ export class OnboardingService {
   async profile(userId:string,dto:any){
     const owner=String(dto.owner_name||'').trim(),name=String(dto.name||'').trim(),address=String(dto.address||'').trim();
     if(!owner||owner.length>255||!name||name.length>255||!address||address.length>1000)throw new BadRequestException('Enter your owner name, shop name and address.');
-    const mobile=normalizeIndianPhone(dto.mobile),type=BUSINESS_TYPES.find(type=>type[0]===dto.business_type);
+    const selected=businessSelection(dto.business_type,dto.additional_business_types);
+    const mobile=normalizeIndianPhone(dto.mobile),type=BUSINESS_TYPES.find(type=>type[0]===selected.business_type);
     if(!type)throw new BadRequestException('Choose a supported business type.');
     const custom=type[0]==='OTHER'?String(dto.custom_business_type||'').trim():'';
     if(custom.length>100)throw new BadRequestException('Describe your business in 100 characters or fewer.');
@@ -74,16 +76,17 @@ export class OnboardingService {
         if(!['OWNER_PROFILE_REQUIRED','BUSINESS_PROFILE_REQUIRED'].includes(user.onboarding_state))throw new BadRequestException('Resume your current setup step.');
         const result=await this.provisioning.provisionTenant({organizationName:name,adminName:owner,adminEmail:user.email||undefined,phone:mobile,adminPassword:randomBytes(24).toString('hex'),businessType:type[0],address,city:dto.city?.trim(),state:dto.state?.trim(),postalCode:dto.postal_code?.trim()},undefined,userId,async(inner,context)=>this.referrals.attachBusiness(inner,userId,context.organization.id));
         orgId=result.organization.id;companyId=result.company.id;
+        await tx.organization.update({where:{id:orgId},data:{additional_business_types:selected.additional_business_types}});
       }else{
         const memberships=await tx.userRole.findMany({where:{user_id:userId,company_id:{not:null},role:{name:{in:['OWNER','TENANT_ADMIN','ADMIN']}}}});
         const company=await tx.company.findFirst({where:{organization_id:orgId,id:{in:memberships.map(m=>m.company_id!)},organization:{is_active:true,archived_at:null}}});
         if(!company)throw new ForbiddenException('Business owner access is required.');companyId=company.id;
-        await tx.organization.update({where:{id:orgId},data:{name,business_type:type[0]}});
+        await tx.organization.update({where:{id:orgId},data:{name,...selected}});
         await tx.company.update({where:{id:companyId},data:{trade_name:name,legal_name:name,phone:mobile,address,...(dto.city!==undefined?{city:dto.city.trim()}:{}),...(dto.state!==undefined?{state:dto.state.trim()}:{}),...(dto.postal_code!==undefined?{postal_code:dto.postal_code.trim()}: {})}});
       }
-      const profile={owner_name:owner,name,mobile,business_type:type[0],custom_business_type:custom,address,city:dto.city?.trim(),state:dto.state?.trim(),postal_code:dto.postal_code?.trim()};
-      await tx.user.update({where:{id:userId},data:{display_name:owner,phone:mobile,onboarding_data:{...(user.onboarding_data as any),business_type:type[0],custom_business_type:custom,suggested_features:type[3],profile:JSON.parse(JSON.stringify(profile)),...(dto.latitude!=null?{location:{latitude:dto.latitude,longitude:dto.longitude}}:{})}}});
-      await tx.auditLog.create({data:{company_id:companyId,user_id:userId,action:user.organization_id?'BUSINESS_ONBOARDING_UPDATED':'BUSINESS_ONBOARDING_CREATED',details:JSON.stringify({business_type:type[0],mobile_verified:!!user.phone_verified_at&&user.phone_e164===mobile})}});
+      const profile={owner_name:owner,name,mobile,...selected,custom_business_type:custom,address,city:dto.city?.trim(),state:dto.state?.trim(),postal_code:dto.postal_code?.trim()};
+      await tx.user.update({where:{id:userId},data:{display_name:owner,phone:mobile,onboarding_data:{...(user.onboarding_data as any),...selected,custom_business_type:custom,suggested_features:type[3],profile:JSON.parse(JSON.stringify(profile)),...(dto.latitude!=null?{location:{latitude:dto.latitude,longitude:dto.longitude}}:{})}}});
+      await tx.auditLog.create({data:{company_id:companyId,user_id:userId,action:user.organization_id?'BUSINESS_ONBOARDING_UPDATED':'BUSINESS_ONBOARDING_CREATED',details:JSON.stringify({...selected,mobile_verified:!!user.phone_verified_at&&user.phone_e164===mobile})}});
     }));
     return this.requestActivation(userId);
   }

@@ -1,3 +1,4 @@
+import {useBusinessPreset} from './experience/useBusinessPreset';
 import UpiAccountBreakdown from './payments/UpiAccountBreakdown';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ import './experience/experience-layout.css';
 const shopDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 export default function RetailHome() {
  useUiLanguage();
+ const businessPreset=useBusinessPreset();
  const navigate=useNavigate(),user=useAuthStore(s=>s.user),tenant=useAuthStore(s=>s.tenantContext),access=useRetailEntitlements(),quick=useQuickAccess();
  const [retry,setRetry]=useState(0),[editing,setEditing]=useState(false),[hidden,setHidden]=useState(false),[question,setQuestion]=useState('');
  const experience=useHomeExperience(retry),data=experience.data,isNew=data?.maturity==='NEW';
@@ -51,6 +53,7 @@ export default function RetailHome() {
  const makeBill=()=>navigate('/retail/quick-sale');
  const actions=<>
    <section aria-label={ui('Shop actions')} className="xp-action-grid">
+    {data?.can.sell&&can('inventory.read')&&businessPreset.serviceCalculator&&<PrimaryActionCard id="qa-service-workspace" title="Service Calculator" description="Service charges + spare parts in one bill" Icon={Receipt} onClick={()=>navigate('/retail/service-calculator')}/>}
     {data?.can.sell&&<PrimaryActionCard id="qa-new-bill" title={isNew?'Make First Bill':'Quick Bill'} description={isNew?'Start billing in seconds. No setup needed.':'Choose items, then collect payment.'} Icon={Receipt} onClick={makeBill}/>}
     {data?.can.buy&&<PrimaryActionCard id="qa-add-purchase" title="Buy Stock" description="Add a purchase and manage stock." Icon={ShoppingCart} tone="warning" onClick={()=>navigate('/retail/purchases/new')}/>}
     {isNew&&data?.can.manageItems&&<PrimaryActionCard title="Add Many Items" description="Add items together or import a list." Icon={PackagePlus} tone="info" onClick={()=>navigate('/retail/items/bulk')}/>}

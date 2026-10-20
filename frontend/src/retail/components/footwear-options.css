@@ -1,0 +1,14 @@
+.retail-app .r-footwear-chips {display:flex;flex-wrap:wrap;gap:8px;}
+.retail-app .r-footwear-chips button {min-height:44px;min-width:44px;}
+.retail-app .r-footwear-chips button[aria-pressed='true'] {background:var(--r-primary);color:var(--r-surface);}
+.retail-app .r-footwear-custom {display:flex;gap:8px;margin:12px 0;}
+.retail-app .r-footwear-custom input {min-width:0;flex:1;}
+.retail-app .r-footwear-custom button {flex:0 0 auto;}
+.retail-app .r-footwear-setup>p {margin:8px 0;}
+
+.retail-app .r-footwear-setup > .r-form-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+.retail-app .r-footwear-setup > .r-form-grid button[aria-pressed='true'] {background:var(--r-primary-light);color:var(--r-primary-text);}
+.retail-app .r-stitch-service-calculator .r-bill-item-info .r-btn--sm {color:var(--r-text);}
+
+.retail-app .r-stitch-service-calculator .r-page-header-action:empty {display:none;}
+.retail-app .r-stitch-service-calculator .r-page-header h1 {font-size:clamp(17px,4vw,24px);}

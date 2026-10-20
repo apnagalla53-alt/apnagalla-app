@@ -1,3 +1,7 @@
+import ServiceBillContext from './ServiceBillContext';
+import {useBusinessPreset} from '../experience/useBusinessPreset';
+import {useRetailEntitlements} from '../subscription/useRetailEntitlements';
+import '../components/footwear-options.css';
 import BillCalculator from './BillCalculator';
 import BillCustomerInput from './BillCustomerInput';
 import ServiceChargeEditor from './ServiceChargeEditor';
@@ -17,7 +21,7 @@ import {
  * The MOST IMPORTANT screen. Must feel extremely fast.
  * Search/scan → Add items → Qty controls → Sticky total → PAY
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useBillStore, useSaleCompleteStore } from "../retailStore";
 import { useBillingPreferences } from '../settings/useBillingPreferences';
@@ -44,8 +48,12 @@ import {
   Receipt,
 } from "lucide-react";
 
-const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
+const EmbeddedPayment=lazy(()=>import('./RetailPayment'));
+
+const RetailNewBill = ({ quick = true, service=false }: { quick?: boolean;service?:boolean }) => {
   useUiLanguage();
+  const businessPreset=useBusinessPreset(),access=useRetailEntitlements();
+  const [serviceName,setServiceName]=useState(''),[serviceKey,setServiceKey]=useState(0);
   const navigate = useNavigate();
   const user=useAuthStore(state=>state.user);
   const canReadCatalog=['OWNER','ADMIN','TENANT_ADMIN'].includes(user?.role||'')||!!user?.permissions.includes('inventory.read');
@@ -285,16 +293,18 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
   const [manualKey,setManualKey]=useState(0),[manualName,setManualName]=useState('');
   const resetManual=()=>{setManualName('');setManualKey(n=>n+1);};
 
+  if(service&&!access.data)return access.error?<section className="r-section" role="alert"><p>{access.error}</p><button type="button" className="r-btn" onClick={()=>void access.refresh(true)}>Try Again</button></section>:<LoadingState label="Loading service workspace…"/>;
+  if(service&&!businessPreset.serviceCalculator)return <Navigate to="/retail/quick-sale" replace/>;
   if (quick&&!canReadCatalog) return <Navigate to="/retail/amount-sale" replace />;
-  if (savedSale) return <Navigate to="/retail/payment" replace />;
+  if (!service&&savedSale) return <Navigate to="/retail/payment" replace />;
 
   return (
-    <div className="r-stitch-bill-layout" style={{paddingBottom:140}}>
+    <div className={'r-stitch-bill-layout'+(service?' r-stitch-service-calculator':'')} style={{paddingBottom:140}}>
       {/* Header */}
       <StitchHeader className="r-page-header">
-        <h1>{ui(gstRequested ? 'New GST Bill' : quick ? 'Quick Bill' : 'New Bill')}</h1>
+        <h1>{ui(service?'Service Calculator':gstRequested ? 'New GST Bill' : quick ? 'Quick Bill' : 'New Bill')}</h1>
         <div className="r-page-header-action">
-          {billItems.length > 0 && (
+          {billItems.length > 0 && !service && (
             <button
               className="r-btn r-btn--ghost r-btn--sm"
               onClick={async () => {
@@ -321,6 +331,7 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
       </StitchHeader>
       {gstRequested&&<p className="r-caption">Enter the applicable GST percentage before saving. Complete Business Details and item HSN/SAC for a GST invoice.</p>}
       {customerSelector}
+      {service&&<ServiceBillContext onServiceName={name=>{setServiceName(name);setServiceKey(n=>n+1);}}/>}
       {!quick&&<>
       <div className="r-section r-search-filter">
         <div className="r-search-bar r-bill-search">
@@ -421,8 +432,9 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
       </section>}
       </>}
       {quickItem&&<QuickCreateItemSheet name={unknownBarcode?'':searchQuery.trim()} barcode={unknownBarcode} onClose={()=>setQuickItem(false)} onCreated={({item,quantity})=>{handleAddItem(item,quantity);setQuickItem(false);setUnknownBarcode(undefined);}}/>}
-      {editingCandidate&&<Sheet open onClose={()=>setEditingCandidate(null)} title="Edit bill item"><QuickBillCandidate name={editingCandidate.name} existing={editingCandidate} onAdded={()=>setEditingCandidate(null)}/></Sheet>}
-      {quick&&<div className="r-section r-quick-entry-section"><div className="r-quick-entry-heading"><h2>Quick item</h2><BillCalculator/></div><QuickBillCandidate key={manualKey} name={manualName} compact onAdded={resetManual} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);resetManual();}}/><button type="button" className="r-btn r-btn--outline r-w-full" onClick={()=>setMoreOpen(true)}>More</button>{serviceCharge&&<div className="r-service-charge-chip"><span>{serviceCharge.name} · ₹{serviceCharge.amount.toFixed(2)}{serviceCharge.gst_rate?' + GST '+serviceCharge.gst_rate+'%':''}</span><button type="button" className="r-btn" onClick={()=>{setMoreTab('service');setMoreOpen(true);}}>EDIT</button><button type="button" className="r-btn" onClick={()=>setServiceCharge(null)}>Remove</button></div>}</div>}
+      {editingCandidate&&<Sheet open onClose={()=>setEditingCandidate(null)} title="Edit bill item"><QuickBillCandidate purpose={editingCandidate.new_item?.item_type==='SERVICE'?'SERVICE':service?'PART':'ITEM'} name={editingCandidate.name} existing={editingCandidate} onAdded={()=>setEditingCandidate(null)}/></Sheet>}
+      {service&&<section className="r-section r-service-charges" aria-label="Service Charges"><h2>Service Charges</h2><QuickBillCandidate key={'service-'+serviceKey} purpose="SERVICE" name={serviceName} compact onAdded={()=>{setServiceName('');setServiceKey(n=>n+1);}} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);setServiceName('');setServiceKey(n=>n+1);}}/></section>}
+      {quick&&<div className="r-section r-quick-entry-section"><div className="r-quick-entry-heading"><h2>{service?'Spare Parts':'Quick item'}</h2><BillCalculator/></div><QuickBillCandidate key={manualKey} name={manualName} purpose={service?'PART':'ITEM'} compact onAdded={resetManual} onExistingItem={(item,quantity)=>{handleAddItem(item,quantity);resetManual();}}/><button type="button" className="r-btn r-btn--outline r-w-full" onClick={()=>setMoreOpen(true)}>More</button>{serviceCharge&&<div className="r-service-charge-chip"><span>{serviceCharge.name} · ₹{serviceCharge.amount.toFixed(2)}{serviceCharge.gst_rate?' + GST '+serviceCharge.gst_rate+'%':''}</span><button type="button" className="r-btn" onClick={()=>{setMoreTab('service');setMoreOpen(true);}}>EDIT</button><button type="button" className="r-btn" onClick={()=>setServiceCharge(null)}>Remove</button></div>}</div>}
 
       {/* Bill Items */}
 
@@ -505,7 +517,7 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
           ))
         )}
       </div>
-      <section className="r-section r-quick-bill-summary" aria-label="Item summary"><div className="r-card"><h2>Bill summary</h2><div className="r-table-scroll"><table className="r-bill-summary-table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>{billItems.map(i=><tr key={i.row_id||i.item_id}><td>{i.name}</td><td>{i.quantity} {i.unit}</td><td>₹{i.rate.toFixed(2)}</td><td>₹{(i.total/(1+(i.gst_rate??i.tax_rate??0)/100)).toFixed(2)}</td></tr>)}{serviceCharge&&<tr><td>{serviceCharge.name}</td><td>1</td><td>₹{serviceCharge.amount.toFixed(2)}</td><td>₹{serviceCharge.amount.toFixed(2)}</td></tr>}</tbody></table></div><BillTaxSummary onQuote={setDraftQuote}/></div></section>
+      <section className="r-section r-quick-bill-summary" aria-label="Item summary"><div className="r-card"><h2>Bill summary</h2><div className="r-table-scroll"><table className="r-bill-summary-table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>{billItems.map(i=><tr key={i.row_id||i.item_id}><td>{i.name}</td><td>{i.quantity} {i.unit}</td><td>₹{i.rate.toFixed(2)}</td><td>₹{(i.total/(1+(i.gst_rate??i.tax_rate??0)/100)).toFixed(2)}</td></tr>)}{serviceCharge&&<tr><td>{serviceCharge.name}</td><td>1</td><td>₹{serviceCharge.amount.toFixed(2)}</td><td>₹{serviceCharge.amount.toFixed(2)}</td></tr>}</tbody></table></div>{service&&draftQuote&&<div className="r-service-totals">{['Service Charges','Spare Parts'].map((label,group)=><div className="r-billing-row" key={label}><span>{label} · before bill discount / GST</span><strong>₹{billItems.reduce((sum,line,index)=>((line.item_type==='SERVICE'||line.new_item?.item_type==='SERVICE')?0:1)===group?sum+Number(draftQuote.lines?.[index]?.before_bill_discount||0):sum,0).toFixed(2)}</strong></div>)}</div>}<BillTaxSummary onQuote={setDraftQuote}/></div></section>
       <Sheet open={moreOpen} onClose={()=>setMoreOpen(false)} title="More options"><div className="r-mobile-segments" role="group" aria-label="More billing options">{([['details','Bill details'],['photo','Item photo'],['service','Service charge']] as const).map(([key,label])=><button type="button" key={key} className={moreTab===key?'is-selected':''} aria-pressed={moreTab===key} onClick={()=>setMoreTab(key)}>{label}</button>)}</div>{moreTab==='details'&&<div className="xp-stack">          <div className="r-form-grid">
             <div>
               <label htmlFor="invoice-bill-date">{ui("Bill Date")}</label>
@@ -562,7 +574,7 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
           />
 </div>}{moreTab==='photo'&&<><p>Attach a photo to this bill.</p><AttachmentPicker onFileSelect={setAttachment}/></>}{moreTab==='service'&&<ServiceChargeEditor close={()=>setMoreOpen(false)}/>}</Sheet>
       {/* Sticky Billing Summary + PAY button */}
-      <div className="r-sticky-footer" id="billing-footer">
+      {!service&&<div className="r-sticky-footer" id="billing-footer">
         <div className="r-counter-total"><small>{ui("Total")} ({billItems.length} {ui("lines")} · {itemCount} {ui("units")})</small><strong>₹{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></div>
         <button
           className="r-btn r-btn--primary-lg"
@@ -573,7 +585,8 @@ const RetailNewBill = ({ quick = true }: { quick?: boolean }) => {
         >
           {ui("PAY ₹")}{total.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
         </button>
-      </div>
+      </div>}
+      {service&&billItems.length>0&&<section aria-label="Service bill payment"><Suspense fallback={<LoadingState label="Loading payment…"/>}><EmbeddedPayment embedded/></Suspense></section>}
       {configure && (
         <RetailLineConfigurator
           itemId={configure.itemId}

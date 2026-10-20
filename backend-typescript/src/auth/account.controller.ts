@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
-import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsArray, ArrayMaxSize, IsIn, IsNumber, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { AccountSessionGuard } from './account-session.guard';
 import { MobileOtpService } from './mobile-otp.service';
 import { OnboardingService } from './onboarding.service';
@@ -26,6 +26,7 @@ class LinkRequestDto { @IsString() @MinLength(10) @MaxLength(25) phone: string; 
 class LinkVerifyDto extends VerifyOtpDto { @IsString() @MinLength(1) @MaxLength(255) current_password: string; }
 class OwnerDto { @IsString() @MinLength(1) @MaxLength(255) name: string; }
 class BusinessDto {
+  @IsOptional() @IsArray() @ArrayMaxSize(12) @IsString({each:true}) additional_business_types?: string[];
   @IsString() @MaxLength(50) business_type: string;
   @IsString() @MinLength(1) @MaxLength(255) name: string;
   @IsString() @MinLength(1) @MaxLength(1000) address: string;

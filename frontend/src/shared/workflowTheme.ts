@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { Banknote, BookOpen, CalendarDays, ChartNoAxesCombined, CheckCircle, CircleDollarSign, Download, House, Package, Receipt, Settings, Shield, Sparkles, Truck, Undo2, UsersRound, Zap, type LucideIcon } from 'lucide-react';
+import { Banknote, BookOpen, Calculator, CalendarDays, ChartNoAxesCombined, CheckCircle, CircleDollarSign, Download, House, Package, Receipt, Settings, Shield, Sparkles, Truck, Undo2, UsersRound, Zap, type LucideIcon } from 'lucide-react';
 
 const palettes={
   home:['#176b63','#e4f1ed','#f7faf8','#8fd9ce','#213e38','#121c19'],
@@ -32,6 +32,7 @@ export function workflowFor(path:string):Workflow {
   if(path.endsWith('/print'))return flow('billing','Billing','Print receipt','Review the saved bill before printing.',Receipt);
   if(/\/(?:return|returns)(?:\/|$)/.test(path))return flow('returns','Returns','Sale return & refund','Review the original bill and returned quantity.',Undo2);
   if(path==='/retail/amount-sale')return flow('quick','Amount-only sale','Quick amount','Enter an amount, then collect the payment.',Zap);
+  if(path==='/retail/service-calculator')return flow('quick','Automobile Repair','Service Calculator','Service charges + spare parts in one bill',Calculator);
   if(path==='/retail/quick-sale')return flow('quick','Quick Bill','Bill as you sell','Search an item or type a new one. Setup can wait.',Zap);
   if(path==='/retail/udhar')return flow('khata','Khata','Record Udhar','Choose a customer and record their credit.',BookOpen);
   if(path==='/retail/bill')return flow('billing','Item billing','Build an item bill','Add items and quantities, then review payment.',Receipt);

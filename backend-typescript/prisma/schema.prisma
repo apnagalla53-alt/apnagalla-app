@@ -722,6 +722,7 @@ model Organization {
   primary_color  String? @db.VarChar(7)
   invoice_footer String? @db.Text
   business_type String? @db.VarChar(100)
+  additional_business_types String[] @default([])
   internal_notes Json @default("[]") @db.JsonB
   limit_overrides Json @default("{}") @db.JsonB
   subscription TenantSubscription?
@@ -787,6 +788,7 @@ model Company {
   units                      Unit[]
   tax_classes                TaxClass[]
   items                      Item[]
+  item_brands                ItemBrand[]
   item_batches               ItemBatch[]
   retail_capability_settings RetailCapabilitySettings?
   variant_option_definitions VariantOptionDefinition[]
@@ -1161,6 +1163,19 @@ model TaxClass {
   @@map("tax_classes")
 }
 
+model ItemBrand {
+  id String @id @default(uuid()) @db.Uuid
+  company_id String @db.Uuid
+  name String @db.VarChar(100)
+  normalized_name String @db.VarChar(100)
+  company Company @relation(fields: [company_id], references: [id], onDelete: Restrict)
+  items Item[]
+
+  @@unique([company_id, normalized_name])
+  @@unique([id, company_id])
+  @@map("item_brands")
+}
+
 model Item {
   cost_states InventoryCostState[]
   id                 String  @id @default(uuid()) @db.Uuid
@@ -1185,6 +1200,8 @@ model Item {
   compatibility_tags String? @db.Text
   is_system Boolean @default(false)
   category String? @db.VarChar(100)
+  brand_id String? @db.Uuid
+  brand ItemBrand? @relation(fields: [brand_id, company_id], references: [id, company_id], onDelete: Restrict)
   hsn_sac String? @db.VarChar(50)
   low_stock_threshold Decimal @default(0) @db.Decimal(15,6)
   preferred_supplier_id String? @db.Uuid

@@ -9,8 +9,8 @@ import { onboardingPlanBenefits,onboardingPlanDescriptions,onboardingPlanNames }
 import './Onboarding.css';
 import '../shared/apna-theme.css';
 import { ui, useUiLanguage } from '../i18n';
-type Profile={owner_name:string;name:string;mobile:string;business_type:string;custom_business_type:string;address:string;city:string;state:string;postal_code:string};
-const emptyProfile:Profile={owner_name:'',name:'',mobile:'',business_type:'',custom_business_type:'',address:'',city:'',state:'',postal_code:''};
+type Profile={owner_name:string;name:string;mobile:string;business_type:string;additional_business_types:string[];custom_business_type:string;address:string;city:string;state:string;postal_code:string};
+const emptyProfile:Profile={owner_name:'',name:'',mobile:'',business_type:'',additional_business_types:[],custom_business_type:'',address:'',city:'',state:'',postal_code:''};
 const localPhone=(phone:string)=>phone.replace(/^\+91/,'').replace(/\D/g,'');
 const device=()=>localStorage.getItem('evolix-device-id')||undefined;
 export default function Onboarding(){
@@ -39,7 +39,7 @@ export default function Onboarding(){
    navigate(startPath.current||'/retail/home',{replace:true});return;
   }
   setData(result);setView('');
-  if(hydrate){const saved=result.data?.profile||{};setProfile({...emptyProfile,...saved,owner_name:saved.owner_name||result.owner_name||'',name:saved.name||result.business?.name||'',mobile:localPhone(saved.mobile||result.phone||''),business_type:saved.business_type||result.business?.business_type||'',address:saved.address||result.business?.address||'',city:saved.city||result.business?.city||'',state:saved.state||result.business?.state||'',postal_code:saved.postal_code||result.business?.postal_code||''});if(result.data?.location)setGps(result.data.location);}
+  if(hydrate){const saved=result.data?.profile||{};setProfile({...emptyProfile,...saved,owner_name:saved.owner_name||result.owner_name||'',name:saved.name||result.business?.name||'',mobile:localPhone(saved.mobile||result.phone||''),business_type:result.business?.business_type||saved.business_type||'',additional_business_types:result.business?.additional_business_types||saved.additional_business_types||[],address:saved.address||result.business?.address||'',city:saved.city||result.business?.city||'',state:saved.state||result.business?.state||'',postal_code:saved.postal_code||result.business?.postal_code||''});if(result.data?.location)setGps(result.data.location);}
  }
  async function reload(){setError('');setBusy(true);try{const result=(await api.get('/auth/account/onboarding')).data;if(mounted.current)await install(result,true);}catch(e:any){if(mounted.current)setError(e.response?.data?.message||'Cannot load your setup. Please retry.');}finally{if(mounted.current)setBusy(false);}}
  useEffect(()=>{mounted.current=true;if(!loaded.current&&!user?.is_platform){loaded.current=true;void reload();}return()=>{mounted.current=false;};},[]);
@@ -71,7 +71,8 @@ export default function Onboarding(){
     <label htmlFor="ob-owner">Owner Name <span>*</span></label><input id="ob-owner" autoComplete="name" required maxLength={255} value={profile.owner_name} onChange={e=>field('owner_name',e.target.value)} placeholder="Your full name"/>
     <label htmlFor="ob-shop">Shop / Business Name <span>*</span></label><input id="ob-shop" autoComplete="organization" required maxLength={255} value={profile.name} onChange={e=>field('name',e.target.value)} placeholder="Shree Ganesh General Store"/>
     <label htmlFor="ob-mobile">Mobile Number <span>*</span></label><div className="ob-phone"><span>+91</span><input id="ob-mobile" type="tel" autoComplete="tel-national" inputMode="tel" required pattern="[6-9][0-9 ]{9,13}" maxLength={14} value={profile.mobile} onChange={e=>field('mobile',e.target.value)} placeholder="98765 43210"/></div><p className="ob-field-note">For shop contact. {data.mobile_verified&&localPhone(data.phone||'')===localPhone(profile.mobile)?'Your saved number is verified.':'This number is not verified; no OTP will be sent.'}</p>
-    <label id="ob-type-label">Business Type <span>*</span></label><button type="button" aria-labelledby="ob-type-label ob-type-value" className="ob-category-control" aria-haspopup="dialog" onClick={()=>setSheet(true)}><span id="ob-type-value">{category?.name||'Select business type'}</span><ChevronDown size={21}/></button>
+    <label id="ob-type-label">What do you sell or do? <span>*</span></label><button type="button" aria-labelledby="ob-type-label ob-type-value" className="ob-category-control" aria-haspopup="dialog" onClick={()=>setSheet(true)}><span id="ob-type-value">{category?category.name+(profile.additional_business_types.length?' + '+profile.additional_business_types.length+' more':''):'Select business activities'}</span><ChevronDown size={21}/></button>
+    <p className="ob-field-note">Select everything that applies to your business.{category&&<> Main business: {category.name}.</>}</p>
     {profile.business_type==='PHARMACY'&&<p className="ob-field-note">Recommended: Batch &amp; Expiry with FEFO, Multi-unit and GST. Availability follows your selected plan. Tracking is configured per item; general goods and services do not need batch tracking.</p>}
     {profile.business_type==='OTHER'&&<><label htmlFor="ob-custom">Describe your business <small>(optional)</small></label><input id="ob-custom" maxLength={100} value={profile.custom_business_type} onChange={e=>field('custom_business_type',e.target.value)} placeholder="e.g. Horse accessories"/></>}
     <label htmlFor="ob-address">Address <span>*</span></label><textarea id="ob-address" autoComplete="street-address" required maxLength={1000} rows={3} value={profile.address} onChange={e=>field('address',e.target.value)} placeholder="Main Market, Khargone, Madhya Pradesh"/>
@@ -105,6 +106,6 @@ export default function Onboarding(){
    {data&&!profileStep&&!planStep&&!migrationStep&&!pendingStep&&<div role="alert"><p>We couldn’t find your next setup step. Your records are safe.</p><button type="button" onClick={()=>void reload()}>Reload setup</button><Link to="/support">Contact Support</Link></div>}
   </section>
   <footer className="ob-footer"><p><ShieldCheck size={16}/>Your progress is saved securely</p><button disabled={busy} type="button" onClick={async()=>{try{await api.post('/auth/account/logout');}finally{useAuthStore.getState().logout();}}}>Sign out</button><Link to="/privacy">Privacy</Link><Link to="/support">Help</Link></footer>
-  {sheet&&<BusinessTypeSheet types={data.business_types} value={profile.business_type} onSelect={value=>field('business_type',value)} onClose={()=>setSheet(false)}/>}
+  {sheet&&<BusinessTypeSheet types={data.business_types} value={profile.business_type} additional={profile.additional_business_types} onSelect={(value,additional)=>setProfile(p=>({...p,business_type:value,additional_business_types:additional}))} onClose={()=>setSheet(false)}/>}
  </main>;
 }

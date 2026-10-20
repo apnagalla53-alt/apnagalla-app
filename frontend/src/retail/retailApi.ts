@@ -157,9 +157,9 @@ export const itemApi = {
     return api.get('/inventory/stock');
   },
 
-  getItems: async (search?: string, offset=0, stock_status?:'all'|'low'|'out',includeInactive=false) => {
+  getItems: async (search?: string, offset=0, stock_status?:'all'|'low'|'out',includeInactive=false,item_type?:'SERVICE'|'PART') => {
     // Maps to: GET /api/v1/retail/items
-    const params = {search,offset,limit:100,stock_status,...(includeInactive?{include_inactive:'true'}:{})};
+    const params = {item_type,search,offset,limit:100,stock_status,...(includeInactive?{include_inactive:'true'}:{})};
     return envelope(api.get<RetailItem[]>('/retail/items', { params }));
   },
 

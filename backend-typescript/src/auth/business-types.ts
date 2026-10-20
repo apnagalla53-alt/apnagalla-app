@@ -42,7 +42,7 @@ export const BUSINESS_TYPES = [
   ['UTENSILS','Utensils / Kitchenware','CookingPot',[],'Home, hardware & construction',['utensils','kitchenware']],
   ['AUTO_PARTS','Auto Parts','Bike',['COMPATIBILITY','VARIANTS'],'Automotive',['auto parts']],
   ['TWO_WHEELER_PARTS','Two-Wheeler Parts','Bike',['COMPATIBILITY','VARIANTS'],'Automotive',['two wheeler parts']],
-  ['AUTOMOTIVE','Auto / Two-Wheeler Repair','Bike',['COMPATIBILITY','VARIANTS','SERVICES'],'Automotive',['auto repair','two wheeler repair']],
+  ['AUTOMOTIVE','Bike Service / Automobile Repair','Bike',['COMPATIBILITY','VARIANTS','SERVICES'],'Automotive',['auto repair','two wheeler repair','automobile repair','bike service','garage']],
   ['TYRE_BATTERY','Tyre / Battery Shop','Bike',['SERIAL_TRACKING'],'Automotive',['tyre','tire','battery']],
   ['CAR_ACCESSORIES','Car Accessories','Bike',['COMPATIBILITY','VARIANTS'],'Automotive',['car accessories']],
   ['STATIONERY','Stationery','NotebookPen',['MULTI_UNIT'],'General retail',['stationery']],
@@ -62,4 +62,14 @@ export const BUSINESS_TYPES = [
   ['OTHER','Other','Shapes',[],'Other',['other']],
 ] as const;
 export const businessTypeCatalog=()=>BUSINESS_TYPES.map(([code,name,icon,suggested_features,group,keywords])=>({code,name,icon,suggested_features,group,keywords,preset:businessPreset(code,name,suggested_features)}));
-export const presetForBusiness=(code?:string|null)=>{const type=BUSINESS_TYPES.find(t=>t[0]===code);return businessPreset(code,type?.[1],type?.[3]);};
+export const presetForBusiness=(code?:string|null,additional:readonly string[]=[])=>{
+  const type=BUSINESS_TYPES.find(t=>t[0]===code),primary=businessPreset(code,type?.[1],type?.[3]);
+  const extras=[...new Set(additional)].filter(key=>key!==code).map(key=>{const info=BUSINESS_TYPES.find(t=>t[0]===key);return businessPreset(key,info?.[1],info?.[3]);});
+  return {...primary,additionalBusinessTypes:extras.map(p=>p.key),
+    recommendedUnits:[...new Set([...primary.recommendedUnits,...extras.flatMap(p=>p.recommendedUnits)])],
+    unitSuggestions:[...primary.unitSuggestions,...extras.flatMap(p=>p.unitSuggestions).filter(u=>!primary.unitSuggestions.some(p=>p.code===u.code))].filter((u,index,all)=>all.findIndex(p=>p.code===u.code)===index),
+    recommendedCategories:[...primary.recommendedCategories.map(c=>({...c,family:primary.family})),...extras.flatMap(p=>p.recommendedCategories.map(c=>({...c,family:p.family}))).filter(c=>!primary.recommendedCategories.some(p=>p.name===c.name))],
+    recommendedCapabilities:[...new Set([...primary.recommendedCapabilities,...extras.flatMap(p=>p.recommendedCapabilities)])],
+    serviceCalculator:primary.serviceCalculator||extras.some(p=>p.serviceCalculator),
+    serviceSuggestions:primary.serviceSuggestions?.length?primary.serviceSuggestions:extras.find(p=>p.serviceCalculator)?.serviceSuggestions||[]};
+};

@@ -6,7 +6,7 @@ import { useRetailEntitlements } from '../subscription/useRetailEntitlements';
 import { Sheet } from './MobileControls';
 import { canShowDrawerItem, drawerGroups, drawerQuickLinks, type DrawerNavItem } from './retailNavigation';
 
-const ids = ['quick-sale','bill','inventory','khata','suppliers','receive','pay-supplier','purchases','expenses','needs','items','low-stock','bills','held','galla','reports','calendar','assistant'];
+const ids = ['service-calculator','quick-sale','bill','inventory','khata','suppliers','receive','pay-supplier','purchases','expenses','needs','items','low-stock','bills','held','galla','reports','calendar','assistant'];
 const all = [...drawerQuickLinks, ...drawerGroups.flatMap(g=>g.children)];
 const catalog = ids.map(id=>all.find(item=>item.id===id)!).filter(Boolean);
 const eventName = 'evolix-quick-access';
@@ -17,13 +17,13 @@ export function useQuickAccess() {
   useEffect(()=>{const update=()=>setRevision(n=>n+1);window.addEventListener(eventName,update);window.addEventListener('storage',update);return()=>{window.removeEventListener(eventName,update);window.removeEventListener('storage',update);};},[]);
   const canEdit=['SMART','PRO'].includes(access.data?.entitlements.plan?.code||'');
   const features=access.data?new Set(access.data.entitlements.features.filter(f=>f.enabled).map(f=>f.code)):null;
-  const available=catalog.filter(item=>canShowDrawerItem(item,{user,features}));
+  const available=catalog.filter(item=>canShowDrawerItem(item,{user,features,serviceCalculator:access.data?.business_preset?.serviceCalculator}));
   let saved:string[]|null=null;
   try {const stored=JSON.parse(localStorage.getItem(key)||'null');if(Array.isArray(stored))saved=[...new Set(stored.filter(id=>typeof id==='string'&&ids.includes(id)))].slice(0,8);} catch { /* corrupted preferences use defaults */ }
   void revision;
   const selection=canEdit&&saved?saved:access.data?.business_preset?.defaultQuickActions||['receive','purchases','expenses','needs','suppliers'];
   const home=selection.map(id=>available.find(item=>item.id===id)).filter((item):item is DrawerNavItem=>!!item);
-  const sidebar=canEdit&&saved ? [drawerQuickLinks[0],...home] : drawerQuickLinks.filter(item=>canShowDrawerItem(item,{user,features}));
+  const sidebar=canEdit&&saved ? [drawerQuickLinks[0],...home] : drawerQuickLinks.filter(item=>canShowDrawerItem(item,{user,features,serviceCalculator:access.data?.business_preset?.serviceCalculator}));
   const save=(next:string[]|null)=>{if(!canEdit)return;if(next===null)localStorage.removeItem(key);else localStorage.setItem(key,JSON.stringify(next.slice(0,8)));window.dispatchEvent(new Event(eventName));};
   return {canEdit,available,selection,home,sidebar,save};
 }

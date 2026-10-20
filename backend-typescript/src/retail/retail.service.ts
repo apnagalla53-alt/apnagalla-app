@@ -31,6 +31,7 @@ export class RetailService {
 
   async getItems(companyId: string, search?: string, query:any={}) {
     const where: any = { company_id: companyId, is_system: false, ...(query.include_inactive==='true'?{}:{is_active:true}) };
+    if(query.item_type){if(!['STOCK_ITEM','SERVICE','PART'].includes(query.item_type))throw new BadRequestException('Unknown item kind');where.item_type=query.item_type==='PART'?{not:'SERVICE'}:query.item_type;}
     const paging = page(query);
     const stockStatus = query.stock_status;
     if (stockStatus && !['all', 'low', 'out'].includes(stockStatus)) throw new BadRequestException('Unknown stock status');
@@ -94,6 +95,23 @@ export class RetailService {
     return new Map(photos.map(photo => [photo.entity_id, { id: photo.id }]));
   }
 
+  async getBrands(companyId:string,search?:string,query:any={}) {
+    return this.prisma.itemBrand.findMany({where:{company_id:companyId,...(search?.trim()?{name:{contains:search.trim(),mode:'insensitive'}}:{})},orderBy:[{name:'asc'},{id:'asc'}],...page(query)});
+  }
+  async createBrand(companyId:string,userId:string,raw:string) {
+    const name=raw.normalize('NFKC').trim().replace(/\s+/g,' ');
+    if(!name||name.length>100)throw new BadRequestException('Enter a brand name of 1–100 characters');
+    return this.prisma.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM companies WHERE id=${companyId}::uuid FOR UPDATE`;
+      const normalized_name=name.toLocaleLowerCase('en-IN');
+      const existing=await tx.itemBrand.findUnique({where:{company_id_normalized_name:{company_id:companyId,normalized_name}}});
+      if(existing)return existing;
+      const brand=await tx.itemBrand.create({data:{company_id:companyId,name,normalized_name}});
+      await tx.auditLog.create({data:{company_id:companyId,user_id:userId,action:'ITEM_BRAND_CREATED',source_document_type:'ItemBrand',source_document_id:brand.id}});
+      return brand;
+    });
+  }
+
   async getItemCategories(companyId:string,search?:string,query:any={}) {
     const {take,skip}=page(query);
     const rows=await this.prisma.item.groupBy({by:['category'],where:{company_id:companyId,is_system:false,
@@ -126,6 +144,7 @@ export class RetailService {
         tax_rate: Number(item.tax_class?.tax_rate || 0),
         mrp: Number(item.mrp),
         category: item.category,
+        brand_id: item.brand_id,
         hsn_sac: item.hsn_sac,
         low_stock_threshold: Number(item.low_stock_threshold),
         custom_attributes: item.custom_attributes,
@@ -171,6 +190,7 @@ export class RetailService {
 
 
   private async itemReferences(tx: Prisma.TransactionClient, companyId: string, dto: Partial<CreateRetailItemDto>) {
+    if(dto.brand_id&&!await tx.itemBrand.findFirst({where:{id:dto.brand_id,company_id:companyId}}))throw new BadRequestException('Brand not found in this business');
     if (dto.unit_id && !await tx.unit.findFirst({ where: { id: dto.unit_id, company_id: companyId } })) throw new BadRequestException('Unit not found');
     if (dto.tax_class_id && !await tx.taxClass.findFirst({ where: { id: dto.tax_class_id, company_id: companyId } })) throw new BadRequestException('Tax class not found');
     if (dto.preferred_supplier_id && !await tx.party.findFirst({ where: { id: dto.preferred_supplier_id, company_id: companyId, party_type: 'SUPPLIER' } })) throw new BadRequestException('Supplier not found');
@@ -213,12 +233,12 @@ export class RetailService {
       }
       const service = dto.selling_mode === 'SERVICE';
       this.validateUnitMode(unit.code, dto.selling_mode || 'PIECE');
-      if (dto.inventory_tracking === false && (dto.opening_stock || dto.has_variants || dto.track_batch || dto.track_serial || dto.is_bundle || service)) throw new BadRequestException('Price-only items cannot have opening stock, services or advanced tracking');
+      if (dto.inventory_tracking === false && (dto.opening_stock || dto.has_variants || dto.track_batch || dto.track_serial || dto.is_bundle)) throw new BadRequestException('Price-only items cannot have opening stock, services or advanced tracking');
       if ((dto.opening_stock || 0) > 0 && (service || dto.track_batch || dto.track_serial || dto.has_variants || dto.is_bundle)) throw new BadRequestException('Receive tracked stock through Buy Stock with its variant, batch or serial details');
       const item = await tx.item.create({ data: { company_id: companyId, sku, name: dto.name.trim(), primary_unit_id: unit.id,
-        inventory_tracking: dto.inventory_tracking ?? true, item_type: service ? 'SERVICE' : dto.is_bundle ? 'BUNDLE' : 'STOCK_ITEM', selling_mode: service ? 'PIECE' : dto.selling_mode || 'PIECE',
+        inventory_tracking: service ? false : dto.inventory_tracking ?? true, item_type: service ? 'SERVICE' : dto.is_bundle ? 'BUNDLE' : 'STOCK_ITEM', selling_mode: service ? 'PIECE' : dto.selling_mode || 'PIECE',
         default_sale_rate: dto.selling_price, purchase_rate: dto.purchase_price || 0, mrp: dto.mrp || 0,
-        tax_class_id: taxId, category: dto.category, hsn_sac: dto.hsn_sac, low_stock_threshold: dto.low_stock_threshold || 0,
+        tax_class_id: taxId, category: dto.category, brand_id:dto.brand_id, hsn_sac: dto.hsn_sac, low_stock_threshold: dto.low_stock_threshold || 0,
         preferred_supplier_id: dto.preferred_supplier_id, has_variants: dto.has_variants || false, track_batch: dto.track_batch || false,
         track_serial: dto.track_serial || false, is_bundle: dto.is_bundle || false, warranty_days: dto.warranty_days,
         compatibility_tags: dto.compatibility_tags, custom_attributes: dto.custom_attributes } });
@@ -248,7 +268,7 @@ export class RetailService {
       await tx.$queryRaw`SELECT id FROM items WHERE id = ${itemId}::uuid AND company_id = ${companyId}::uuid FOR UPDATE`;
       const item = await tx.item.findFirst({ where: { id: itemId, company_id: companyId, is_system: false }, include: { _count: { select: BASE_UNIT_USAGE } } });
       if (!item) throw new NotFoundException('Item not found');
-      for(const [key,value] of Object.entries(dto))if(value===null&&!['category','hsn_sac','preferred_supplier_id','tax_class_id'].includes(key))throw new BadRequestException(key+' cannot be null');
+      for(const [key,value] of Object.entries(dto))if(value===null&&!['brand_id','category','hsn_sac','preferred_supplier_id','tax_class_id'].includes(key))throw new BadRequestException(key+' cannot be null');
       if(dto.name!==undefined){if(!dto.name.trim())throw new BadRequestException('Item name is required');dto={...dto,name:dto.name.trim()};}
       if(dto.active===false&&await tx.itemBundleComponent.count({where:{component_item_id:itemId,bundle_item:{company_id:companyId,is_active:true}}}))throw new BadRequestException('This item is used by an active bundle. Update or remove that bundle first.');
       await this.itemReferences(tx, companyId, dto);
@@ -286,7 +306,7 @@ export class RetailService {
         if(barcode){if(existing)await tx.itemBarcode.update({where:{id:existing.id},data:{is_active:true,is_primary:true}});else await tx.itemBarcode.create({data:{company_id:companyId,item_id:itemId,barcode,is_primary:true}});}
       }
       const fields: Record<string,string> = { name:'name', sku:'sku', selling_price:'default_sale_rate', purchase_price:'purchase_rate', mrp:'mrp',
-        category:'category',hsn_sac:'hsn_sac',low_stock_threshold:'low_stock_threshold',preferred_supplier_id:'preferred_supplier_id',unit_id:'primary_unit_id',
+        brand_id:'brand_id',category:'category',hsn_sac:'hsn_sac',low_stock_threshold:'low_stock_threshold',preferred_supplier_id:'preferred_supplier_id',unit_id:'primary_unit_id',
         tax_class_id:'tax_class_id',selling_mode:'selling_mode',has_variants:'has_variants',track_batch:'track_batch',track_serial:'track_serial',
         is_bundle:'is_bundle',warranty_days:'warranty_days',compatibility_tags:'compatibility_tags',custom_attributes:'custom_attributes',active:'is_active' };
       for (const [source,target] of Object.entries(fields)) if ((dto as any)[source] !== undefined) data[target]=(dto as any)[source];

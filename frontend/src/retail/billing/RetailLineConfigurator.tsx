@@ -52,7 +52,7 @@ export default function RetailLineConfigurator({ itemId, existing, close,initial
         store.items.filter(line => line.item_id === item.id && line.row_id !== existing?.row_id).forEach(line => store.putLine({ ...line, unit: selectedUnit.code, unit_id: selectedUnit.id }));
       }
       const delta = groups.flatMap((group: any) => group.options).filter((option: any) => modifiers.includes(option.id)).reduce((sum: number, option: any) => sum + Number(option.price_delta), 0);
-      useBillStore.getState().putLine({ row_id: existing?.row_id, item_id: item.id,
+      useBillStore.getState().putLine({ row_id: existing?.row_id, item_id: item.id, item_type:item.item_type,
         name: item.name + (variant ? ' · ' + (item.variants.find((choice: any) => choice.id === variant)?.name || 'Variant') : ''),
         rate: Number(rate), quantity: Number(quantity), discount_amount: Number(discount), unit: selectedUnit.code, unit_id: selectedUnit.id,
         variant_id: variant || undefined, batch_id: batch || undefined, serial_ids: serials.length ? serials : undefined,

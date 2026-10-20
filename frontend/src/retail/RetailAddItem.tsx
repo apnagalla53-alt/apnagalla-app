@@ -4,6 +4,9 @@ import { categorySuggestion } from './experience/categorySuggestion';
 import StitchHeader from './design/StitchHeader';
 import ItemEntryModes from './experience/ItemEntryModes';
 import { ui, useUiLanguage } from "../i18n";
+import ItemBrandPicker from './components/ItemBrandPicker';
+import FootwearOptions from './components/FootwearOptions';
+import {emptyFootwearOptions,footwearCombinations,variantOptionKey,type FootwearOptionsValue} from './components/footwearOptionsModel';
 import ItemCategoryPicker from "./components/ItemCategoryPicker";
 import UnitPicker, { sellingModeLabel } from './components/UnitPicker';
 import { MobileSelect } from "./components/MobileControls";
@@ -52,6 +55,8 @@ const RetailAddItem = () => {
   const [buyUnit,setBuyUnit]=useState<{code:string;name:string}|null>(seed?.buyUnit??null),[packQuantity,setPackQuantity]=useState<string>(seed?.packQuantity??''),[packSellingPrice,setPackSellingPrice]=useState<string>(seed?.packSellingPrice??'');
   const [sku, setSku] = useState<string>(seed?.sku??"");
   const [barcode, setBarcode] = useState<string>(seed?.barcode??"");
+  const [brand,setBrand]=useState<string>(seed?.brand||'');
+  const [footwear,setFootwear]=useState<FootwearOptionsValue>(seed?.footwear||emptyFootwearOptions);
   const [category, setCategory] = useState<string>(seed?.category??"");
   const [description, setDescription] = useState<string>(seed?.description??"");
   const [unit, setUnit] = useState<string>(seed?.unit??"PCS");
@@ -82,7 +87,7 @@ const RetailAddItem = () => {
   const photoUpload = useOptionalPhotoUpload('add-item');
   const [savedItemId, setSavedItemId] = useState<string>(seed?.savedItemId??'');
 
-  const draft=useWorkflowDraft('add-item',{name,sellingPrice,openingStock,openingCost,skipOpeningCost,showAdvanced,showCapabilities,allCapabilities,trackStock,buyUnit,packQuantity,packSellingPrice,sku,barcode,category,description,unit,unitName,purchasePrice,mrp,gstRate,customGstRate,hsn,lowStockAlert,kind,sellingMode,batch,serial,variants,warranty,savedItemId});
+  const draft=useWorkflowDraft('add-item',{brand,footwear,name,sellingPrice,openingStock,openingCost,skipOpeningCost,showAdvanced,showCapabilities,allCapabilities,trackStock,buyUnit,packQuantity,packSellingPrice,sku,barcode,category,description,unit,unitName,purchasePrice,mrp,gstRate,customGstRate,hsn,lowStockAlert,kind,sellingMode,batch,serial,variants,warranty,savedItemId});
   const finishSave = () => {
     draft.clear();
     photoUpload.select(null);
@@ -95,6 +100,7 @@ const RetailAddItem = () => {
 
     if(kind==='STOCK'&&access.isFeatureEffective('MULTI_UNIT')&&buyUnit&&buyUnit.code!==unit&&(!Number.isFinite(Number(packQuantity))||Number(packQuantity)<=0)){setError(ui('Enter how many selling units are in one purchase unit.'));return;}
     if(trackStock&&!tracked&&openingStock===''){setError(ui('Enter your counted stock, or leave stock setup for later.'));return;}
+    if(preset.family==='FOOTWEAR'&&variants&&(footwearCombinations(footwear).length===0||footwearCombinations(footwear).length>100)){setError('Choose sizes/colours for up to 100 combinations.');return;}
     setSaving(true);
 
     setError("");
@@ -103,6 +109,8 @@ const RetailAddItem = () => {
       if (!itemId) {
       const response = await api.post('/retail/items/inline',{
         name: name.trim(),
+        ...(brand?{brand_id:brand}:{}),
+        ...(preset.family==='FOOTWEAR'&&variants?{variants:footwearCombinations(footwear).map(attributes=>({attributes,...(footwear.different&&footwear.prices[variantOptionKey(attributes)]?{default_sale_rate:Number(footwear.prices[variantOptionKey(attributes)])}:{})}))}:{}),
         ...(buyUnit&&buyUnit.code!==unit&&kind==='STOCK'&&access.isFeatureEffective('MULTI_UNIT')?{purchase_unit_code:buyUnit.code,purchase_unit_factor:Number(packQuantity),...(packSellingPrice!==''?{purchase_unit_selling_price:Number(packSellingPrice)}:{})}:{}),
         selling_price: Number(sellingPrice),
         inventory_tracking:tracked||trackStock,
@@ -157,7 +165,7 @@ const RetailAddItem = () => {
           Item Saved!
         </div>
         <div style={{ color: "var(--r-text-muted)" }}>{name}</div>
-        {variants&&<div className="r-card"><h2>Item created successfully.</h2><p>Next: configure each size/colour, then receive stock for each variant.</p><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/items/'+savedItemId)}>Set up variants</button><button className="r-btn r-btn--primary" onClick={()=>navigate('/retail/purchases/new?item='+savedItemId)}>Buy Stock</button><button className="r-btn" onClick={()=>navigate('/retail/items')}>Back to Items</button></div>}
+        {variants&&<div className="r-card"><h2>Item created successfully.</h2><p>{preset.family==='FOOTWEAR'?'Sizes and colours are saved. Receive stock for each combination.':'Next: configure each size/colour, then receive stock for each variant.'}</p><button className="r-btn r-btn--outline" onClick={()=>navigate('/retail/items/'+savedItemId)}>Set up variants</button><button className="r-btn r-btn--primary" onClick={()=>navigate('/retail/purchases/new?item='+savedItemId)}>Buy Stock</button><button className="r-btn" onClick={()=>navigate('/retail/items')}>Back to Items</button></div>}
       </div>
     );
   }
@@ -179,7 +187,7 @@ const RetailAddItem = () => {
                 onChange={(e) => setName(e.target.value)}
                 required
               />
-            </div><div className="r-input-group">
+            </div>{preset.family==='FOOTWEAR'&&<ItemBrandPicker value={brand} onChange={setBrand}/>}<div className="r-input-group">
               <label className="r-label" htmlFor="selling-price-input">
                 {ui('Selling Price (₹)')} · {ui(unitName||unit)} *
               </label>
@@ -206,7 +214,8 @@ const RetailAddItem = () => {
               }} />
             </div>
           {kind==='STOCK'&&access.isFeatureEffective('MULTI_UNIT')&&<details className="xp-unit-section r-card" open={preset.family==='PHARMACY'?true:undefined}><summary>{ui('Buy and sell in different packs?')}</summary><label htmlFor="item-buy-unit">{ui('How do you buy it?')}</label><small>{ui('From supplier')}</small><UnitPicker id="item-buy-unit" title="How do you buy it?" category={category} value={buyUnit?.code||unit} allowedModes={serial?['PIECE']:['PIECE',...features]} onChange={choice=>setBuyUnit(choice)}/>{buyUnit&&buyUnit.code!==unit&&<div className="xp-conversion"><label htmlFor="item-pack-quantity">{ui('How many')} {unitName||unit} {ui('in 1')} {buyUnit.name}?</label><div className="xp-conversion-stepper"><button type="button" aria-label={ui('Decrease pack quantity')} disabled={Number(packQuantity)<=1} onClick={()=>setPackQuantity(String(Math.max(1,Number(packQuantity)-1)))}><Minus size={18}/></button><input id="item-pack-quantity" className="r-input" inputMode="decimal" type="number" min="0.000001" step="any" value={packQuantity} onChange={e=>setPackQuantity(e.target.value)}/><button type="button" aria-label={ui('Increase pack quantity')} onClick={()=>setPackQuantity(String(Number(packQuantity)+1))}><Plus size={18}/></button></div><label htmlFor="item-pack-selling-price">Selling price per {buyUnit.name} · optional</label><input id="item-pack-selling-price" className="r-input" type="number" min="0" step=".01" value={packSellingPrice} onChange={e=>setPackSellingPrice(e.target.value)} inputMode="decimal"/><p className="xp-unit-hint">{ui('Helps keep stock and purchase costs correct.')}</p></div>}</details>}
-          {['CLOTHING','FOOTWEAR'].includes(preset.family)&&<section className="r-card"><p id="item-size-question">{ui(preset.itemPrompts.variants)}</p><div className="r-form-grid" role="group" aria-labelledby="item-size-question"><button type="button" className="r-btn r-btn--outline" aria-pressed={!variants} onClick={()=>{setVariants(false);setOpeningStock('');}}>{ui('No')}</button><button type="button" className="r-btn r-btn--outline" disabled={!access.isFeatureEffective('VARIANTS')} aria-pressed={variants} onClick={()=>{setVariants(true);setOpeningStock('');}}>{ui('Yes')}</button></div><p className="r-caption">{access.isFeatureEffective('VARIANTS')?ui('Choose Yes only for items sold in different sizes or colours.'):ui('Sizes and colours require a plan with this feature.')}</p></section>}
+          {preset.family==='FOOTWEAR'&&kind==='STOCK'&&<FootwearOptions value={footwear} onChange={value=>{setFootwear(value);setVariants(value.hasSizes||value.hasColours);setOpeningStock('');}} enabled={access.isFeatureEffective('VARIANTS')} price={sellingPrice}/>}
+          {preset.family==='CLOTHING'&&<section className="r-card"><p id="item-size-question">{ui(preset.itemPrompts.variants)}</p><div className="r-form-grid" role="group" aria-labelledby="item-size-question"><button type="button" className="r-btn r-btn--outline" aria-pressed={!variants} onClick={()=>{setVariants(false);setOpeningStock('');}}>{ui('No')}</button><button type="button" className="r-btn r-btn--outline" disabled={!access.isFeatureEffective('VARIANTS')} aria-pressed={variants} onClick={()=>{setVariants(true);setOpeningStock('');}}>{ui('Yes')}</button></div><p className="r-caption">{access.isFeatureEffective('VARIANTS')?ui('Choose Yes only for items sold in different sizes or colours.'):ui('Sizes and colours require a plan with this feature.')}</p></section>}
           {preset.family==='PHARMACY'&&<section className="r-card"><label className="r-toggle-row"><input type="checkbox" disabled={!access.isFeatureEffective('BATCH_TRACKING')} checked={batch} onChange={e=>{setBatch(e.target.checked);setOpeningStock('');}}/>{ui('Track Batch & Expiry?')}</label>{!access.isFeatureEffective('BATCH_TRACKING')&&<p className="r-caption">{ui('Your current plan does not include batch and expiry tracking.')}</p>}</section>}
           {preset.family==='ELECTRONICS'&&<section className="r-card"><label className="r-toggle-row"><input type="checkbox" disabled={!access.isFeatureEffective('SERIAL_TRACKING')} checked={serial} onChange={e=>{setSerial(e.target.checked);setUnit('PCS');setSellingMode('PIECE');setOpeningStock('');}}/>{ui('Track serial numbers and warranty?')}</label>{serial&&<label>Warranty in days<input className="r-input" type="number" min="0" max="36500" value={warranty} onChange={e=>setWarranty(e.target.value)} inputMode="decimal"/></label>}{!access.isFeatureEffective('SERIAL_TRACKING')&&<p className="r-caption">{ui('Serial and warranty tracking require a plan with this feature.')}</p>}</section>}
           {preset.family==='EATERY'&&access.isFeatureEffective('MODIFIERS')&&<p className="xp-unit-hint">Any options or add-ons? You can add sugar choices or extras in Item Details after saving.</p>}

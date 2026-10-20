@@ -35,7 +35,8 @@ export interface RetailItem {
 }
 
 export interface BillLineItem {
-  new_item?: { client_id: string; name: string; unit_code: string; unit_name?: string; selling_mode: string };
+  item_type?: string;
+  new_item?: { item_type?:'STOCK_ITEM'|'SERVICE'; client_id: string; name: string; unit_code: string; unit_name?: string; selling_mode: string };
   gst_rate?: number;
   row_id?: string; unit_id?: string; dimensions?: {length:number; width?:number; height?:number}; serial_ids?: string[]; tax_rate?: number;
   item_id: string;
@@ -174,7 +175,7 @@ export const useBillStore = create<BillState>((set, get) => ({
         };
       }
       const newItem: BillLineItem = {
-        item_id: item.id,
+        item_id: item.id, item_type:item.item_type,
         row_id: createUuid(),
         unit_id: item.primary_unit_id,
         tax_rate: item.gst_rate||0, gst_rate:item.gst_rate||0,

@@ -10,7 +10,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../shared/store/authStore';
 import api, { getApiErrorMessage } from '../shared/api';
-import { khataApi } from './retailApi';
 import { AttachmentPicker } from '../shared/components/AttachmentPicker';
 import { useOptionalPhotoUpload } from '../shared/useOptionalPhotoUpload';
 import {notifyPayment} from './payments/paymentVoice';
@@ -30,7 +29,6 @@ export default function RetailAmountSale({ udhar=false }: { udhar?: boolean }) {
   const [upiConfirmed,setUpiConfirmed]=useState(false),[receivingProfile,setReceivingProfile]=useState(seed?.receivingProfile||''),[alternate,setAlternate]=useState(!!seed?.alternate),[receivingMobile,setReceivingMobile]=useState(seed?.receivingMobile||'');
   const draft=useWorkflowDraft(udhar?'udhar-entry':'amount-sale',{amount,method,customer,date,due,note,channel,invoice,receivingProfile,alternate,receivingMobile});
   useEffect(()=>{setUpiConfirmed(false);},[method,amount,receivingProfile,alternate,receivingMobile]);
-  useEffect(()=>{if(canCustomers)khataApi.getCustomers().then(r=>setCustomers(r.data.data)).catch(e=>setError(getApiErrorMessage(e)));},[canCustomers]);
   return <div className="r-page-with-sticky r-entry-page r-stitch-amount-sale">
     <StitchHeader className="r-page-header r-entry-header" hasBack><div className="r-entry-heading"><button type="button" className="r-back-btn" aria-label={ui("Back")} onClick={()=>navigate('/retail/home')}><ArrowLeft size={22}/></button><h1>{udhar?ui("Udhar Entry"):ui("Amount-only Sale")}</h1></div></StitchHeader>
     <div className="r-section"><div className="r-entry-intro"><div><strong>{ui('Amount-only Sale')}</strong><p>{ui('No item is selected, so item stock will not update and exact profit cannot be calculated.')}</p></div><button type="button" className="r-btn r-btn--outline" onClick={()=>navigate('/retail/quick-sale')}><Plus size={18}/>{ui("Quick Bill")}</button></div>

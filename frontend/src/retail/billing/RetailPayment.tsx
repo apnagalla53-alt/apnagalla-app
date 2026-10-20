@@ -39,7 +39,7 @@ import InlineEntitySheet from '../experience/InlineEntitySheet';
 
 type PaymentMode = "CASH" | "UPI" | "UDHAR" | "SPLIT";
 
-const RetailPayment = () => {
+const RetailPayment = ({embedded=false}: {embedded?:boolean}) => {
   useUiLanguage();
   const navigate = useNavigate();
   const completedReceipt = useRef<string | null>(null);
@@ -325,7 +325,7 @@ const RetailPayment = () => {
         </p>
       )}
       {/* Header */}
-      <StitchHeader className="r-page-header" hasBack>
+      {!embedded&&<StitchHeader className="r-page-header" hasBack>
         <button
           className="r-btn r-btn--icon"
           aria-label="Back to bill"
@@ -336,7 +336,7 @@ const RetailPayment = () => {
         </button>
         <h1>{ui("Payment")}</h1>
         <div style={{ width: 48 }} />
-      </StitchHeader>
+      </StitchHeader>}
 
       {/* Amount to Pay */}
       <div className="r-card r-stitch-payment-total">
@@ -414,7 +414,7 @@ const RetailPayment = () => {
         </div>
       )}
 
-      <div className="r-section r-payment-final-summary"><TaxBreakdown quote={taxQuote} rates={[...items.map(i=>Number(i.tax_rate||0)),...(serviceCharge?[serviceCharge.gst_rate]:[])]}/></div>
+      {!embedded&&<div className="r-section r-payment-final-summary"><TaxBreakdown quote={taxQuote} rates={[...items.map(i=>Number(i.tax_rate||0)),...(serviceCharge?[serviceCharge.gst_rate]:[])]}/></div>}
       {/* ── CASH Flow ─────────────────────────────────── */}
       {selectedMode === "UPI" && quote !== null && !alternate && (
         <div className="r-section">

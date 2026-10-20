@@ -1,10 +1,12 @@
 import { IsString, IsNumber, IsOptional, IsBoolean, Min, Max, IsInt, IsUUID, IsIn, MinLength, MaxLength,IsArray,ArrayMinSize,ArrayMaxSize,ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { AddVariantDto } from '../../item-composition/item-composition.dto';
 
 // Matches the existing DECIMAL(15,6) item and opening-stock columns.
 const ITEM_NUMBER_MAX = 999_999_999.999999;
 
 export class CreateRetailItemDto {
+  @IsOptional() @IsUUID() brand_id?: string | null;
   @IsOptional() @IsBoolean() skip_opening_cost?: boolean;
   @IsOptional() @IsNumber() @Min(0) @Max(ITEM_NUMBER_MAX, { message: 'Opening cost is too large. Enter an amount below 1,000,000,000.' }) opening_cost?: number;
   @IsOptional() @IsBoolean() inventory_tracking?: boolean;
@@ -115,9 +117,14 @@ export class UpdateRetailItemDto extends CreateRetailItemDto {
 }
 
 export class InlineRetailItemDto extends CreateRetailItemDto {
+  @IsOptional() @IsArray() @ArrayMinSize(1) @ArrayMaxSize(100) @ValidateNested({each:true}) @Type(()=>AddVariantDto) variants?: AddVariantDto[];
   @IsOptional() @IsNumber() @Min(0) purchase_unit_selling_price?: number;
   @IsOptional() @IsString() @MaxLength(20) purchase_unit_code?:string;
   @IsOptional() @IsNumber() @Min(0.000001) purchase_unit_factor?:number;
+}
+
+export class CreateItemBrandDto {
+  @IsString() @MinLength(1) @MaxLength(100) name: string;
 }
 export class BulkRetailItemsDto {
   @IsArray() @ArrayMinSize(1) @ArrayMaxSize(50) @ValidateNested({each:true}) @Type(()=>CreateRetailItemDto) items:CreateRetailItemDto[];

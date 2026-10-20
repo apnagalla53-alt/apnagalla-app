@@ -50,7 +50,7 @@ export default function RemotePartySelect({
       } finally {
         if (active) setLoading(false);
       }
-    }, 250);
+    }, query.trim() ? 200 : 0);
     return () => {
       active = false;
       clearTimeout(timer);

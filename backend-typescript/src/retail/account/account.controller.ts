@@ -96,9 +96,9 @@ export class RetailAccountController {
       this.entitlementsForShop(req),
       this.db.plan.findMany({where:{code:{in:[...PLAN_ORDER]},is_active:true},include:{plan_features:{include:{feature:true}}}}),
       this.db.subscriptionPayment.findMany({where:{organization_id:req.user.organization_id},orderBy:{paid_at:'desc'},take:50,select:{id:true,plan_name:true,amount:true,tax:true,discount:true,status:true,method:true,reference:true,paid_at:true,refund_amount:true}}),
-      this.db.organization.findFirst({where:{id:req.user.organization_id},select:{business_type:true}}),
+      this.db.organization.findFirst({where:{id:req.user.organization_id},select:{business_type:true,additional_business_types:true}}),
     ]);
-    return {current:this.entitlements.subscriptionSummary(effective),entitlements:effective,business_type:organization?.business_type,business_preset:presetForBusiness(organization?.business_type),
+    return {current:this.entitlements.subscriptionSummary(effective),entitlements:effective,business_type:organization?.business_type,additional_business_types:organization?.additional_business_types||[],business_preset:presetForBusiness(organization?.business_type,organization?.additional_business_types),
       plans:plans.sort((a,b)=>PLAN_ORDER.indexOf(a.code as any)-PLAN_ORDER.indexOf(b.code as any)).map(p=>({id:p.id,code:p.code,name:p.name,monthly_price:Number(p.monthly_price),description:p.description,limits:p.limits,features:p.plan_features.map(f=>({code:f.feature.code,name:f.feature.name,...featureMetadata(f.feature.code)}))})),
       payments:['OWNER','ADMIN','TENANT_ADMIN'].includes(req.user.role)?payments:[],payment_provider:{status:'NOT_CONFIGURED',checkout_available:false},voice_provider:{status:'NOT_CONFIGURED',available:false},
       backup_provider:this.backupConfiguration()};

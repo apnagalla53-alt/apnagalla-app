@@ -21,6 +21,7 @@ import {
   UpdateRetailItemDto,
   InlineRetailItemDto,
   BulkRetailItemsDto,
+  CreateItemBrandDto,
 } from './dto/retail-item.dto';
 import {
   CreateRetailCustomerDto,
@@ -95,9 +96,10 @@ export class RetailController {
   @Post('items/inline')
   @RequirePermissions('inventory.write')
   async inlineItem(@Req() req:any,@Body() dto:InlineRetailItemDto){
-    const {purchase_unit_code,purchase_unit_factor,purchase_unit_selling_price,...itemData}=dto;
+    const {purchase_unit_code,purchase_unit_factor,purchase_unit_selling_price,variants,...itemData}=dto;
     return this.db.runAtomic(async()=>{
       const item=await this.retailService.createItem(req.user.company_id,req.user.id,req.user.financial_year_id,req.user.branch_id,itemData);
+      if(variants?.length)await this.composition.setupVariants(req.user,item.id,{variants});
       let purchase_unit_id=item.primary_unit_id;
       if(purchase_unit_code&&purchase_unit_code!==item.unit){
         if(!(purchase_unit_factor!>0))throw new BadRequestException('Enter the number of sale units in one purchase unit');
@@ -120,6 +122,12 @@ export class RetailController {
       query,
     );
   }
+
+  @Get('item-brands') @RequireFeature('RETAIL_POS','INVENTORY') @RequirePermissions('inventory.read')
+  getBrands(@Req() req:any,@Query('search') search?:string,@Query() query?:any){return this.retailService.getBrands(req.user.company_id,search,query);}
+
+  @Post('item-brands') @RequireFeature('RETAIL_POS','INVENTORY') @RequirePermissions('inventory.write')
+  createBrand(@Req() req:any,@Body() dto:CreateItemBrandDto){return this.retailService.createBrand(req.user.company_id,req.user.id,dto.name);}
 
   @Post('items/removal')
   @RequirePermissions('inventory.write')

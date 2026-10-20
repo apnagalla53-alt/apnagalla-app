@@ -1,6 +1,9 @@
 import { useRetailEntitlements } from "../subscription/useRetailEntitlements";
 export type BusinessPreset = {
   family: string;
+  serviceCalculator?: boolean;
+  serviceSuggestions?: string[];
+  additionalBusinessTypes?: string[];
   intakeOrder?: string[];
   voiceExample?: string;
   key: string;
@@ -11,6 +14,7 @@ export type BusinessPreset = {
     name: string;
     units: string[];
     capabilities?: string[];
+    family?: string;
   }[];
   recommendedCapabilities: string[];
   itemPrompts: {
@@ -57,6 +61,7 @@ export function useBusinessPreset(category?: string) {
   );
   return {
     ...preset,
+    family: match?.family || preset.family,
     recommendedUnits: match?.units || preset.recommendedUnits,
     categoryCapabilities: match?.capabilities || [],
     isPersonalized: !!access.data?.business_type && preset.key !== "OTHER",
