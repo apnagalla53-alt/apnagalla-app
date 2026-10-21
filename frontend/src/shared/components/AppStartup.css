@@ -1,0 +1,19 @@
+.app-startup{min-height:100vh;min-height:100dvh;display:grid;grid-template-rows:1fr auto;align-items:center;padding:32px 24px max(28px,env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 28%,#e5f4ec 0,transparent 58%),#fafbf9;color:#183b2e;font-family:var(--font-family,system-ui,sans-serif);box-sizing:border-box;text-align:center}
+.app-startup-content{width:100%;max-width:360px;justify-self:center;padding:32px 0}
+.app-startup-logo{display:grid;place-items:center;width:112px;height:112px;margin:0 auto 25px;background:white;border:1px solid #e4ece5;border-radius:30px;box-shadow:0 12px 36px #134d3010}
+.app-startup-logo img{display:block;border-radius:22px;width:88px;height:88px}
+.app-startup-brand{font-size:27px;font-weight:800;letter-spacing:-1px;line-height:1.25;margin:0 0 32px;color:#075b40}
+.app-startup h1{font-size:21px;font-weight:650;line-height:1.35;letter-spacing:-.5px;margin:0 0 12px;color:inherit}
+.app-startup-message{min-height:48px;margin:0 auto;font-size:14px;line-height:1.7;color:#5b7065;max-width:300px;overflow-wrap:anywhere}
+.app-startup-progress{height:4px;width:140px;overflow:hidden;margin:23px auto 0;background:#dcebe1;border-radius:10px}
+.app-startup-progress span{display:block;width:45%;height:100%;border-radius:inherit;background:#08784e;animation:app-startup-slide 1.6s ease-in-out infinite}
+.app-startup-tagline{font-size:12px;line-height:1.5;margin:34px 0 0;color:#718278}
+.app-startup-footer{display:flex;justify-content:center;align-items:center;gap:8px;max-width:100%;font-size:11px;line-height:1.5;color:#718278}
+.app-startup-footer svg{flex-shrink:0}
+.app-startup-retry{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:48px;margin:20px auto 0;padding:12px 28px;background:#08784e;color:white;border:0;border-radius:13px;font:600 15px/1.5 var(--font-family,system-ui,sans-serif);cursor:pointer}
+.app-startup-retry:hover{background:#065b3b}.app-startup-retry:focus-visible{outline:3px solid #5ab78e;outline-offset:4px}
+@keyframes app-startup-slide{0%{transform:translateX(-105%)}100%{transform:translateX(330%)}}
+@media(min-width:800px){.app-startup{background:radial-gradient(ellipse at 50% 30%,#e5f4ec 0,transparent 52%),#fafbf9}.app-startup-logo{width:120px;height:120px}.app-startup-brand{font-size:30px}}
+@media(max-height:500px){.app-startup{padding-top:16px;padding-bottom:16px}.app-startup-content{padding:10px 0}.app-startup-logo{width:72px;height:72px;margin-bottom:10px;border-radius:20px}.app-startup-logo img{width:56px;height:56px}.app-startup-brand{font-size:22px;margin-bottom:16px}.app-startup-tagline{margin-top:18px}}
+@media(prefers-reduced-motion:reduce){.app-startup-progress span{animation:none;width:100%;opacity:.75}}
+@media(prefers-color-scheme:dark){.app-startup{background:radial-gradient(ellipse at 50% 28%,#12382a 0,transparent 58%),#102119;color:#e6f2e9}.app-startup-brand{color:#a4dfbd}.app-startup-message{color:#b1c3b7}.app-startup-tagline,.app-startup-footer{color:#93ab9b}.app-startup-progress{background:#2b4d39}.app-startup-progress span{background:#7dcda4}.app-startup-retry{background:#a4dfbd;color:#102119}.app-startup-retry:hover{background:#c5efd6}}

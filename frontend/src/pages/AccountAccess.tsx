@@ -6,6 +6,7 @@ import { useAuthStore } from '../shared/store/authStore';
 import { createUuid } from '../shared/browserCrypto';
 import GoogleSignIn from './GoogleSignIn';
 import './Login.css';
+import BrandWaves from '../shared/components/BrandWaves';
 
 export default function AccountAccess({ signup = false }: { signup?: boolean }) {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ export default function AccountAccess({ signup = false }: { signup?: boolean }) 
   }
 
   if(!signup&&session&&user&&!user.is_platform)return <Navigate replace to={user.must_change_password?'/change-password':user.onboarding_state&&user.onboarding_state!=='READY'?'/onboarding':'/retail/home'}/>;
-  return <main className="login-container account-access-page"><section className="login-card account-access-card">
+  return <main className="login-container account-access-page"><BrandWaves/><section className="login-card account-access-card">
     <div className="account-brand"><img src="/brand/apna-galla-app-192.png" alt="" width="48" height="48" /><span>Apna Galla<small>Har dukaan ka apna hisaab</small></span></div>
     <h1>{signup ? 'Create your shop account' : 'Welcome to your shop'}</h1>
     <p className="account-intro">{signup ? 'Start with your account. We’ll help you set up your shop next.' : 'Sign in to continue your daily business.'}</p>

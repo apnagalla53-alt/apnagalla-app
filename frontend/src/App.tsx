@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react';
 import RetailErrorBoundary from './retail/RetailErrorBoundary';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './shared/store/authStore';
+import AppStartup from './shared/components/AppStartup';
 import BrowserSessionBootstrap, { ContinueWebsiteSession } from './shared/components/BrowserSessionBootstrap';
 
 // Auth
@@ -167,7 +168,7 @@ function App() {
   return (
     <Router>
       <BrowserSessionBootstrap>
-      <RetailErrorBoundary><Suspense fallback={<main className="r-section" role="status">Loading Apna Galla…</main>}>
+      <RetailErrorBoundary><Suspense fallback={<AppStartup phase="page"/>}>
       <Routes>
         {/* ── Public ──────────────────────────────────── */}
         <Route path="/login" element={<AccountAccess />} />

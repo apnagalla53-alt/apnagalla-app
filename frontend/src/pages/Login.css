@@ -71,3 +71,7 @@
 .account-access-card .login-legal a:last-child{flex-basis:100%;text-align:center}
 @media(max-width:380px){.account-access-card{padding:24px 20px}.account-access-card h1{font-size:24px}.account-setup-steps{gap:5px}.account-setup-steps li{font-size:10px;gap:5px}.account-setup-steps li>span{width:20px;height:20px}}
 @media(prefers-reduced-motion:no-preference){.account-referral{transition:border-color .18s ease}.account-referral[open]{border-color:#91b7a0}}
+
+/* Decorative waves stay behind the form and never intercept taps. */
+.account-access-page{position:relative;isolation:isolate}
+.account-access-card{position:relative;z-index:1}

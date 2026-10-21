@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from '../store/authStore';
 import { preloadInitialRoute } from '../initialRoute';
+import AppStartup from './AppStartup';
 
 const base=(import.meta.env.VITE_API_URL||import.meta.env.VITE_API_BASE_URL||'').replace(/\/+$/,'').replace(/(?:\/api\/v1)+$/,'')+'/api/v1';
 export default function BrowserSessionBootstrap({children}:{children:ReactNode}) {
@@ -29,7 +30,7 @@ export default function BrowserSessionBootstrap({children}:{children:ReactNode})
     })();
     return ()=>{current=false;clearTimeout(timer);controller.abort();};
   },[skip,revision]);
-  if(!ready)return <main className="login-container"><section className="login-card">{error?<><h1>Could not open your shop</h1><p role="alert">{error}</p><button onClick={()=>{setError('');setRevision(v=>v+1);}}>Try again</button></>:<p role="status">Checking your account…</p>}</section></main>;
+  if(!ready)return <AppStartup key={revision} error={error} onRetry={()=>{setError('');setRevision(v=>v+1);}}/>;
   return <>{children}</>;
 }
 export function ContinueWebsiteSession() {

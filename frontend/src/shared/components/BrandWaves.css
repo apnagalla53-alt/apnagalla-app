@@ -1,0 +1,7 @@
+.brand-waves{position:fixed;inset:auto 0 0;height:clamp(180px,35vh,340px);pointer-events:none;overflow:hidden;z-index:0;contain:paint}
+.brand-waves svg{position:absolute;bottom:0;left:0;display:block;width:200%;height:100%;max-width:none}
+.brand-waves-back{color:#d8efe2;transform:translateX(-18%)}
+.brand-waves-front{color:#b5dfc9;opacity:.72;transform:translateX(-8%)}
+@media(prefers-reduced-motion:no-preference){.brand-waves-back{animation:brand-wave-back 22s ease-in-out infinite alternate}.brand-waves-front{animation:brand-wave-front 18s ease-in-out infinite alternate}}
+@keyframes brand-wave-back{from{transform:translateX(-18%) translateY(5px)}to{transform:translateX(-2%) translateY(-6px)}}
+@keyframes brand-wave-front{from{transform:translateX(-4%) translateY(5px)}to{transform:translateX(-22%) translateY(-5px)}}
